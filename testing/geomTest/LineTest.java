@@ -1,4 +1,4 @@
-package test.algorithmTest;
+package testing.geomTest;
 
 import static org.junit.Assert.*;
 

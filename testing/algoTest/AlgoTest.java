@@ -1,4 +1,4 @@
-package test.algorithmTest;
+package testing.algoTest;
 
 import java.util.*;
 
