@@ -32,7 +32,7 @@ public class Camera
 		mAngleX2 = angleX2;
 		mAngleX3 = angleX3;
 		mRadius = radius;
-		mCenter = new Glue (new IntegerMatrix (3, 3));
+		mCenter = new Glue (new IntegerMatrix (3, 1));
 	}
 	
 	/**
