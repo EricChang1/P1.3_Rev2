@@ -17,8 +17,12 @@ public class Camera
 	 */
 	public static double angleAdd (double previous, double add)
 	{
-		double rad = Math.toRadians(previous + add);
-		return (Math.asin(Math.sin (rad)) + 180);
+		double result = previous + add;
+		if (result > 360)
+			result -= 360;
+		else if (result < 0)
+			result += 360;
+		return result;
 	}
 	
 	/**

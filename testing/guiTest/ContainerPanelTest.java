@@ -13,6 +13,7 @@ public class ContainerPanelTest extends JFrame
 	public static void main (String[] args)
 	{
 		ContainerPanelTest test = new ContainerPanelTest();
+		test.setSize(250, 250);
 		test.setVisible(true);
 	}
 	
@@ -22,7 +23,9 @@ public class ContainerPanelTest extends JFrame
 		mContainerPanel = new ContainerPanel (mContainer);
 		
 		setTitle ("container panel test");
-		setLayout (new BorderLayout());
+		BorderLayout layout = new BorderLayout();
+		setLayout (layout);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		add (mContainerPanel, BorderLayout.CENTER);
 		
 		ContainerPanel.RotationZoomListener listenRotationZoom = mContainerPanel.new RotationZoomListener();

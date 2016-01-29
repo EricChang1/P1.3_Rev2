@@ -308,6 +308,21 @@ public abstract class Matrix <T extends Number> implements Cloneable
 		else
 			throw new MatrixOutOfBoundsException (row + "|" + col + " out of bounds in " + getRows() + "x" + getColumns() + " matrix");
 	}
+	
+	public String toString()
+	{
+		String s =  getRows() + "x" + getColumns() + " matrix\n[\t";
+		for (int cRow = 0; cRow < getRows(); ++cRow)
+		{
+			for (int cCol = 0; cCol < getColumns(); ++cCol)
+				s += getCell (cRow, cCol) + " ";
+			if (cRow < getRows() - 1)
+				s += "\n\t";
+			else
+				s += "]";
+		}
+		return s;
+	}
 
 	/**
 	 * @param rowIndex index of row to count
