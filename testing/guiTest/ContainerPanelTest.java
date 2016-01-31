@@ -13,8 +13,9 @@ public class ContainerPanelTest extends JFrame
 	public static void main (String[] args)
 	{
 		ContainerPanelTest test = new ContainerPanelTest();
-		test.setSize(250, 250);
+		test.setSize(500, 500);
 		test.setVisible(true);
+		
 	}
 	
 	public ContainerPanelTest()
@@ -28,10 +29,20 @@ public class ContainerPanelTest extends JFrame
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		add (mContainerPanel, BorderLayout.CENTER);
 		
-		ContainerPanel.RotationZoomListener listenRotationZoom = mContainerPanel.new RotationZoomListener();
-		addMouseListener (listenRotationZoom);
-		addMouseMotionListener (listenRotationZoom);
-		addMouseWheelListener (listenRotationZoom);
+		ContainerPanel.ZoomListener zoomListen = mContainerPanel.new ZoomListener (0.2);
+		ContainerPanel.RotationListener rotateListen = mContainerPanel.new RotationListener (0.4);
+		ContainerPanel.ResizeListener resizeListen = mContainerPanel.new ResizeListener();
+		
+		addMouseListener (rotateListen);
+		addMouseMotionListener (rotateListen);
+		addMouseWheelListener (zoomListen);
+		addComponentListener (resizeListen);
+	}
+	
+	public void setVisible (boolean flag)
+	{
+		super.setVisible(flag);
+		mContainerPanel.init();
 	}
 	
 	

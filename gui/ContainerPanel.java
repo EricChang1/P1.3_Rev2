@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -12,6 +15,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.Rectangle2D;
+import java.awt.peer.PanelPeer;
 import java.awt.Rectangle;
 
 import models.*;
@@ -42,87 +46,6 @@ public class ContainerPanel extends JPanel
 		DoubleMatrix mP1, mP2;
 	}
 	
-	public class RotationZoomListener 	extends MouseAdapter
-										implements MouseWheelListener, MouseMotionListener
-	{
-		public RotationZoomListener() 
-		{
-			mZoomSensitivity = 1.0;
-			mRotationSensitivity = 1.0;
-		}
-		
-		public RotationZoomListener (double zoomSensitivity, double rotationSensitivity)
-		{
-			mZoomSensitivity = zoomSensitivity;
-			mRotationSensitivity = rotationSensitivity;
-		}
-		
-		public void setZoomSensitivity (double zoomSens)
-		{
-			mZoomSensitivity = zoomSens;
-		}
-		
-		public void setRotationSensitivity (double rotationSens)
-		{
-			mRotationSensitivity = rotationSens;
-		}
-		
-		@Override
-		public void mouseWheelMoved(MouseWheelEvent e) 
-		{
-			int rotation = e.getWheelRotation();
-			if (rotation < 0)
-				mCamera.changeRadius(rotation * mZoomSensitivity);
-		}
-		
-		@Override
-		public void mousePressed (MouseEvent e)
-		{
-			mPrevMouseLocation = e.getLocationOnScreen();
-		}
-		
-		@Override
-		public void mouseReleased (MouseEvent e)
-		{
-			mPrevMouseLocation = null;
-		}
-
-		@Override
-		public void mouseDragged(MouseEvent e) 
-		{
-			Point currentLocation = e.getLocationOnScreen();
-			if (mPrevMouseLocation != null)
-			{
-				double distX = currentLocation.getX() - mPrevMouseLocation.getX();
-				double distY = currentLocation.getY() - mPrevMouseLocation.getY();
-				mCamera.moveX2 (mRotationSensitivity * distY);
-				mCamera.moveX3 (mRotationSensitivity * distX);
-			}
-			mPrevMouseLocation = currentLocation;
-			setAxisRotation();
-			repaint(getBounds());
-		}
-		
-		public double mZoomSensitivity, mRotationSensitivity;
-		public Point mPrevMouseLocation;
-	}
-	
-	public ContainerPanel (Container c)
-	{
-		mConnectingLines = c.getConnectingLines();
-		mScreenMapping = new DoubleMatrix(3, 3);
-		mAxisRotation = new DoubleMatrix (3, 3);
-		mAxisRotation.getScalarMatrix(1.0, mAxisRotation);
-		
-		IntegerMatrix initCamPos = new IntegerMatrix(3, 1);
-		int maxSide = Math.max(Math.max (c.getDimensions(0), c.getDimensions(1)), c.getDimensions(2));
-		initCamPos.setCell(0, 0, maxSide);
-		initCamPos.setCell(1, 0, c.getDimensions(1) / 2);
-		initCamPos.setCell(2, 0, c.getDimensions(2) / 2);
-		mCameraPosition = new Glue (initCamPos);
-		mCamera = new Camera(0, 0, 1);
-	}
-	
 	public static Rectangle2D getImageArea (ArrayList <LinePair> lines, int coordOffset)
 	{
 		double[] min = new double[2], max = new double[2];
@@ -143,49 +66,187 @@ public class ContainerPanel extends JPanel
 		return new Rectangle2D.Double(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 	}
 	
+	
+	public abstract class InputListener
+	{
+		public InputListener()
+		{
+			mSensitivity = 1.0;
+		}
+		
+		public InputListener (double sensitivity)
+		{
+			mSensitivity = sensitivity;
+		}
+		
+		public double getSensitivity()
+		{
+			return mSensitivity;
+		}
+		
+		public void setSensitivity (double sensitivity)
+		{
+			mSensitivity = sensitivity;
+		}
+		
+		private double mSensitivity;
+	}
+	
+	public class ZoomListener extends InputListener implements MouseWheelListener
+	{
+		public ZoomListener () {}
+		
+		public ZoomListener (double sensitivity) {super (sensitivity); }
+		
+		public void mouseWheelMoved (MouseWheelEvent e)
+		{
+			int rotation = e.getWheelRotation();
+			double rChange = Math.sqrt(mCamera.getRadius() + rotation * getSensitivity()) - Math.sqrt (mCamera.getRadius());
+			mCamera.changeRadius(rChange);
+			
+			DoubleMatrix t = new DoubleMatrix (mProjection.getRows(), mAxisRotation.getColumns());
+			mProjection.multiply(mAxisRotation, t);
+			ArrayList <LinePair> vertPairs = processLines(t);
+			Rectangle2D imgArea = getImageArea(vertPairs, 1);
+			adjustPixelMapping(imgArea.getWidth(), imgArea.getHeight());
+			adjustCentering(imgArea);
+			repaint();
+		}
+	}
+	
+	public class RotationListener extends InputListener implements MouseListener, MouseMotionListener
+	{
+		public RotationListener() {}
+		
+		public RotationListener (double sensitivity) {super (sensitivity); }
+		
+		@Override
+		public void mouseDragged(MouseEvent e) 
+		{
+			Point currentLocation = e.getLocationOnScreen();
+			if (mPrevMouseLocation != null)
+			{
+				double distX = currentLocation.getX() - mPrevMouseLocation.getX();
+				double distY = currentLocation.getY() - mPrevMouseLocation.getY();
+				mCamera.moveX2 (getSensitivity() * distY);
+				mCamera.moveX3 (-getSensitivity() * distX);
+				updateDebugOutput();
+			}
+			mPrevMouseLocation = currentLocation;
+			setAxisRotation();
+			repaint(getBounds());
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) 
+		{
+			if (e.getClickCount() == 2)
+			{
+				mCamera.moveX2 (-mCamera.getAngleX2());
+				mCamera.moveX3 (-mCamera.getAngleX3());
+				setAxisRotation();
+				repaint();
+				updateDebugOutput();
+			}
+			mPrevMouseLocation = e.getLocationOnScreen();
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) 
+		{
+			mPrevMouseLocation = null;
+		}
+		
+		@Override
+		public void mouseExited(MouseEvent e) 
+		{
+			mPrevMouseLocation = null;
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {}
+		
+		@Override
+		public void mousePressed(MouseEvent e) {}
+		
+		@Override
+		public void mouseMoved(MouseEvent e) {}
+		
+		private Point mPrevMouseLocation;
+	}
+	
+	public class ResizeListener extends ComponentAdapter
+	{
+
+		@Override
+		public void componentResized(ComponentEvent e) 
+		{
+			DoubleMatrix t = new DoubleMatrix (mProjection.getRows(), mAxisRotation.getColumns());
+			mProjection.multiply (mAxisRotation, t);
+			
+			ArrayList <LinePair> projected = processLines (t);
+			Rectangle2D imgArea = getImageArea (projected, 1);
+			adjustPixelMapping(imgArea.getWidth(), imgArea.getHeight());
+			adjustCentering (imgArea);
+			repaint();
+		}	
+	}
+	
+	public ContainerPanel (Container c)
+	{	
+		setLayout(new GridBagLayout());
+		constructDebugComponents();
+		setDebugOutput (true);
+		
+		IntegerMatrix centerContPos = new IntegerMatrix (3, 1);
+		centerContPos.setCell (0, 0, -c.getDimensions(0) / 2);
+		centerContPos.setCell (1, 0, -c.getDimensions(1) / 2);
+		centerContPos.setCell (2, 0, -c.getDimensions(2) / 2);
+		c.glue(new Glue (centerContPos));
+		
+		mConnectingLines = c.getConnectingLines();
+		mScreenMapping = new DoubleMatrix(3, 3);
+		mProjection = new DoubleMatrix (3, 4);
+		mAxisRotation = new DoubleMatrix (4, 4);
+		mAxisRotation.getScalarMatrix(1.0, mAxisRotation);
+		
+		IntegerMatrix initCamPos = new IntegerMatrix(3, 1);
+		int maxSide = Math.max(Math.max (c.getDimensions(0), c.getDimensions(1)), c.getDimensions(2));
+		initCamPos.setCell(0, 0, maxSide);
+		initCamPos.setCell(1, 0, c.getDimensions(1) / 2);
+		initCamPos.setCell(2, 0, c.getDimensions(2) / 2);
+		mCameraPosition = new Glue (initCamPos);
+		mCamera = new Camera(0, 0, 1);
+		
+		setProjectionMatrix();
+		setAxisRotation();
+	}
+	
+	public void init ()
+	{
+		DoubleMatrix t = new DoubleMatrix (3, 4);
+		mProjection.multiply(mAxisRotation, t);
+		ArrayList <LinePair> projected = processLines (t);
+		Rectangle2D imgRect = getImageArea(projected, 1);
+		adjustPixelMapping(imgRect.getWidth(), imgRect.getHeight());
+		adjustCentering(imgRect);
+	}
+	
 	public void paintComponent (Graphics g)
 	{
 		super.paintComponent(g);
-		//compute transformation matrix mapping any point to the respective point on the screen
-		//considering the rotation of the axis
-		/*DoubleMatrix totalTransformation = new DoubleMatrix (3, 4);
-		getProjectionMatrix().multiply(mAxisRotation, totalTransformation);*/
-		DoubleMatrix totalTransformation = getProjectionMatrix();
-		ArrayList <LinePair> pairs = processLines(totalTransformation);
-		
-		Rectangle2D imgFrame = getImageArea(pairs, 1);
-		adjustPixelMapping (imgFrame.getWidth(), imgFrame.getHeight());
-		adjustCentering (imgFrame);
-		setAxisRotation();
 		
 		Graphics2D g2 = (Graphics2D) g;
 		
-		DoubleMatrix totTrans = getProjectionMatrix();
-		DoubleMatrix result = new DoubleMatrix (totTrans.getRows(), totTrans.getColumns());
-		mScreenMapping.multiply(totTrans, result);
-		totTrans = result.clone();
-		mAxisRotation.multiply (totTrans, result);
-		totTrans = result.clone();
-		ArrayList<LinePair> pairsInc = processLines (totTrans);
+		ArrayList<LinePair> pairsInc = processLines (getTransformation());
 		
 		for (LinePair p : pairsInc)
-		//for (LinePair p : pairs)
 		{
-			int rows = p.getFirst().getRows(), cols = p.getFirst().getColumns();
-			
-			
-			
-			/*DoubleMatrix first = new DoubleMatrix (rows, cols), second = new DoubleMatrix (rows, cols);
-			mScreenMapping.multiply(p.getFirst(), first);
-			mScreenMapping.multiply(p.getSecond(), second);*/
-			
-			DoubleMatrix first = p.getFirst(), second = p.getSecond();
-			
 			int x1, x2, y1, y2;
-			x1 = first.getCell(1, 0).intValue();
-			y1 = first.getCell(2, 0).intValue();
-			x2 = second.getCell(1, 0).intValue();
-			y2 = second.getCell(2, 0).intValue();
+			x1 = p.getFirst().getCell(1, 0).intValue();
+			y1 = p.getFirst().getCell(2, 0).intValue();
+			x2 = p.getSecond().getCell(1, 0).intValue();
+			y2 = p.getSecond().getCell(2, 0).intValue();
 			System.out.println ("drew line " + x1 + "|" + y1 + " to " + x2 + "|" + y2);
 			g2.drawLine(x1, y1, x2, y2);
 		}
@@ -225,16 +286,45 @@ public class ContainerPanel extends JPanel
 		return returnVal;
 	}
 	
-	private DoubleMatrix getProjectionMatrix()
+	private void constructDebugComponents()
 	{
+		JLabel angleLabelX2, angleLabelX3;
+		angleLabelX2 = new JLabel ("X2 = ");
+		angleLabelX3 = new JLabel ("X3 = ");
+		mDbgAngleX2 = new JLabel();
+		mDbgAngleX3 = new JLabel();
 		
-		DoubleMatrix t = new DoubleMatrix(3, 4);
-		t.setCell (0, 3, 1.0);
-		t.setCell (1, 0, -(double)mCameraPosition.getPosition(1) / mCameraPosition.getPosition(0));
-		t.setCell (1, 1, 1.0);
-		t.setCell (2, 0, -(double)mCameraPosition.getPosition (2) / mCameraPosition.getPosition (0));
-		t.setCell (2, 2, 1.0);
-		return t;
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0; c.gridy = 0; c.anchor = GridBagConstraints.NORTH;
+		add (angleLabelX2, c);
+		c.gridx = 1;
+		add (mDbgAngleX2, c);
+		c.gridx = 0; c.gridy = 1;
+		add (angleLabelX3, c);
+		c.gridx = 1;
+		add (mDbgAngleX3, c);
+	}
+	
+	private void setDebugOutput (boolean flag)
+	{
+		for (Component comp : getComponents())
+			comp.setVisible(flag);
+	}
+	
+	private void updateDebugOutput()
+	{
+		mDbgAngleX2.setText ("" + mCamera.getAngleX2());
+		mDbgAngleX3.setText ("" + mCamera.getAngleX3());
+	}
+	
+	private DoubleMatrix getTransformation()
+	{
+		Matrix <Double> trans = mAxisRotation;
+		DoubleMatrix result = new DoubleMatrix (mProjection.getRows(), trans.getColumns());
+		mProjection.multiply(trans, result);
+		trans = result.clone();
+		mScreenMapping.multiply(trans, result);
+		return result;
 	}
 	
 	private void setAxisRotation()
@@ -243,8 +333,21 @@ public class ContainerPanel extends JPanel
 		mAxisRotation.copyValues(rotMat, 0, 0, 0, 0, rotMat.getRows(), rotMat.getColumns());
 	}
 	
+	private void setProjectionMatrix()
+	{
+		double c1 = -(double)mCameraPosition.getPosition (1) / mCameraPosition.getPosition (0);
+		double c2 = -(double)mCameraPosition.getPosition (2) / mCameraPosition.getPosition (0);
+		mProjection.setCell (0, 3, 1.0);
+		mProjection.setCell (1, 0, c1);
+		mProjection.setCell (1, 1, 1.0);
+		mProjection.setCell (2, 0, c2);
+		mProjection.setCell (2, 2, 1.0);
+	}
+	
 	private void adjustPixelMapping (double imageWidth, double imageHeight)
 	{
+		imageWidth /= mCamera.getRadius();
+		imageHeight /= mCamera.getRadius(); 
 		double pixelPerUnit = Math.min (getWidth() / imageWidth, getHeight() / imageHeight);
 		DoubleMatrix mapScalar = new DoubleMatrix (2, 2);
 		mapScalar.getScalarMatrix(pixelPerUnit, mapScalar);
@@ -261,8 +364,9 @@ public class ContainerPanel extends JPanel
 	}
 	
 	private ArrayList <Line> mConnectingLines;
-	private Matrix<Double> mScreenMapping, mAxisRotation;
+	private Matrix<Double> mScreenMapping, mProjection, mAxisRotation;
 	private Camera mCamera;
 	private Glue mCameraPosition;
 	
+	private JLabel mDbgAngleX2, mDbgAngleX3;
 }

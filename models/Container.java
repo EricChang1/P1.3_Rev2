@@ -148,6 +148,15 @@ public class Container extends Block
 		return clone;
 	}
 	
+	/**
+	 * @param index index of block in container
+	 * @return the block at index
+	 */
+	public Block getBlock (int index)
+	{
+		return mPlacedBlocks.get(index);
+	}
+	
 	/**	Places a block at the specified position
 		@param block the block object to place
 		@param pos the position to place block 
