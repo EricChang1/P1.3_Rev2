@@ -240,22 +240,36 @@ public class ContainerPanel extends JPanel
 	 */
 	public ContainerPanel (Container c)
 	{	
+		//construct gui
 		setLayout(new GridBagLayout());
 		constructDebugComponents();
 		setDebugOutput (true);
-		
+		//set viewing point position
 		IntegerMatrix centerContPos = new IntegerMatrix (3, 1);
 		centerContPos.setCell (0, 0, -c.getDimensions(0) / 2);
 		centerContPos.setCell (1, 0, -c.getDimensions(1) / 2);
 		centerContPos.setCell (2, 0, -c.getDimensions(2) / 2);
 		c.glue(new Glue (centerContPos));
 		
-		mConnectingLines = c.getConnectingLines();
+		//extract vertices and connections
+		mVertices = new ArrayList<DoubleMatrix>();
+		mConnections = new ArrayList <ArrayList <Integer>>();
+		for (int cVertex = 0; cVertex < c.getNumberOfVertices(); ++cVertex)
+		{
+			mVertices.add (c.getVertex (cVertex).toDoubleMatrix());
+			ArrayList <IntegerMatrix> conns = c.lookUpConnections(cVertex);
+			ArrayList <Integer> connIndices = new ArrayList<Integer>();
+			for (IntegerMatrix conn : conns)
+				connIndices.add (c.getVertexIndex(conn));
+			mConnections.add (connIndices);
+		}
+		
+		//construct transformation matrices
 		mScreenMapping = new DoubleMatrix(3, 3);
 		mProjection = new DoubleMatrix (3, 4);
 		mAxisRotation = new DoubleMatrix (4, 4);
 		mAxisRotation.getScalarMatrix(1.0, mAxisRotation);
-		
+		//initialize camera
 		IntegerMatrix initCamPos = new IntegerMatrix(3, 1);
 		int maxSide = Math.max(Math.max (c.getDimensions(0), c.getDimensions(1)), c.getDimensions(2));
 		initCamPos.setCell(0, 0, maxSide);
@@ -263,7 +277,7 @@ public class ContainerPanel extends JPanel
 		initCamPos.setCell(2, 0, c.getDimensions(2) / 2);
 		mCameraPosition = new Glue (initCamPos);
 		mCamera = new Camera(0, 0, 1);
-		
+		//initialize projection and rotation matrix
 		setProjectionMatrix();
 		setAxisRotation();
 	}
@@ -307,19 +321,22 @@ public class ContainerPanel extends JPanel
 	private ArrayList <LinePair> processLines (DoubleMatrix transformation)
 	{
 		int coordOffsetIndex = 0, endCoords = 3;
-		ArrayList <LinePair> transformed = new ArrayList<LinePair>();
-		for (Line l : mConnectingLines)
+		ArrayList <DoubleMatrix> transformed = new ArrayList<DoubleMatrix>();
+		//transform vertices
+		for (int cVertex = 0; cVertex < mVertices.size(); ++cVertex)
 		{
-			DoubleMatrix first = processPoint (l.getFirst().toDoubleMatrix(), transformation, coordOffsetIndex, endCoords);
-			DoubleMatrix second = processPoint (l.getSecond().toDoubleMatrix(), transformation, coordOffsetIndex, endCoords);
-			//@Todo let transformation map to x1 = 1
-			/*
-			first.setCell(0, 0, 1.0);
-			second.setCell(0, 0, 1.0);
-			*/
-			transformed.add (new LinePair (first, second));
+			DoubleMatrix proc = processPoint (mVertices.get (cVertex), transformation, coordOffsetIndex, endCoords);
+			transformed.add (proc);
 		}
-		return transformed;
+		ArrayList <LinePair> transLines = new ArrayList<LinePair>();
+		//construct lines from transformed vertices
+		for (int cVertex = 0; cVertex < mVertices.size(); ++cVertex)
+		{
+			for (Integer connIndex : mConnections.get (cVertex))
+				transLines.add (new LinePair (mVertices.get(cVertex), mVertices.get (connIndex)));
+		}
+		
+		return transLines;
 	}
 	
 	private DoubleMatrix processPoint (DoubleMatrix p, DoubleMatrix transformation, int obtainIndex, int newRows)
@@ -414,7 +431,10 @@ public class ContainerPanel extends JPanel
 		mScreenMapping.setCell(2, 0, transY);
 	}
 	
-	private ArrayList <Line> mConnectingLines;
+	//private ArrayList <Line> mConnectingLines;
+	private ArrayList <DoubleMatrix> mVertices;
+	private ArrayList <ArrayList <Integer>> mConnections;
+	
 	private Matrix<Double> mScreenMapping, mProjection, mAxisRotation;
 	private Camera mCamera;
 	private Glue mCameraPosition;
