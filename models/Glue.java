@@ -1,13 +1,54 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import models.Matrix.*;
 
 
 public class Glue implements Cloneable 
 {
-
+	/**
+	 * class comparing glue objects with respect to their distance
+	 * to a reference point
+	 * This reference point is the Glue object used to construct the comparator
+	 * @author martin
+	 */
+	public class DistanceComp implements Comparator
+	{
+		@Override
+		/**
+		 * @param o1 a Glue object referring to the first point
+		 * @param o2 a Glue object referring to the second point
+		 * @return 1 if o1 is closer to the reference point than o2, -1 if o2 is closer or 0 if they are equally close
+		 */
+		public int compare (Object o1, Object o2) 
+		{
+			Glue p1 = (Glue) o1, p2 = (Glue) o2;
+			double dist1 = getDistance (p1);
+			double dist2 = getDistance (p2);
+			if (dist1 < dist2)
+				return 1;
+			if (dist1 > dist2)
+				return -1;
+			return 0;
+		}
+		
+		/**
+		 * @return the reference position held by the outer class
+		 */
+		public Glue getReferencePosition()
+		{
+			return new Glue (pos);
+		}
+		
+		public boolean equals (DistanceComp compare)
+		{
+			return pos.equals(compare.getReferencePosition());
+		}
+	}
+	
+	
 	/** Nested class to create a custom exception
 	 */
 	@SuppressWarnings("serial")
@@ -86,6 +127,22 @@ public class Glue implements Cloneable
 		for (int cCoord = 0; cCoord < getDimension(); ++cCoord)
 			s += getPosition(cCoord) + " ";
 		return s;
+	}
+	
+	/**
+	 * @param p2 another point
+	 * @return distance between this and p2
+	 * @throws GlueException if this and p2 do not belong to the same subspace
+	 */
+	public double getDistance (Glue p2)
+	{
+		if (this.getDimension() != p2.getDimension())
+			throw new GlueException ("dimension mismatch: distance cannot be computed");
+		IntegerMatrix diff = new IntegerMatrix (getDimension(), 1);
+		for (int cDim = 0; cDim < getDimension(); ++cDim)
+			diff.setCell(cDim, 0, this.getPosition (cDim) - p2.getPosition (cDim));
+		Integer[] diffAsArray = diff.getColumn(0);
+		return Math.sqrt(diff.vectorProduct(diffAsArray, diffAsArray));
 	}
 	
 	/**
