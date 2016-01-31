@@ -23,6 +23,10 @@ import models.Matrix.*;
 import models.Container;
 import geometry.*;
 
+/**
+ * class used to draw a container
+ * @author martin
+ */
 public class ContainerPanel extends JPanel
 {
 	public static class LinePair
@@ -46,6 +50,11 @@ public class ContainerPanel extends JPanel
 		DoubleMatrix mP1, mP2;
 	}
 	
+	/**
+	 * @param lines lines to draw on 2d plane
+	 * @param coordOffset index of the first coordinate to use for drawing
+	 * @return smallest rectangle comprising the entire drawing
+	 */
 	public static Rectangle2D getImageArea (ArrayList <LinePair> lines, int coordOffset)
 	{
 		double[] min = new double[2], max = new double[2];
@@ -66,24 +75,41 @@ public class ContainerPanel extends JPanel
 		return new Rectangle2D.Double(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 	}
 	
-	
+	/**
+	 * abstract class to be extended by classes that need to store a sensitivity value
+	 * provides getter and setter for sensitivity value
+	 * @author martin
+	 */
 	public abstract class InputListener
 	{
+		/**
+		 * default constructor
+		 */
 		public InputListener()
 		{
 			mSensitivity = 1.0;
 		}
 		
+		/**
+		 * parametric constructor
+		 * @param sensitivity sensitivity to be stored
+		 */
 		public InputListener (double sensitivity)
 		{
 			mSensitivity = sensitivity;
 		}
 		
+		/**
+		 * @return sensitivity value
+		 */
 		public double getSensitivity()
 		{
 			return mSensitivity;
 		}
 		
+		/**
+		 * @param sensitivity value to set sensitivity to
+		 */
 		public void setSensitivity (double sensitivity)
 		{
 			mSensitivity = sensitivity;
@@ -92,6 +118,11 @@ public class ContainerPanel extends JPanel
 		private double mSensitivity;
 	}
 	
+	/**
+	 * class used to listen to mouse wheel 
+	 * in order to change the zooming level of the drawing
+	 * @author martin
+	 */
 	public class ZoomListener extends InputListener implements MouseWheelListener
 	{
 		public ZoomListener () {}
@@ -114,6 +145,12 @@ public class ContainerPanel extends JPanel
 		}
 	}
 	
+	/**
+	 * class used to listen to listen to mouse clicks and mouse motion
+	 * in order to determine whether to rotate the image or
+	 * whether to reset the rotation
+	 * @author martin
+	 */
 	public class RotationListener extends InputListener implements MouseListener, MouseMotionListener
 	{
 		public RotationListener() {}
@@ -175,6 +212,11 @@ public class ContainerPanel extends JPanel
 		private Point mPrevMouseLocation;
 	}
 	
+	/**
+	 * class used to listen to window resizing events
+	 * in order to adjust the size of the image dynamically
+	 * @author martin
+	 */
 	public class ResizeListener extends ComponentAdapter
 	{
 
@@ -192,6 +234,10 @@ public class ContainerPanel extends JPanel
 		}	
 	}
 	
+	/**
+	 * parametric constructor
+	 * @param c container to draw
+	 */
 	public ContainerPanel (Container c)
 	{	
 		setLayout(new GridBagLayout());
@@ -222,6 +268,11 @@ public class ContainerPanel extends JPanel
 		setAxisRotation();
 	}
 	
+	/**
+	 * method to be called before a valid drawing can be made
+	 * Precondition: size of the component is set
+	 * Postcondition: drawing is adjusted for this size
+	 */
 	public void init ()
 	{
 		DoubleMatrix t = new DoubleMatrix (3, 4);
