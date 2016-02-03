@@ -27,7 +27,7 @@ import geometry.*;
  * class used to draw a container
  * @author martin
  */
-public class ContainerPanel extends JPanel
+public class PieceRenderPanel extends JPanel
 {
 	public static class LinePair
 	{
@@ -238,7 +238,7 @@ public class ContainerPanel extends JPanel
 	 * parametric constructor
 	 * @param c container to draw
 	 */
-	public ContainerPanel (Container c)
+	public PieceRenderPanel (BasicShape c)
 	{	
 		//construct gui
 		setLayout(new GridBagLayout());
@@ -330,10 +330,10 @@ public class ContainerPanel extends JPanel
 		}
 		ArrayList <LinePair> transLines = new ArrayList<LinePair>();
 		//construct lines from transformed vertices
-		for (int cVertex = 0; cVertex < mVertices.size(); ++cVertex)
+		for (int cVertex = 0; cVertex < transformed.size(); ++cVertex)
 		{
 			for (Integer connIndex : mConnections.get (cVertex))
-				transLines.add (new LinePair (mVertices.get(cVertex), mVertices.get (connIndex)));
+				transLines.add (new LinePair (transformed.get(cVertex), transformed.get (connIndex)));
 		}
 		
 		return transLines;
