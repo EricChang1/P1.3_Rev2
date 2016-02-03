@@ -1,5 +1,6 @@
 package algorithm;
 import java.util.ArrayList;
+import models.Matrix.*;
 
 import models.Matrix;
 
@@ -26,10 +27,12 @@ public class Scaler
 		precondition: vectors needs to contain only matrices with one column and the same amount of rows
 		@throws InconsistentVectorsException
 	**/
-	public Scaler (ArrayList <Matrix> vec)
+	public Scaler (ArrayList <DoubleMatrix> vec)
 	{
 		//Clone vec so no changes are applied to original
-		ArrayList <Matrix> vectors = (ArrayList<Matrix>) vec.clone();
+		ArrayList <DoubleMatrix> vectors = new ArrayList<DoubleMatrix>(); 
+		for (DoubleMatrix v : vec)
+				vectors.add (v.clone());
 		
 		//Method should exist in MatrixHandler
 		for (int i=0; i<vectors.size(); i++)
@@ -44,7 +47,7 @@ public class Scaler
 		{
 			for (int j=0; j<vectors.get(i).getRows();j++)
 			{
-				Number numValue = vectors.get(i).getCell(j, 1); //value in current cell
+				Number numValue = vectors.get(i).getCell(j, 0); //value in current cell
 				double currentValue = numValue.doubleValue();
 				int digits = String.valueOf(currentValue).length(); //number of digits in current cell
 				int intLength = String.valueOf(Math.floor(currentValue)).length(); //number of digits in cell ignoring decimals
@@ -69,14 +72,14 @@ public class Scaler
 		
 		
 	}
-	public double commFacFinder(ArrayList <Matrix> vectors)
+	public double commFacFinder(ArrayList <DoubleMatrix> vectors)
 	{
 		//Temporary number multiplied to vector to remove all decimals when searching for common factor
 		double removeDecimal = Math.pow(10, numDecimal);
 		//Maximum potential common factor
 		double half = Math.floor(0.5*smallestValue*removeDecimal);
 		
-		ArrayList <Matrix> scaledVectors = scale(vectors, removeDecimal);
+		ArrayList <DoubleMatrix> scaledVectors = scale(vectors, removeDecimal);
 		
 		//Return the lowest common factor, 1 is not needed because it has to be common factor
 		for (double i=2; i<=half;i++)
@@ -93,14 +96,14 @@ public class Scaler
 	}
 	
 	
-	public boolean commFacCheck(ArrayList <Matrix> vectors, double commFac)
+	public boolean commFacCheck(ArrayList <DoubleMatrix> vectors, double commFac)
 	{
 		boolean check=true;
 			for (int i=0; i<vectors.size();i++)
 			{
 				for (int j=0; j<vectors.get(i).getRows();j++)
 				{
-					Number numValue = vectors.get(i).getCell(j, 1); //value in current cell
+					Number numValue = vectors.get(i).getCell(j, 0); //value in current cell
 					double currentValue = numValue.doubleValue();
 					if (currentValue%commFac!=0)
 					{
@@ -116,7 +119,7 @@ public class Scaler
 		precondition: vectors needs to contain only matrices with one column and the same amount of rows
 		@throws InconsistentVectorsException
 	**/
-	public ArrayList <Matrix> scale (ArrayList <Matrix> vectors, double scaler)
+	public ArrayList <DoubleMatrix> scale (ArrayList <DoubleMatrix> vectors, double scaler)
 	{
 		for (int i=0; i<vectors.size(); i++)
 			if (vectors.get(i).dimensionEquals(vectors.get(0))==false)
@@ -128,11 +131,10 @@ public class Scaler
 		{
 			for (int j=0; j<vectors.get(i).getRows();j++)
 			{
-				Number numValue = vectors.get(i).getCell(j, 1); //value in current cell
-				double currentValue = numValue.doubleValue();
-				vectors.get(i).setCell(1, 1, 1);
-				Number newValue = currentValue*scaler;
-				vectors.get(i).setCell(i, 1, newValue);
+				double currentValue = vectors.get(i).getCell(j, 0);
+				vectors.get(i).setCell(1, 0, 1);
+				double newValue = currentValue*scaler;
+				vectors.get(i).setCell(i, 0, newValue);
 			}
 		}
 		return vectors;
