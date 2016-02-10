@@ -179,7 +179,7 @@ public class PieceRenderPanel extends JPanel
 		{
 			if (e.getClickCount() == 2)
 			{
-				mCamera.moveX2 (-mCamera.getAngleX2());
+				mCamera.moveX2 (180 - mCamera.getAngleX2());
 				mCamera.moveX3 (-mCamera.getAngleX3());
 				setAxisRotation();
 				repaint();
@@ -276,7 +276,7 @@ public class PieceRenderPanel extends JPanel
 		initCamPos.setCell(1, 0, c.getDimensions(1) / 2);
 		initCamPos.setCell(2, 0, c.getDimensions(2) / 2);
 		mCameraPosition = new Glue (initCamPos);
-		mCamera = new Camera(0, 0, 1);
+		mCamera = new Camera(180, 0, 1);
 		//initialize projection and rotation matrix
 		setProjectionMatrix();
 		setAxisRotation();
