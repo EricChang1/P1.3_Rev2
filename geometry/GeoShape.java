@@ -50,6 +50,8 @@ public abstract class GeoShape
 	{ 
 		mP1 = p1.clone();
 		mP2 = p2.clone();
+		mInP1 = true;
+		mInP2 = true;
 	}
 	
 	/**
@@ -96,6 +98,18 @@ public abstract class GeoShape
 			eq.setCell(cDim, eq.getColumns() - 1, fixCoord);
 		}
 		return eq;
+	}
+	
+	public String toString()
+	{
+		String ret = new String ("abstract geometric shape defined by ");
+		ret += mP1.toString() + " ";
+		if (!mInP1)
+			ret += " (ex) ";
+		ret += mP2.toString() + " ";
+		if (!mInP2)
+			ret += " (ex) ";
+		return ret;
 	}
 	
 	/**
@@ -151,15 +165,27 @@ public abstract class GeoShape
 	
 	/**
 	 * @param p point to check whether it is within the range
-	 * @return true if p is contained in the smallest rectangular shape containing all the points of this shape
+	 * @return true if p is contained in (including) the smallest rectangular shape containing all the points of this shape
 	 */
 	public boolean isInRange (Glue p)
 	{
+		ArrayList <DoubleMatrix> dirVecs = getVectors();
 		for (int cDim = 0; cDim < getDimension(); ++cDim)
 		{
-			int max = Math.max (getFirst().getCell (cDim, 0), getSecond().getCell (cDim, 0));
-			int min = Math.min (getFirst().getCell (cDim, 0), getSecond().getCell (cDim, 0));
-			if (p.getPosition(cDim) < min || p.getPosition(cDim) > max)
+			double dirVal = 0;
+			for (DoubleMatrix dirVec : dirVecs)
+				dirVal += dirVec.getCell(cDim, 0);
+			double makeDecimalDivisor = 100.0;
+			double coord1 = getFirst().getCell (cDim, 0);
+			if (!mInP1)
+				coord1 += dirVal / makeDecimalDivisor;
+			double coord2 = getSecond().getCell (cDim, 0);
+			if (!mInP2)
+				coord2 -= dirVal / makeDecimalDivisor;
+			
+			double max = Math.max (coord1, coord2);
+			double min = Math.min (coord1, coord2);
+			if (p.getPosition (cDim) < min || p.getPosition (cDim) > max)
 				return false;
 		}
 		return true;
@@ -174,16 +200,51 @@ public abstract class GeoShape
 	{
 		for (int cDim = 0; cDim < getDimension(); ++cDim)
 		{
-			int minT, maxT, minG, maxG;
-			minT = Math.min(this.getFirst().getCell(cDim, 0), this.getSecond().getCell(cDim, 0));
-			maxT = Math.max(this.getFirst().getCell(cDim, 0), this.getSecond().getCell(cDim, 0));
-			minG = Math.min(g.getFirst().getCell(cDim, 0), g.getSecond().getCell(cDim, 0));
-			maxG = Math.max(g.getFirst().getCell(cDim, 0), g.getSecond().getCell(cDim, 0));
-			if ((minG < minT || maxG > maxT) && (minT < minG || maxT > maxG))
-				return false;
+			double dirValT = 0, dirValG = 0;
+			for (DoubleMatrix dirVecT : this.getVectors())
+				dirValT += dirVecT.getCell (cDim, 0);
+			for (DoubleMatrix dirVecG : g.getVectors())
+				dirValG += dirVecG.getCell (cDim, 0);
+			
+			double p1T, p2T, p1G, p2G;
+			p1T = this.getFirst().getCell (cDim, 0);
+			if (!this.mInP1)
+				p1T += dirValT;
+			p2T = this.getSecond().getCell (cDim, 0);
+			if (!this.mInP2)
+				p2T -= dirValT;
+			p1G = g.getFirst().getCell (cDim, 0);
+			if (!g.mInP1)
+				p1G += dirValG;
+			p2G = g.getSecond().getCell (cDim, 0);
+			if (!g.mInP2)
+				p2G -= dirValG;
+			
+			double minT, maxT, minG, maxG;
+			minT = Math.min (p1T, p2T);
+			maxT = Math.max (p1T, p2T);
+			minG = Math.min (p1G, p2G);
+			maxG = Math.max (p1G, p2G);
+			
+			if (maxG < minT || minG > maxT)
+				return false;		
 		}
 		return true;
 	}
 	
+	/**
+	 * change whether to in-/exclude starting and end point
+	 * point is included if flag is set to true
+	 * the default is true
+	 * @param inP1 flag for start point
+	 * @param inP2 flag for end point
+	 */
+	public void setInclusion (boolean inP1, boolean inP2)
+	{
+		mInP1 = inP1;
+		mInP2 = inP2;
+	}
+	
 	private Glue mP1, mP2;
+	private boolean mInP1, mInP2;
 }

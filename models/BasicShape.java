@@ -107,6 +107,62 @@ public class BasicShape
 	}
 	
 	/**
+	 * @param p1 first point
+	 * @param p2 second point
+	 * @return relative position of p1 to p2
+	 * Precondition: dimension of p1, p2 is the same
+	 */
+	public static RelatPos getRelativePos (Glue p1, Glue p2)
+	{
+		if (p1.getPosition (0) < p2.getPosition (0))
+			return RelatPos.FRONT;
+		if (p1.getPosition (0) > p2.getPosition(0))
+			return RelatPos.BACK;
+		if (p1.getPosition (1) < p2.getPosition (1))
+			return RelatPos.RIGHT;
+		if (p1.getPosition (1) > p2.getPosition (1))
+			return RelatPos.LEFT;
+		if (p1.getPosition (2) < p2.getPosition (2))
+			return RelatPos.ABOVE;
+		if (p1.getPosition (2) > p2.getPosition (2))
+			return RelatPos.BELOW;
+		throw new IllegalArgumentException (p1 + " and " + p2 + " are identical");
+	}
+	
+	/**
+	 * inner class containing intersection point and 
+	 * indices of the line the intersection is on
+	 * @author martin
+	 */
+	public class Intersection extends Glue
+	{
+		/**
+		 * @param vecInter vector to intersection
+		 * @param indexLinePairs list of lists each containing two entries
+		 * corresponding to the indices to vertices of this object
+		 * where these vertices form a line on which the intersection is located
+		 */
+		public Intersection (IntegerMatrix vecInter, int indV1, int indV2)
+		{
+			super (vecInter);
+			mIndV1 = indV1;
+			mIndV2 = indV2;
+		}
+		
+		/**
+		 * @return index of first vertex
+		 */
+		public int getLineStart() { return mIndV1; }
+		
+		/**
+		 * @return index of second vertex
+		 */
+		public int getLineEnd() { return mIndV2; }
+		
+		private int mIndV1, mIndV2;
+	}
+	
+	/**
 	 * constructs basic shape from parameters
 	 * @param vectors list of vectors
 	 * @param adjMatrix adjacency matrix
@@ -241,16 +297,25 @@ public class BasicShape
 	
 	/**
 	 * @param l2 line to search for intersection
-	 * @return list of intersection points
+	 * @return list of intersection points, each intersection involving the line
+	 * intersecting with l2 in this object
 	 */
-	public ArrayList <IntegerMatrix> getLineIntersections (Line l2)
+	public ArrayList <Intersection> getLineIntersections (Line l2)
 	{
-		ArrayList <IntegerMatrix> intersections = new ArrayList<Matrix.IntegerMatrix>();
-		for (Line l1 : getConnectingLines())
+		ArrayList <Intersection> intersections = new ArrayList<>();
+		
+		for (int cVert1 = 0; cVert1 < getNumberOfVertices() - 1; ++cVert1)
 		{
-			IntersectionSolver solver = new IntersectionSolver (l1, l2);
-			if (solver.getSolutionType() == IntersectionSolver.Result.ONE)
-				intersections.add (solver.getIntersection().toVector());
+			for (int cVert2 = cVert1 + 1; cVert2 < getNumberOfVertices(); ++cVert2)
+			{
+				if (adjMatrix.getCell (cVert1, cVert2).equals (1))
+				{
+					Line connection = new Line (new Glue (getVertex (cVert1)), new Glue (getVertex (cVert2)));
+					IntersectionSolver solver = new IntersectionSolver (connection, l2);
+					if (solver.getSolutionType() == IntersectionSolver.Result.ONE && solver.isWithinBounds())
+						intersections.add (new Intersection(solver.getIntersection().toVector(), cVert1, cVert2));
+				}
+			}
 		}
 		return intersections;
 	}
@@ -493,60 +558,77 @@ public class BasicShape
 	}
 	
 	
+	/**
+	 * COMMENT!
+	 */
 	public void addMissingRectanglePoints()
 	{
+		//compute min and max point of cuboid encompassing entire shape
+		IntegerMatrix outerMax = new IntegerMatrix (mGlue.getDimension(), 1);
+		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
+			outerMax.setCell(cDim, 0, mGlue.getPosition(cDim) + getDimensions(cDim));
 		//contain: new points, connections of these
-		ArrayList <IntegerMatrix> newPoints = new ArrayList<Matrix.IntegerMatrix>();
-		ArrayList <ArrayList<IntegerMatrix>> newPointsConnections = new ArrayList<ArrayList<IntegerMatrix>>();
+		//ArrayList <IntegerMatrix> newPoints = new ArrayList<Matrix.IntegerMatrix>();
+		//ArrayList <ArrayList<IntegerMatrix>> newPointsConnections = new ArrayList<>();
+		//existing connections
+		ArrayList <Line> connections = getConnectingLines();
 		//iterate through vertices
 		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
 		{
 			//iterate through free connections
 			ArrayList<RelatPos> freeConn = mPossibleConnections.get(cVert);
+			if (!freeConn.isEmpty())
+			{
+				System.out.print ("vertex " + getVertex (cVert) + " has free connections ");
+				System.out.println (freeConn.toString());
+			}
+			
+			ArrayList <Intersection> inters = new ArrayList<>();
 			for (RelatPos free : freeConn)
 			{
 				//compute line through current vertex and current free connection vector
 				IntegerMatrix vertex = getVertex(cVert);
 				IntegerMatrix pDirect = getRelativePosVector(free, vertex.getRows());
 				boolean beyondDimension = false;
-				for (int cDim = 0; cDim < pDirect.getRows(); ++cDim)
+				int cDim = 0;
+				while (!beyondDimension && cDim < pDirect.getRows())
 				{
-					pDirect.setCell(cDim, 0, pDirect.getCell (cDim, 0) + vertex.getCell (cDim, 0));
-					if (pDirect.getCell(cDim, 0) < 0 || pDirect.getCell(cDim, 0) > getDimensions (cDim))
+					int coordDir = pDirect.getCell (cDim, 0);
+					int borderDist = (coordDir >= 0 ? outerMax.getCell (cDim, 0) : mGlue.getPosition(cDim)) - vertex.getCell(cDim, 0);
+					//check whether distance to border is not 0 if direction is not zero
+					if (coordDir != 0 && borderDist == 0)
 						beyondDimension = true;
+					else
+						pDirect.setCell(cDim, 0, vertex.getCell (cDim, 0) + (coordDir != 0 ? borderDist : 0));
+					++cDim;
 				}
 				if (!beyondDimension)
 				{
 					Line intersect = new Line (new Glue (vertex), new Glue (pDirect));
-					ArrayList <Line> connections = getConnectingLines();
-					//search for intersection with existing lines for positive scalar of line vector
-					for (Line connect : connections)
-					{
-						IntersectionSolver solver = new IntersectionSolver (intersect, connect);
-						if (solver.getSolutionType() == IntersectionSolver.Result.ONE &&
-							solver.getScalars().get(0) > 0)
-						{
-							//store intersection point & related connections
-							IntegerMatrix inter = solver.getIntersection().toVector();
-							newPoints.add (inter);
-							newPoints.add (vertex);
-							newPoints.add (connect.getFirst());
-							newPoints.add (connect.getSecond());
-							ArrayList<IntegerMatrix> newConnections = new ArrayList<Matrix.IntegerMatrix>();
-							newConnections.add (vertex);
-							newConnections.add (connect.getFirst());
-							newConnections.add (connect.getSecond());
-							newPointsConnections.add(newConnections);
-							//add empty list for connected points
-							for (int cnt = 0; cnt < 3; ++cnt)
-								newPointsConnections.add(new ArrayList <IntegerMatrix>());
-						}
-					}
+					intersect.setInclusion (false, true);
+					inters.addAll (getLineIntersections (intersect));
 				}
 			}
+			//add intersection vertices and manipulate connections
+			addVertices (inters);
+			//connect intersection vertices to current vertex
+			for (Intersection inter : inters)
+			{
+				int interVertIndex = getVertexIndex (inter.toVector());
+				modifyConnection(interVertIndex, cVert, true);
+			}
+		}
+		System.out.println ("finished inserting");
+		
+		/*
+		ArrayList <IntegerMatrix> newPoints = new ArrayList<>();
+		ArrayList <ArrayList <IntegerMatrix>> newPointsConnections = new ArrayList<>();
+		for (Intersection inter : inters)
+		{
+			newPoints.add (inter.toVector());
 		}
 		IntegerMatrix adjMatMissing = buildAdjacencyMatrix(newPoints, newPointsConnections);
-		addVertices (newPoints, adjMatMissing);
+		addVertices (newPoints, adjMatMissing);*/
 	}
 	
 	/** Performs actual rotation
@@ -602,6 +684,49 @@ public class BasicShape
 	}
 	
 	/**
+	 * adds intersection points to the list of vectors and
+	 * manipulates connections such that the points the intersection is on
+	 * are now indirectly connected through the intersection
+	 * Precondition: the indices provided in the intersection objects 
+	 * refer to valid vertices of this object
+	 * @param inters list of intersections
+	 */
+	private void addVertices (ArrayList <Intersection> inters)
+	{
+		//structure: intersection, line start, line end => next intersection...
+		ArrayList <IntegerMatrix> newVertices = new ArrayList<>();
+		IntegerMatrix adj = new IntegerMatrix (3 * inters.size(), 3 * inters.size());
+		
+		int offset = 0;
+		for (int cInter = 0; cInter < inters.size(); ++cInter)
+		{
+			Intersection inter = inters.get (cInter);
+			//disconnect
+			modifyConnection (inter.getLineStart(), inter.getLineEnd(), false);
+			
+			newVertices.add (inter.toVector());
+			int startingOffset = offset;
+			++offset;
+			int interVertex = getVertexIndex (inter.toVector());
+			if (interVertex != inter.getLineStart())
+			{
+				newVertices.add (getVertex (inter.getLineStart()));
+				adj.setCell (startingOffset, offset, 1);
+				adj.setCell (offset, startingOffset, 1);
+				++offset;
+			}
+			if (interVertex != inter.getLineEnd())
+			{
+				newVertices.add (getVertex (inter.getLineEnd()));
+				adj.setCell (startingOffset, offset, 1);
+				adj.setCell (offset, startingOffset, 1);
+				++offset;
+			}
+		}
+		addVertices (newVertices, adj);
+	}
+	
+	/**
 	 * adds missing points in newVertices to list of vectors in their exact order
 	 * adds elements to mPossibleConnections
 	 * fills in connections in adjacent
@@ -641,8 +766,7 @@ public class BasicShape
 				if (adjacent.getCell (cNewVertex, cAdj).equals(1))
 				{
 					int iAdj = getVertexIndex (newVertices.get(cAdj));
-					adjMatrix.setCell (iVertex, iAdj, 1);
-					adjMatrix.setCell (iAdj, iVertex, 1);
+					modifyConnection (iVertex, iAdj, true);
 				}
 			}
 		}
@@ -653,29 +777,43 @@ public class BasicShape
 	}
 	
 	/**
+	 * modifies a connection between vertices provided
+	 * @param iVert1 index of first vertex
+	 * @param iVert2 index of second vertex
+	 * @param connected true: establish connection, false delete connection
+	 * Precondition: iVert1, iVert2 are valid 0-based indices to vertices
+	 */
+	private void modifyConnection (int iVert1, int iVert2, boolean connected)
+	{
+		Glue p1 = new Glue (getVertex (iVert1)), p2 = new Glue (getVertex (iVert2));
+		if (connected)
+		{
+			adjMatrix.setCell (iVert1, iVert2, 1);
+			adjMatrix.setCell (iVert2, iVert1, 1);
+			mPossibleConnections.get (iVert1).remove (getRelativePos (p1, p2));
+			mPossibleConnections.get (iVert2).remove (getRelativePos (p2, p1));
+		}
+		else
+		{
+			adjMatrix.setCell (iVert1, iVert2, 0);
+			adjMatrix.setCell (iVert2, iVert1, 0);
+			mPossibleConnections.get (iVert1).add (getRelativePos (p1, p2));
+			mPossibleConnections.get (iVert2).add (getRelativePos (p2, p1));
+		}
+		
+	}
+	
+	/**
 	 * Recalculates list of available connections for vertex at index iVertex
 	 * @param iVertex
 	 */
 	private void resetConnections (int iVertex)
 	{
 		ArrayList <IntegerMatrix> connections = lookUpConnections(iVertex);
-		IntegerMatrix vertex = getVertex(iVertex);
+		Glue vertex = new Glue (getVertex(iVertex));
 		ArrayList <RelatPos> remain = mPossibleConnections.get(iVertex);
 		for (IntegerMatrix conn : connections)
-		{
-			if (conn.getCell(0, 0) < vertex.getCell(0, 0))
-				remain.remove(RelatPos.BACK);
-			else if (conn.getCell(0, 0) > vertex.getCell(0, 0))
-				remain.remove(RelatPos.FRONT);
-			if (conn.getCell(1, 0) < vertex.getCell (1, 0))
-				remain.remove(RelatPos.LEFT);
-			else if (conn.getCell(1, 0) > vertex.getCell(1, 0))
-				remain.remove (RelatPos.RIGHT);
-			if (conn.getCell(2, 0) < vertex.getCell(2, 0))
-				remain.remove (RelatPos.BELOW);
-			else if (conn.getCell (2, 0) > vertex.getCell(2, 0))
-				remain.remove(RelatPos.ABOVE);
-		}
+			remain.remove (getRelativePos(vertex, new Glue (conn)));
 	}
 	
 	private ArrayList<IntegerMatrix> vectors;
