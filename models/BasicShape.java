@@ -33,6 +33,13 @@ public class BasicShape
 		public BadNumberOfCollumsException (String message) { super (message); }
 	}
 	
+	public static class NonExistingVertexException extends IllegalArgumentException
+	{
+		public NonExistingVertexException() {super(); }
+		
+		public NonExistingVertexException (String message) { super (message); }
+	}
+	
 	/**
 	 * @param points list of points
 	 * @param connected 2d list of points connected to points
@@ -248,29 +255,53 @@ public class BasicShape
 	/**
 	 * cuts the empty space into cuboids
 	 * @return list of these cuboids
+	 * Precondition: there need to be enough vertices for each cuboid
 	 */
-	public ArrayList <Cuboid> decomposeIntoCuboids()
-	{
-		BasicShape divided = new BasicShape (this);
-		divided.addMissingRectanglePoints();
-		
+	public ArrayList <Cuboid> getCuboids()
+	{	
 		ArrayList <Cuboid> cuboids = new ArrayList <Cuboid>();
-		for (int cRow = 0; cRow < getNumberOfVertices(); ++cRow)
+		int connConnReq = 3;
+		//condition: two points form a cuboid iff each of these points has 3 points which are connected to the other 3
+		//these two points must not be connected
+		
+		//iterate through potential p1
+		for (int cVert1 = 0; cVert1 < getNumberOfVertices() - 1; ++cVert1)
 		{
-			
-			for (int cCol = cRow + 1; cCol < getNumberOfVertices(); ++cCol)
+			//iterate through potential p2
+			for (int cVert2 = cVert1 + 1; cVert2 < getNumberOfVertices(); ++cVert2)
 			{
-				//if there is a new connection
-				if (adjMatrix.getCell(cRow, cCol).equals(0) && 
-					divided.adjMatrix.getCell(cRow, cCol).equals(1))
+				//if p1, p2 are disconnected
+				if (adjMatrix.getCell (cVert1, cVert2).equals(0))
 				{
-					ArrayList <Integer> triangleBase = findTriangleIndices (cRow, cCol);
-					for (int indTriangle : triangleBase)
+					int cConnConnections = 0;
+					//int cConn1 = cVert2 + 1;
+					int cConn1 = 0;
+					//iterate through all connections of p1 after p2
+					while (cConn1 < getNumberOfVertices() && cConnConnections < connConnReq)
 					{
-						ArrayList <Integer> triangleDiag = findTriangleIndices (indTriangle, cRow);
-						for (int diag : triangleDiag)
-							cuboids.add (new Cuboid (new Glue (getVertex (cRow)), new Glue (getVertex (diag))));
+						if (adjMatrix.getCell (cVert1, cConn1).equals (1))
+						{
+							//int cConn2 = cConn1 + 1;
+							int cConn2 = 0;
+							boolean connConnFound = false;
+							//iterate through all connections of p2
+							while (cConn2 < getNumberOfVertices() && !connConnFound)
+							{
+								if (adjMatrix.getCell (cVert2, cConn2).equals (1) &&
+									adjMatrix.getCell (cConn1, cConn2).equals (1))
+									++cConnConnections;
+								++cConn2;
+							}
+						}
+						++cConn1;
 					}
+					if (cConnConnections >= connConnReq)
+					{
+						Glue p1 = new Glue (getVertex (cVert1));
+						Glue p2 = new Glue (getVertex (cVert2));
+						cuboids.add (new Cuboid (p1, p2));
+					}
+					
 				}
 			}
 		}
@@ -425,7 +456,7 @@ public class BasicShape
 		{
 			BasicShape cut = new BasicShape (this);
 			cut.addMissingRectanglePoints();
-			ArrayList <Cuboid> cubes = cut.decomposeIntoCuboids();
+			ArrayList <Cuboid> cubes = cut.getCuboids();
 			for (Cuboid cube : cubes)
 			{
 				ArrayList <Integer> dims = cube.getDimensions();
@@ -538,6 +569,34 @@ public class BasicShape
 			!this.vectors.equals(comp.vectors))
 			return false;
 		return true;
+	}
+	
+	/**
+	 * @param vec1 a vertex
+	 * @param vec2 another vertex
+	 * @return true if vec1 and vec2 are connected, false otherwise
+	 * @throws NonExistingVertexException if vec1 or vec2 are not vertices of this object
+	 */
+	public boolean isConnected (IntegerMatrix vec1, IntegerMatrix vec2)
+	{
+		int ind1 = getVertexIndex (vec1);
+		int ind2 = getVertexIndex (vec2);
+		if (ind1 == getNumberOfVertices() || ind2 == getNumberOfVertices())
+			throw new NonExistingVertexException ("given vertices do not exist");
+		return (adjMatrix.getCell(ind1, ind2).equals (1));
+	}
+	
+	/**
+	 * @param ind1 a 0-based index referring to a vertex
+	 * @param ind2 another 0-based index referring to a vertex
+	 * @return true if referenced vertices are connected
+	 */
+	public boolean isConnected (int ind1, int ind2)
+	{
+		if (ind1 < 0 || ind1 >= adjMatrix.getRows() ||
+			ind2 < 0 || ind2 >= adjMatrix.getRows())
+			throw new NonExistingVertexException ("there are no vertices with corresponding indices");
+		return (adjMatrix.getCell (ind1, ind2).equals (1));
 	}
 	
 	/** Calculates the dimensions of a shape

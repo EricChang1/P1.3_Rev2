@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.util.*;
 import java.io.*;
 
+import geometry.Cuboid;
 import geometry.Rectangle;
 import gui.*;
 import models.*;
@@ -18,10 +19,11 @@ public class CubeDissectionTest
 	public static void main (String[] args)
 	{
 		CubeDissectionTest test = new CubeDissectionTest();
-		/*test.showBefore();
-		test.showAfter();
-		*/
-		test.testSidesDecompos();
+		//test.showBefore();
+		//test.showAfter();
+		
+		//test.testSidesDecompos();
+		test.testCubeDecompos();
 	}
 	
 	public static JFrame getFrame (PieceRenderPanel render, String title)
@@ -96,6 +98,20 @@ public class CubeDissectionTest
 			System.out.println (rect.toString());
 		if (rects.isEmpty())
 			System.out.println ("no rects");
+	}
+	
+	public void testCubeDecompos()
+	{
+		BasicShape decompose = new BasicShape (mShape);
+		decompose.addMissingRectanglePoints();
+		
+		ArrayList <Cuboid> cuboids = decompose.getCuboids();
+		System.out.println ("printing cuboids");
+		for (Cuboid cube : cuboids)
+			System.out.println (cube.toString());
+		if (cuboids.isEmpty())
+			System.out.println ("no cuboids");
+		//System.out.println ("volume V = " + decompose.getVolume());
 	}
 	
 	
