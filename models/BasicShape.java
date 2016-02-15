@@ -175,23 +175,26 @@ public class BasicShape
 	 * @param adjMatrix adjacency matrix
 	 */
 	@SuppressWarnings("unchecked")
-	public BasicShape(ArrayList <IntegerMatrix> vectors, IntegerMatrix adjMatrix){
-
+	public BasicShape(ArrayList <IntegerMatrix> vectors, IntegerMatrix adjMatrix)
+	{
+		//init vertices
 		this.vectors = new ArrayList<IntegerMatrix>();
 		for (IntegerMatrix vec : vectors)
 			this.vectors.add (vec.clone());
 		if (!numberOfCols(vectors)) 
 			throw new BadNumberOfCollumsException ("The vectors introduced are not 3x1");
+		//compute dimensions
 		dimensions = new ArrayList<Integer>();
 		calcDim (vectors);
+		//initialize offset position
+		mGlue = new Glue (new IntegerMatrix (vectors.get (0).getRows(), 1));
+		//create adjacency matrix
+		this.adjMatrix = adjMatrix.clone();
+		//set possible connections
 		mPossibleConnections = new ArrayList<ArrayList<RelatPos>>();
 		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
-			mPossibleConnections.add (new ArrayList <RelatPos> (Arrays.asList(RelatPos.values())));
-		this.adjMatrix = adjMatrix.clone();
-		ArrayList<Integer> zeroPos = new ArrayList <Integer>();
-		for (int cCoord = 0; cCoord < vectors.get(0).getRows(); ++cCoord)
-			zeroPos.add(new Integer(0));
-		mGlue = new Glue (zeroPos);
+			mPossibleConnections.add (getHypoPossibleConnections (getVertex (cVertex)));
+		//compute actual possible connections
 		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
 			resetConnections(cVertex);
 		mVolume = -1;
@@ -229,6 +232,8 @@ public class BasicShape
 	
 	/**
 	 * @return list of the sides of the basic shape
+	 * Precondition: for each rectangle (= side) there need to be enough vertices
+	 * to form them
 	 */
 	public ArrayList <Rectangle> getRectangles()
 	{
@@ -313,6 +318,7 @@ public class BasicShape
 	 * @param indDirect point to be directly connected
 	 * @param indIndirect point to be indirectly connected
 	 * @return set of all vertices directly connected to indDirect and indirectly connected to indIndirect
+	 * !!! legacy !!!
 	 */
 	public ArrayList <Integer> findTriangleIndices (int indDirect, int indIndirect)
 	{
@@ -384,11 +390,23 @@ public class BasicShape
 	}
 	
 	/**
+	 * @param index index to a vertex in this shape
+	 * @return free connections for vertex associated with index
+	 * @throws NonExistingVertexException if no vertex is associated with index
+	 */
+	public ArrayList <RelatPos> getFreeConnections (int index)
+	{
+		if (index < 0 || index >= getNumberOfVertices())
+			throw new NonExistingVertexException ("invalid index");
+		return (ArrayList <RelatPos>)mPossibleConnections.get (index).clone();
+	}
+	
+	/**
 	 * @param index index of point to look up connections for
 	 * @return array list containing vectors to points connected to point at index each as a clone of original
 	 */
-	public ArrayList <IntegerMatrix> lookUpConnections(int index){
-
+	public ArrayList <IntegerMatrix> lookUpConnections (int index)
+	{
 		ArrayList<IntegerMatrix> connections = new ArrayList<IntegerMatrix>();
 		for(int counter=0; counter<adjMatrix.getRows(); counter++){
 			if(adjMatrix.getCell(index,counter)!=0){
@@ -396,6 +414,32 @@ public class BasicShape
 			}
 		}
 		return connections;
+	}
+	
+	/**
+	 * @param vertex a given vertex within the container
+	 * @return hypothetically possible connections for vertex thus
+	 * excluding connections which could only exist if the connected point
+	 * was outside of the container
+	 */
+	public ArrayList <RelatPos> getHypoPossibleConnections (IntegerMatrix vertex)
+	{
+		int zInd = 0, xInd = 1, yInd = 2;
+		ArrayList <RelatPos> relats = new ArrayList<>();
+		IntegerMatrix maxPos = getMaxDimension().toVector();
+		if (!vertex.getCell (zInd, 0).equals (mGlue.getPosition(zInd)))
+			relats.add (RelatPos.BACK);
+		if (!vertex.getCell (zInd, 0).equals (maxPos.getCell (zInd, 0)))
+			relats.add (RelatPos.FRONT);
+		if (!vertex.getCell (xInd, 0).equals (mGlue.getPosition (xInd)))
+			relats.add (RelatPos.LEFT);
+		if (!vertex.getCell (xInd, 0).equals (maxPos.getCell (xInd, 0)))
+			relats.add (RelatPos.RIGHT);
+		if (!vertex.getCell (yInd, 0).equals (mGlue.getPosition (yInd)))
+			relats.add (RelatPos.BELOW);
+		if (!vertex.getCell (yInd, 0).equals (maxPos.getCell (yInd, 0)))
+			relats.add (RelatPos.ABOVE);
+		return relats;
 	}
 	
 	/**
@@ -427,15 +471,15 @@ public class BasicShape
 	}
 	
 	/**
-	 * @param minPos the position at which this blocks upper left corner is sitting
-	 * @return the maxPos, which is equivalent to the position of the bottom right corner
+	 * @return the point within the container having the
+	 * largest coordinate values
      */
-	public Position getMaxDimension(Position minPos) 
+	public Position getMaxDimension () 
 	{
 		ArrayList<Integer> maxPos = new ArrayList<Integer>();
-		maxPos.add(getDimensions(0) + minPos.getPosition().get(0));
-		maxPos.add(getDimensions(1) + minPos.getPosition().get(1));
-		maxPos.add(getDimensions(2) + minPos.getPosition().get(2));
+		maxPos.add(getDimensions(0) + mGlue.getPosition().get(0));
+		maxPos.add(getDimensions(1) + mGlue.getPosition().get(1));
+		maxPos.add(getDimensions(2) + mGlue.getPosition().get(2));
 		Position max = new Position(maxPos);
 		return max;
 	}
@@ -598,6 +642,48 @@ public class BasicShape
 			ind2 < 0 || ind2 >= adjMatrix.getRows())
 			throw new NonExistingVertexException ("there are no vertices with corresponding indices");
 		return (adjMatrix.getCell (ind1, ind2).equals (1));
+	}
+	
+	/**
+	 * @param b a given basic shape in the same space as this shape
+	 * @return true if b is within this
+	 */
+	public boolean isWithin (BasicShape b)
+	{
+		//check whether range of this encompasses b's range
+		Glue bOffs = b.getGlue(), bMax = b.getMaxDimension();
+		Glue tOffs = this.getGlue(), tMax = this.getMaxDimension();
+		for (int cDim = 0; cDim < tOffs.getDimension(); ++cDim)
+		{
+			if (bOffs.getPosition (cDim) < tOffs.getPosition (cDim) ||
+				bMax.getPosition (cDim) > tMax.getPosition (cDim))
+				return false;
+		}
+		//do line check for every vertex of b
+		for (int cVert = 0; cVert < b.getNumberOfVertices(); ++cVert)
+		{
+			if (!isWithin (new Glue (b.getVertex (cVert))))
+				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * @param p a given point in the same space as shape
+	 * @return true if p is within this shape
+	 */
+	public boolean isWithin (Glue p)
+	{
+		Glue origin = new Glue (new IntegerMatrix (p.getDimension(), 3));
+		int inters = 0;
+		for (Line l : getConnectingLines())
+		{
+			IntersectionSolver solver = new IntersectionSolver(new Line (origin, p), l);
+			if (solver.getSolutionType() == IntersectionSolver.Result.ONE && solver.isWithinBounds())
+				++inters;
+		}
+		
+		return (inters % 2 == 1);
 	}
 	
 	/** Calculates the dimensions of a shape
@@ -804,7 +890,7 @@ public class BasicShape
 			if (cVertex == vectors.size())
 			{
 				vectors.add (newVertices.get(cNewVertex));
-				mPossibleConnections.add (new ArrayList <RelatPos> (Arrays.asList (RelatPos.values())));
+				mPossibleConnections.add (getHypoPossibleConnections (newVertices.get (cNewVertex)));
 			}
 			addedIndices.add (cVertex);
 		}
@@ -873,7 +959,7 @@ public class BasicShape
 		Glue vertex = new Glue (getVertex(iVertex));
 		ArrayList <RelatPos> remain = mPossibleConnections.get(iVertex);
 		for (IntegerMatrix conn : connections)
-			remain.remove (getRelativePos(vertex, new Glue (conn)));
+			remain.remove (getRelativePos (vertex, new Glue (conn)));
 	}
 	
 	private ArrayList<IntegerMatrix> vectors;

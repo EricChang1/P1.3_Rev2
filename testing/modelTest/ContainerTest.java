@@ -1,7 +1,9 @@
 package testing.modelTest;
 
-import algorithm.*;
 import java.util.*;
+import javax.swing.*;
+
+import algorithm.*;
 
 import models.Block;
 import models.Container;
@@ -9,17 +11,33 @@ import models.Glue;
 import models.Position;
 import models.Matrix.*;
 
+import gui.PieceRenderPanel;
+
+/**
+ * test class for container class
+ * @author martin
+ */
 public class ContainerTest 
 {
 	public static void main (String[] args)
 	{
 		ContainerTest test = new ContainerTest();
 		test.addTest();
+		test.freeVertexTest();
 	}
 	
 	public ContainerTest()
 	{
 		mContainer = new Container(10, 10, 10);
+	}
+	
+	public Position setVector (int c1, int c2, int c3)
+	{
+		IntegerMatrix v3d = new IntegerMatrix (3, 1);
+		v3d.setCell(0, 0, c1);
+		v3d.setCell(1, 0, c2);
+		v3d.setCell(2, 0, c3);
+		return new Position (v3d);
 	}
 	
 	public void addTest()
@@ -60,6 +78,7 @@ public class ContainerTest
 		System.out.println ("demo 2|3|3: possible");
 		Position vertex = setVector (2, 3, 3);
 		ArrayList<Position> relatives = mContainer.getRelativePlacements(cuboid2, mContainer.getVertexIndex(vertex.toVector()));
+		
 		for (Position relat : relatives)
 		{
 			System.out.println (relat.toString());
@@ -69,21 +88,37 @@ public class ContainerTest
 				mContainer.placeBlock(cuboid2, relat);
 				System.out.println ("Can block be found?");
 				//Block b = mContainer.getBlockAt(relat);
-				mContainer.print(System.out);
+				mContainer.print (System.out);
+				System.out.println ("placed at " + relat);
 				System.out.println ("success!");
 				break;
 			}
 		}
 		
+		
 	}
 	
-	public Position setVector (int c1, int c2, int c3)
+	public void freeVertexTest()
 	{
-		IntegerMatrix v3d = new IntegerMatrix (3, 1);
-		v3d.setCell(0, 0, c1);
-		v3d.setCell(1, 0, c2);
-		v3d.setCell(2, 0, c3);
-		return new Position (v3d);
+		PieceRenderPanel show = new PieceRenderPanel (mContainer);
+		JFrame frame = new JFrame ("container");
+		frame.setSize(400, 400);
+		frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+		frame.add (show);
+		frame.setVisible(true);
+		PieceRenderPanel.RotationListener rListen = show.new RotationListener();
+		rListen.setSensitivity(0.25);
+		frame.addMouseListener(rListen);
+		frame.addMouseMotionListener(rListen);
+		show.init();
+		
+		System.out.println ("printing free vertices");
+		ArrayList <IntegerMatrix> freeVs = mContainer.getFreeVertices();
+		for (IntegerMatrix free : freeVs)
+		{
+			System.out.println (new Glue (free));
+		}
+		
 	}
 	
 	public void printPlaceTest (Container c, Block b, Glue g)

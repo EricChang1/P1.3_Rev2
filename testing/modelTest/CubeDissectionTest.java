@@ -111,7 +111,7 @@ public class CubeDissectionTest
 			System.out.println (cube.toString());
 		if (cuboids.isEmpty())
 			System.out.println ("no cuboids");
-		//System.out.println ("volume V = " + decompose.getVolume());
+		System.out.println ("volume V = " + decompose.getVolume());
 	}
 	
 	

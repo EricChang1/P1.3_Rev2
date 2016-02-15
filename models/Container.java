@@ -137,6 +137,38 @@ public class Container extends Block
 	}
 	
 	/**
+	 * @return list of vertices enclosing the free space of a container
+	 */
+	public ArrayList <IntegerMatrix> getFreeVertices()
+	{
+		ArrayList <IntegerMatrix> freeVerts = new ArrayList<>();
+		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
+		{
+			//add to list iff
+			//vertex is corner and corner is connected to another corner
+			IntegerMatrix vertex = getVertex (cVertex);
+			if (isCorner (vertex))
+			{
+				boolean onlyCornerConns = true;
+				ArrayList <IntegerMatrix> conns = lookUpConnections (cVertex);
+				int cConn = 0;
+				while (onlyCornerConns && cConn < conns.size())
+				{
+					if (!isCorner (conns.get (cConn)))
+						onlyCornerConns = false;
+					++cConn;
+				}
+				if (onlyCornerConns)
+					freeVerts.add (vertex);
+			}
+			//vertex is not corner and has free connections
+			else if (!getFreeConnections (cVertex).isEmpty())
+				freeVerts.add (vertex);
+		}
+		return freeVerts;
+	}
+	
+	/**
 	 * @return deep copy of this
 	 */
 	public Container clone()
@@ -157,6 +189,22 @@ public class Container extends Block
 		return mPlacedBlocks.get(index);
 	}
 	
+	/**
+	 * @param vertex a given vertex
+	 * @return true if vertex is a corner vertex of this container
+	 */
+	public boolean isCorner (IntegerMatrix vertex)
+	{
+		Glue minPos = getGlue(), maxPos = getMaxDimension();
+		for (int cDim = 0; cDim < minPos.getDimension(); ++cDim)
+		{
+			if (!vertex.getCell (cDim, 0).equals (minPos.getPosition (cDim)) || 
+				!vertex.getCell (cDim, 0).equals (maxPos.getPosition (cDim)))
+				return false;
+		}
+		return true;
+	}
+	
 	/**	Places a block at the specified position
 		@param block the block object to place
 		@param pos the position to place block 
@@ -169,7 +217,7 @@ public class Container extends Block
 		Block cloneBlock = block.clone();
 		cloneBlock.glue (pos);
 		mPlacedBlocks.add (cloneBlock);
-		addShape(block);
+		addShape (cloneBlock);
 	}
 	
 	/** @param pos Position queried block is at
@@ -221,44 +269,32 @@ public class Container extends Block
 		//check whether lines inside intersect with sides of block
 		Glue prevPos = block.getGlue();
 		block.glue(pos);
+		
+		BasicShape completed = new BasicShape (block);
+		completed.addMissingRectanglePoints();
+		ArrayList<Rectangle> blockSides = completed.getRectangles();
+		
 		for (Block bPlaced : mPlacedBlocks)
 		{
-			ArrayList<Rectangle> blockSides = block.getRectangles();
 			ArrayList <Line> placeBlockLines = bPlaced.getConnectingLines();
+			//exclude begin/end points of placed lines
+			for (Line placedLine : placeBlockLines)
+				placedLine.setInclusion (false, false);
 			
 			for (Rectangle sBlock : blockSides)
 			{
 				for (Line lContainer : placeBlockLines)
 				{
+					
 					IntersectionSolver is = new IntersectionSolver(sBlock, lContainer);
 					if (is.getSolutionType() == IntersectionSolver.Result.ONE && is.isWithinBounds())
 					{
-						Glue isect = is.getIntersection();
-						//if intersection is not begin or end
-						if (block.getVertexIndex(isect.toVector()) >= block.getNumberOfVertices())
-						{
-							block.glue (prevPos);
-							return false;
-						}
+						return false;
 					}	
 				}
 			}
 			
-			//check whether block to place is inside placed block or vice versa
-			boolean allInsidePlaced = true, allInsidePlace = true;
-			for (int cDim = 0; cDim < block.getGlue().getDimension(); ++cDim)
-			{
-				//if place is not within range of placed
-				if (allInsidePlaced &&
-					(block.getGlue().getPosition(cDim) < bPlaced.getGlue().getPosition(cDim) ||
-					block.getDimensions(cDim) > bPlaced.getDimensions(cDim)))
-					allInsidePlaced = false;
-				if (allInsidePlace &&
-					(bPlaced.getGlue().getPosition(cDim) > block.getGlue().getPosition(cDim) ||
-					bPlaced.getDimensions(cDim) > block.getDimensions(cDim)))
-					allInsidePlace = false;
-			}
-			if (allInsidePlaced || allInsidePlace)
+			if (bPlaced.isWithin (block) || block.isWithin (bPlaced))
 				return false;
 		}
 		block.glue (prevPos);
