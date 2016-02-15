@@ -274,22 +274,23 @@ public class BasicShape
 				if (adjMatrix.getCell (cVert1, cVert2).equals(0))
 				{
 					int cConnConnections = 0;
-					//int cConn1 = cVert2 + 1;
-					int cConn1 = 0;
+					int cConn1 = cVert1;
 					//iterate through all connections of p1 after p2
 					while (cConn1 < getNumberOfVertices() && cConnConnections < connConnReq)
 					{
 						if (adjMatrix.getCell (cVert1, cConn1).equals (1))
 						{
-							//int cConn2 = cConn1 + 1;
-							int cConn2 = 0;
+							int cConn2 = cVert1;
 							boolean connConnFound = false;
 							//iterate through all connections of p2
 							while (cConn2 < getNumberOfVertices() && !connConnFound)
 							{
 								if (adjMatrix.getCell (cVert2, cConn2).equals (1) &&
 									adjMatrix.getCell (cConn1, cConn2).equals (1))
+								{
 									++cConnConnections;
+									connConnFound = true;
+								}
 								++cConn2;
 							}
 						}
