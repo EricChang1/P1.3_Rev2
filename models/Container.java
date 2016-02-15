@@ -1,7 +1,5 @@
 package models;
-import geometry.IntersectionSolver;
-import geometry.Line;
-import geometry.Rectangle;
+import geometry.*;
 import geometry.IntersectionSolver.Result;
 
 import java.util.ArrayList;
@@ -136,9 +134,11 @@ public class Container extends Block
 		mPlacedBlocks = new ArrayList <Block>();
 	}
 	
+	
 	/**
 	 * @return list of vertices enclosing the free space of a container
 	 */
+	/*
 	public ArrayList <IntegerMatrix> getFreeVertices()
 	{
 		ArrayList <IntegerMatrix> freeVerts = new ArrayList<>();
@@ -167,6 +167,31 @@ public class Container extends Block
 		}
 		return freeVerts;
 	}
+	*/
+	
+	/**
+	 * @TODO debug
+	 * @return list of cuboids which contain together the entire free space in this container
+	 */
+	public ArrayList <Cuboid> getFreeCuboids()
+	{
+		ArrayList <Cuboid> free = new ArrayList<>();
+		
+		Container cloneCont = this.clone();
+		cloneCont.addMissingRectanglePoints();
+		for (int cOldVert = 0; cOldVert < cloneCont.getNumberOfVertices(); ++cOldVert)
+		{
+			for (int cNewVert = this.getNumberOfVertices(); cNewVert < cloneCont.getNumberOfVertices(); ++cNewVert)
+			{
+				Cuboid c = getCuboid (cOldVert, cNewVert, cOldVert, cOldVert);
+				if (c != null)
+					free.add (c);
+			}
+		}
+		
+		
+		return free;
+	}
 	
 	/**
 	 * @return deep copy of this
@@ -174,8 +199,9 @@ public class Container extends Block
 	public Container clone()
 	{
 		Container clone = new Container (getDimensions(0), getDimensions(1), getDimensions(2));
+		Glue origin = new Glue (new IntegerMatrix (getGlue().getDimension(), 1));
 		for (Block b : mPlacedBlocks)
-			clone.mPlacedBlocks.add(b.clone());
+			clone.placeBlock (b, origin);
 		
 		return clone;
 	}

@@ -207,8 +207,8 @@ public class BasicShape
 	public BasicShape (BasicShape clone)
 	{
 		this (clone.vectors, clone.adjMatrix);
-		mGlue = clone.mGlue;
 		mVolume = clone.mVolume;
+		this.glue (clone.getGlue());
 	}
 	
 	/**
@@ -275,40 +275,9 @@ public class BasicShape
 			//iterate through potential p2
 			for (int cVert2 = cVert1 + 1; cVert2 < getNumberOfVertices(); ++cVert2)
 			{
-				//if p1, p2 are disconnected
-				if (adjMatrix.getCell (cVert1, cVert2).equals(0))
-				{
-					int cConnConnections = 0;
-					int cConn1 = cVert1;
-					//iterate through all connections of p1 after p2
-					while (cConn1 < getNumberOfVertices() && cConnConnections < connConnReq)
-					{
-						if (adjMatrix.getCell (cVert1, cConn1).equals (1))
-						{
-							int cConn2 = cVert1;
-							boolean connConnFound = false;
-							//iterate through all connections of p2
-							while (cConn2 < getNumberOfVertices() && !connConnFound)
-							{
-								if (adjMatrix.getCell (cVert2, cConn2).equals (1) &&
-									adjMatrix.getCell (cConn1, cConn2).equals (1))
-								{
-									++cConnConnections;
-									connConnFound = true;
-								}
-								++cConn2;
-							}
-						}
-						++cConn1;
-					}
-					if (cConnConnections >= connConnReq)
-					{
-						Glue p1 = new Glue (getVertex (cVert1));
-						Glue p2 = new Glue (getVertex (cVert2));
-						cuboids.add (new Cuboid (p1, p2));
-					}
-					
-				}
+				Cuboid cbd = getCuboid (cVert1, cVert2, cVert1, cVert1);
+				if (cbd != null)
+					cuboids.add (cbd);	
 			}
 		}
 		return cuboids;
@@ -462,6 +431,55 @@ public class BasicShape
 	}
 	
 	/**
+	 * @param indP1 index of first vertex
+	 * @param indP2 index of second vertex
+	 * @param offsP1Conn offset index of indP1's connections
+	 * @param offsP2Conn offset index of indP2's connections
+	 * @return a cuboid contained in this shape where the first and the second vertex are
+	 * diagonally opposite to each other, if such a cuboid exists. Otherwise this method
+	 * returns null
+	 */
+	public Cuboid getCuboid (int indP1, int indP2, int offsP1Conn, int offsP2Conn)
+	{
+		int connConnReq = 3;
+		//if p1, p2 are disconnected
+		if (adjMatrix.getCell (indP1, indP2).equals(0))
+		{
+			int cConnConnections = 0;
+			int cConn1 = offsP1Conn;
+			//iterate through all connections of p1 starting at given offset
+			while (cConn1 < getNumberOfVertices() && cConnConnections < connConnReq)
+			{
+				if (adjMatrix.getCell (indP1, cConn1).equals (1))
+				{
+					int cConn2 = offsP2Conn;
+					boolean connConnFound = false;
+					//iterate through all connections of p2 starting at given offset
+					//until connections of connections is found
+					while (cConn2 < getNumberOfVertices() && !connConnFound)
+					{
+						if (adjMatrix.getCell (indP2, cConn2).equals (1) &&
+							adjMatrix.getCell (cConn1, cConn2).equals (1))
+						{
+							++cConnConnections;
+							connConnFound = true;
+						}
+						++cConn2;
+					}
+				}
+				++cConn1;
+			}
+			if (cConnConnections >= connConnReq)
+			{
+				Glue p1 = new Glue (getVertex (indP1));
+				Glue p2 = new Glue (getVertex (indP2));
+				return new Cuboid (p1, p2);
+			}
+		}
+		return null;
+	}
+	
+	/**
 	 * @param index index of vertex
 	 * @return vertex at index translated by glued offset
 	 */
@@ -499,6 +517,7 @@ public class BasicShape
 	{
 		if (mVolume < 0)
 		{
+			mVolume = 0;
 			BasicShape cut = new BasicShape (this);
 			cut.addMissingRectanglePoints();
 			ArrayList <Cuboid> cubes = cut.getCuboids();
@@ -705,7 +724,13 @@ public class BasicShape
 	
 	
 	/**
-	 * COMMENT!
+	 * inserts new vertices into the shape such that it consists of
+	 * multiple adjacent cuboids
+	 * whenever a vertex has a free connection a new vertex will be inserted if 
+	 * a line from the first vertex intersects in one point with an existing line.
+	 * the intersection will be the new vertex
+	 * new vertices will be added at the end of the list of vertices thus having
+	 * higher number indices compared to the 'old' vertices
 	 */
 	public void addMissingRectanglePoints()
 	{
@@ -713,11 +738,6 @@ public class BasicShape
 		IntegerMatrix outerMax = new IntegerMatrix (mGlue.getDimension(), 1);
 		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
 			outerMax.setCell(cDim, 0, mGlue.getPosition(cDim) + getDimensions(cDim));
-		//contain: new points, connections of these
-		//ArrayList <IntegerMatrix> newPoints = new ArrayList<Matrix.IntegerMatrix>();
-		//ArrayList <ArrayList<IntegerMatrix>> newPointsConnections = new ArrayList<>();
-		//existing connections
-		ArrayList <Line> connections = getConnectingLines();
 		//iterate through vertices
 		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
 		{
@@ -765,16 +785,6 @@ public class BasicShape
 			}
 		}
 		System.out.println ("finished inserting");
-		
-		/*
-		ArrayList <IntegerMatrix> newPoints = new ArrayList<>();
-		ArrayList <ArrayList <IntegerMatrix>> newPointsConnections = new ArrayList<>();
-		for (Intersection inter : inters)
-		{
-			newPoints.add (inter.toVector());
-		}
-		IntegerMatrix adjMatMissing = buildAdjacencyMatrix(newPoints, newPointsConnections);
-		addVertices (newPoints, adjMatMissing);*/
 	}
 	
 	/** Performs actual rotation

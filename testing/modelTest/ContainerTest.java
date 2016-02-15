@@ -100,7 +100,7 @@ public class ContainerTest
 	
 	public void freeVertexTest()
 	{
-		PieceRenderPanel show = new PieceRenderPanel (mContainer);
+		PieceRenderPanel show = new PieceRenderPanel (mContainer.clone());
 		JFrame frame = new JFrame ("container");
 		frame.setSize(400, 400);
 		frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
