@@ -64,7 +64,7 @@ public class GaussElim implements Runnable
 		
 		while (cLess < cLarger)
 		{
-			while (cLess < cLarger && pivotIndex[cLess] < pivotIndex[end])
+			while (cLess <= cLarger && pivotIndex[cLess] < pivotIndex[end])
 				++cLess;
 			while (cLess < cLarger && pivotIndex[cLarger] >= pivotIndex[end])
 				--cLarger;
