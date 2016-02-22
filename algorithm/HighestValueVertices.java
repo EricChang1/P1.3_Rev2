@@ -1,8 +1,7 @@
 package algorithm;
-
 import java.util.ArrayList;
 
-import models.*;
+import models.Resource;
 
 public class HighestValueVertices implements SelectionHeuristic {
 	
@@ -11,18 +10,24 @@ public class HighestValueVertices implements SelectionHeuristic {
 		
 	}
 	
+	@Override
 	public int getBestBlock(ArrayList<Resource> list){
 		
-		int index=-1;
 		int maxValue=0;
 		for(int box=0; box<list.size(); box++){
-			int newValue = (int)list.get(box).getBlock().getValue()/list.get(box).getBlock().getNumberOfVertices();
-			if(newValue > maxValue){
-				maxValue=newValue;
-				index++;
+			if (list.get(box).getInventory()>0 || list.get(box).isInfinite()==true)
+			{
+				int newValue = (int)list.get(box).getBlock().getValue()/list.get(box).getBlock().getNumberOfVertices();
+				if(newValue > maxValue)
+				{
+					maxValue=newValue;
+					index=box;
+				}
 			}
 		}
 		return index;
 	}
+	private int index;
+
 	
 }

@@ -1,8 +1,8 @@
 package algorithm;
 
-
 import java.util.ArrayList;
-import models.*;
+
+import models.Resource;
 
 public class HighestValueVolume implements SelectionHeuristic{
 	
@@ -11,17 +11,22 @@ public class HighestValueVolume implements SelectionHeuristic{
 		
 	}
 	
+	@Override
 	public int getBestBlock(ArrayList<Resource> list){
 		
-		int index=-1;
 		double maxValue=0;
 		for(int box=0; box<list.size(); box++){
-			double newValue = list.get(box).getBlock().getValue()/list.get(box).getVolume();
-			if(newValue > maxValue){
-				maxValue=newValue;
-				index++;
-			}
+			if (list.get(box).getInventory()>0 || list.get(box).isInfinite()==true)
+			{
+				double newValue = list.get(box).getBlock().getValue()/list.get(box).getVolume();
+				if(newValue > maxValue){
+					maxValue=newValue;
+					index=box;
+				}
+			}	
 		}
 		return index;
 	}
+	private int index;
+
 }
