@@ -179,11 +179,14 @@ public class Container extends Block
 		
 		Container cloneCont = this.clone();
 		cloneCont.addMissingRectanglePoints();
-		for (int cOldVert = 0; cOldVert < cloneCont.getNumberOfVertices(); ++cOldVert)
+		for (int cNewVert = cloneCont.getNumberOfVertices() - 1; cNewVert <= this.getNumberOfVertices(); --cNewVert)
 		{
-			for (int cNewVert = this.getNumberOfVertices(); cNewVert < cloneCont.getNumberOfVertices(); ++cNewVert)
+			for (int cOldVert = 0; cOldVert < cNewVert; ++cOldVert)
 			{
-				Cuboid c = getCuboid (cOldVert, cNewVert, cOldVert, cOldVert);
+				//solution: exclude added vertices once explored
+				//works, since each cuboid needs to contain min 1 added vertex
+				//fixed 1, fixed 2, conn1 min, conn1 max, conn2 min, conn2 max
+				Cuboid c = cloneCont.getCuboid (cOldVert, cNewVert, 0, cNewVert - 1, 0, cNewVert - 1);
 				if (c != null)
 					free.add (c);
 			}

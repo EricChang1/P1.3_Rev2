@@ -312,10 +312,10 @@ public class PieceRenderPanel extends JPanel
 			y1 = p.getFirst().getCell(2, 0).intValue();
 			x2 = p.getSecond().getCell(1, 0).intValue();
 			y2 = p.getSecond().getCell(2, 0).intValue();
-			System.out.println ("drew line " + x1 + "|" + y1 + " to " + x2 + "|" + y2);
+			//System.out.println ("drew line " + x1 + "|" + y1 + " to " + x2 + "|" + y2);
 			g2.drawLine(x1, y1, x2, y2);
 		}
-		System.out.println ("done drawing");
+		//System.out.println ("done drawing");
 	}
 	
 	private ArrayList <LinePair> processLines (DoubleMatrix transformation)

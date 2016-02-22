@@ -11,10 +11,17 @@ import models.Glue;
 import models.Resource;
 import models.Matrix.*;
 
-
+/**
+ * class performing a dynamic algorithm to solve the polycube puzzle
+ * @author martin
+ */
 public class DynamicAlgo extends Algorithm 
 {
-	
+	/**
+	 * class storing a set of blocks
+	 * modelling a subset
+	 * @author martin
+	 */
 	public static class Subset
 	{	
 		public Subset (LinkedList <Block> blocks)
@@ -54,7 +61,7 @@ public class DynamicAlgo extends Algorithm
 			return comp.equals(mBlocks);
 		}
 		
-		public void addBlock (Block bAdd, int idAdd)
+		public void addBlock (Block bAdd)
 		{
 			mBlocks.add(bAdd.clone());
 			mVolume += bAdd.getVolume();
@@ -94,7 +101,7 @@ public class DynamicAlgo extends Algorithm
 	{
 		Container cut = c.clone();
 		cut.addMissingRectanglePoints();
-		ArrayList <Cuboid> emptyCubes = cut.decomposeIntoCuboids();
+		ArrayList <Cuboid> emptyCubes = cut.getCuboids();
 		ArrayList <LinkedList<Cuboid>> orders = generateCubePermutations(emptyCubes, new LinkedList <Cuboid>());
 		
 		double maxVal = 0;
@@ -147,12 +154,14 @@ public class DynamicAlgo extends Algorithm
 							if (bRef.getDimensions(0) <= cDepth && bRef.getDimensions(1) <= cWidth &&
 								bRef.getDimensions(2) <= cHeight)
 							{
+								//clone container and place block
 								Container c = new Container (cDepth, cHeight, cWidth);
 								c.placeBlock(bRef, zeroPos);
 								
 								
 								current += c.getValue();
-								ArrayList <Cuboid> emptyCubes = c.decomposeIntoCuboids();
+								ArrayList <Cuboid> emptyCubes = c.getCuboids();
+								
 								//problem: order matters
 								//solution: brute force
 								for (Cuboid emptyC : emptyCubes)
@@ -173,6 +182,10 @@ public class DynamicAlgo extends Algorithm
 		}
 	}
 	
+	/**
+	 * populates mSubsets with elements of the power set of the given resources
+	 * such that the total volume of the container is not exceeded
+	 */
 	private void generatePowerSet()
 	{
 		mSubsets.add(new Subset(new LinkedList <Block>()));
@@ -186,8 +199,8 @@ public class DynamicAlgo extends Algorithm
 				while (last.getVolume() + res.getBlock().getVolume() <= getContainer().getVolume())
 				{
 					Subset curr = last.clone();
-					curr.addBlock(res.getBlock(), (int)Math.pow(getPieces().size(), cRes));
-					mSubsets.add(curr);
+					curr.addBlock (res.getBlock());
+					mSubsets.add (curr);
 					last = curr;
 				}
 			}

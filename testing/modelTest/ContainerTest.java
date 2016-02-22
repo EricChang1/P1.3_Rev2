@@ -11,6 +11,7 @@ import models.Glue;
 import models.Position;
 import models.Matrix.*;
 
+import geometry.Cuboid;
 import gui.PieceRenderPanel;
 
 /**
@@ -23,7 +24,7 @@ public class ContainerTest
 	{
 		ContainerTest test = new ContainerTest();
 		test.addTest();
-		test.freeVertexTest();
+		test.freeCuboidTest();
 	}
 	
 	public ContainerTest()
@@ -78,7 +79,7 @@ public class ContainerTest
 		System.out.println ("demo 2|3|3: possible");
 		Position vertex = setVector (2, 3, 3);
 		ArrayList<Position> relatives = mContainer.getRelativePlacements(cuboid2, mContainer.getVertexIndex(vertex.toVector()));
-		
+		/*
 		for (Position relat : relatives)
 		{
 			System.out.println (relat.toString());
@@ -94,11 +95,11 @@ public class ContainerTest
 				break;
 			}
 		}
-		
+		*/
 		
 	}
 	
-	public void freeVertexTest()
+	public void freeCuboidTest()
 	{
 		PieceRenderPanel show = new PieceRenderPanel (mContainer.clone());
 		JFrame frame = new JFrame ("container");
@@ -112,11 +113,26 @@ public class ContainerTest
 		frame.addMouseMotionListener(rListen);
 		show.init();
 		
-		System.out.println ("printing free vertices");
-		ArrayList <IntegerMatrix> freeVs = mContainer.getFreeVertices();
-		for (IntegerMatrix free : freeVs)
+		Container diss = mContainer.clone();
+		diss.addMissingRectanglePoints();
+		
+		PieceRenderPanel showDiss = new PieceRenderPanel (diss);
+		JFrame dissFrame = new JFrame ("dissected container");
+		dissFrame.setSize (400, 400);
+		dissFrame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+		dissFrame.add (showDiss);
+		PieceRenderPanel.RotationListener dissRListen = showDiss.new RotationListener();
+		dissRListen.setSensitivity (0.25);
+		dissFrame.addMouseListener (dissRListen);
+		dissFrame.addMouseMotionListener (dissRListen);
+		dissFrame.setVisible (true);
+		showDiss.init();
+		
+		ArrayList <Cuboid> freeCubes = mContainer.getFreeCuboids();
+		System.out.println ("printing free cuboids");
+		for (Cuboid free : freeCubes)
 		{
-			System.out.println (new Glue (free));
+			System.out.println (free);
 		}
 		
 	}

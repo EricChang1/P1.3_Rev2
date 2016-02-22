@@ -97,6 +97,29 @@ public class Rectangle extends GeoShape {
 	}
 	
 	/**
+	 * @return vertices of this rectangle
+	 */
+	public ArrayList <Glue> getVertices()
+	{
+		IntegerMatrix matP2 = getFirst().clone();
+		IntegerMatrix matP4 = getFirst().clone();
+		for (int cDim = 0; cDim < getDimension(); ++cDim)
+		{
+			if (!mVec1.getCell (cDim, 0).equals (0))
+				matP2.setCell (cDim, 0, getSecond().getCell (cDim, 0));
+			if (!mVec2.getCell (cDim, 0).equals (0))
+				matP4.setCell (cDim, 0, getSecond().getCell (cDim, 0));
+		}
+		
+		ArrayList <Glue> verts = new ArrayList<>();
+		verts.add (new Glue (getFirst()));
+		verts.add (new Glue (matP2));
+		verts.add (new Glue (getSecond()));
+		verts.add (new Glue (matP4));
+		return verts;
+	}
+	
+	/**
 	 * @param s a shape
 	 * @return list of points on the rectangle's border intersecting s
 	 */
@@ -125,6 +148,20 @@ public class Rectangle extends GeoShape {
 		vecs.add(mVec1.clone());
 		vecs.add(mVec2.clone());
 		return vecs;
+	}
+	
+	/**
+	 * @param p a given point
+	 * @return the line p is on or null if p is not located on any line of this rectangle
+	 */
+	public Line getPointLine (Glue p)
+	{
+		for (Line border : getBorderLines())
+		{
+			if (border.isInRange (p))
+				return border;
+		}
+		return null;
 	}
 
 	@Override
