@@ -1,0 +1,11 @@
+#precomiled jars
+*.jar
+#temps
+*~
+#directories
+bin/
+.settings/
+#single files
+.classpath
+.project
+
