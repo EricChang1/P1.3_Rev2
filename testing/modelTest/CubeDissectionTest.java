@@ -11,19 +11,20 @@ import geometry.Rectangle;
 import gui.*;
 import models.*;
 import models.Matrix.DoubleMatrix;
+import models.ShapeParser.BadFileStructureException;
 import algorithm.Scaler;
 
 public class CubeDissectionTest 
 {
 	
-	public static void main (String[] args)
+	public static void main (String[] args) throws BadFileStructureException, IOException
 	{
 		CubeDissectionTest test = new CubeDissectionTest();
-		//test.showBefore();
-		//test.showAfter();
+		test.showBefore();
+		test.showAfter();
 		
 		//test.testSidesDecompos();
-		test.testCubeDecompos();
+		//test.testCubeDecompos();
 	}
 	
 	public static JFrame getFrame (PieceRenderPanel render, String title)
@@ -45,11 +46,11 @@ public class CubeDissectionTest
 		return frame;
 	}
 	
-	public CubeDissectionTest()
+	public CubeDissectionTest() throws BadFileStructureException, IOException
 	{
 		
 		mShape = null;
-		try
+		/*try
 		{
 			ShapeParser readInShapes = new ShapeParser(new File ("pieces.txt"));
 			readInShapes.parse();
@@ -59,13 +60,15 @@ public class CubeDissectionTest
 		{
 			System.out.println ("oh no");
 			e.printStackTrace();
-		}
-		
+		}*/
+		ShapeParser readInShapes = new ShapeParser(new File ("pieces.txt"));
+		readInShapes.parse();
+		mShape = readInShapes.getShapes().get(0);
 	}
 	
 	public void showBefore()
 	{
-		PieceRenderPanel showPiece = new PieceRenderPanel(mShape);
+		PieceRenderPanel showPiece = new PieceRenderPanel (new BasicShape (mShape));
 		mBeforeWin = getFrame (showPiece, "before");
 		mBeforeWin.setVisible(true);
 		showPiece.init();

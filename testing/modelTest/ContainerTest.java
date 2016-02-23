@@ -22,9 +22,25 @@ public class ContainerTest
 {
 	public static void main (String[] args)
 	{
+		
 		ContainerTest test = new ContainerTest();
 		test.addTest();
 		test.freeCuboidTest();
+		
+		
+		/*
+		LinkedList <Integer> ints = new LinkedList<>();
+		for (int cAdd = 0; cAdd < 5; ++cAdd)
+			ints.add (cAdd);
+		
+		ListIterator <Integer> iInts = ints.listIterator();
+		while (iInts.hasNext())
+		{
+			System.out.print (iInts.next() + ", ");
+			if (iInts.nextIndex() == 3)
+				iInts.remove();
+		}
+		*/
 	}
 	
 	public ContainerTest()
