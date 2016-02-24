@@ -22,30 +22,55 @@ public class Rectangle extends GeoShape {
 	}
 	
 	/**
+	 * @param p an arbitrary point within this rectangle (inclusive)
+	 * @return at least one and at most 4 rectangles obtained by
+	 * slicing the rectangle into smaller rectangles by 2 lines parallel to
+	 * the sides through p. In each smaller rectangle, p is the first defining point and
+	 * a vertex of this is the second defining point
+	 * The rectangles are returned in the order of the index of their second defining position,
+	 * which is the same as the order of the method getVertices()
+	 */
+	public ArrayList <Rectangle> splitRectangle (Glue p)
+	{
+		ArrayList <Rectangle> split = new ArrayList<>();
+		for (Glue vertex : getVertices())
+		{
+			//compute: can rect vertex be reached only using one vector of rectangle
+			DoubleMatrix eqV1 = new DoubleMatrix (getDimension(), 2);
+			DoubleMatrix eqV2 = new DoubleMatrix (getDimension(), 2);
+			eqV1.copyValues (mVec1, 0, 0, 0, 0, getDimension(), 1);
+			eqV2.copyValues (mVec2, 0, 0, 0, 0, getDimension(), 1);
+			for (int cDim = 0; cDim < getDimension(); ++cDim)
+			{
+				double pDiff = p.getPosition(cDim) - vertex.getPosition(cDim);
+				eqV1.setCell (cDim, 1, pDiff);
+				eqV2.setCell (cDim, 1, pDiff);
+			}
+			GaussElim el1 = new GaussElim (eqV1), el2 = new GaussElim (eqV2);
+			el1.run(); el2.run();
+			//only add rect with rect vertex if intersection is not on line with rectVertex
+			if (!(el1.isConsistent() || el2.isConsistent()))
+				split.add (new Rectangle (p, vertex));
+		}
+		return split;
+	}
+	
+	/**
 	 * @return list of lines defining the rectangle's border
 	 */
 	public ArrayList <Line> getBorderLines()
 	{
 		ArrayList <Line> lines = new ArrayList<>(4);
 
-		IntegerMatrix matP2 = new IntegerMatrix (getDimension(), 1);
-		IntegerMatrix matP4 = new IntegerMatrix (getDimension(), 1);
-		for (int cDim = 0; cDim < getDimension(); ++cDim)
+		ArrayList <Glue> vertices = getVertices();
+		//iterate through vertices
+		for (int cStart = 0; cStart < vertices.size(); ++cStart)
 		{
-			if (!mVec1.getCell (cDim, 0).equals (0))
-				matP2.setCell (cDim, 0, getSecond().getCell (cDim, 0));
-			if (!mVec2.getCell (cDim, 0).equals (0))
-				matP4.setCell (cDim, 0, getSecond().getCell (cDim, 0));
+			//construct lines using non-opposite points
+			for (int cEnd = cStart + 1; cEnd < vertices.size(); cEnd += 2)
+				lines.add (new Line (vertices.get (cStart), vertices.get (cEnd)));
 		}
-		
-		//stored diagonal
-		Glue p1 = new Glue (getFirst()), p3 = new Glue (getSecond());
-		//computed diagonal
-		Glue p2 = new Glue (matP2), p4 = new Glue (matP4);
-		lines.add (new Line (p1, p2));
-		lines.add (new Line (p1, p3));
-		lines.add (new Line (p2, p4));
-		lines.add (new Line (p3, p4));
+
 		return lines;
 	}
 	
@@ -68,7 +93,7 @@ public class Rectangle extends GeoShape {
 		
 		for (int cDim = 0; cDim < getDimension(); ++cDim)
 		{
-			if (!mVec1.getCell (cDim, 0).equals (0))
+			if (!mVec1.getCell (cDim, 0).equals (0.0))
 			{
 				p1.setCell (cDim, 0, getFirst().getCell (cDim, 0));
 				p2.setCell (cDim, 0, getSecond().getCell (cDim, 0));
@@ -78,7 +103,7 @@ public class Rectangle extends GeoShape {
 				p1.setCell (cDim, 0, p.getPosition(cDim));
 				p2.setCell (cDim, 0, p.getPosition(cDim));
 			}
-			if (!mVec2.getCell (cDim, 0).equals (0))
+			if (!mVec2.getCell (cDim, 0).equals (0.0))
 			{
 				p3.setCell (cDim, 0, getFirst().getCell (cDim, 0));
 				p4.setCell (cDim, 0, getSecond().getCell (cDim, 0));
@@ -97,7 +122,9 @@ public class Rectangle extends GeoShape {
 	}
 	
 	/**
-	 * @return vertices of this rectangle
+	 * @return list of vertices of this rectangle where list[i] and list[(i + 2] % size]
+	 * are opposite to each other (i.e. connected by diagonal only). Thus, the element at
+	 * index 0 is the first defining point, the element at index 2 the second defining point
 	 */
 	public ArrayList <Glue> getVertices()
 	{
@@ -105,9 +132,9 @@ public class Rectangle extends GeoShape {
 		IntegerMatrix matP4 = getFirst().clone();
 		for (int cDim = 0; cDim < getDimension(); ++cDim)
 		{
-			if (!mVec1.getCell (cDim, 0).equals (0))
+			if (!mVec1.getCell (cDim, 0).equals (0.0))
 				matP2.setCell (cDim, 0, getSecond().getCell (cDim, 0));
-			if (!mVec2.getCell (cDim, 0).equals (0))
+			if (!mVec2.getCell (cDim, 0).equals (0.0))
 				matP4.setCell (cDim, 0, getSecond().getCell (cDim, 0));
 		}
 		
@@ -172,6 +199,21 @@ public class Rectangle extends GeoShape {
 		eq.copyValues(mVec2, 0, 1, 0, 0, getDimension(), 1);
 		eq.copyValues(getFirst().toDoubleMatrix(), 0, 2, 0, 0, getDimension(), 1);
 		return eq;
+	}
+	
+	/**
+	 * @param p a given point
+	 * @return true if p is equal to one vertex of this rectangle
+	 */
+	public boolean isVertex (Glue p)
+	{
+		ArrayList <Glue> vertices = getVertices();
+		for (Glue v : vertices)
+		{
+			if (p.equals (v))
+				return true;
+		}
+		return false;
 	}
 	
 	private void determineVectors()

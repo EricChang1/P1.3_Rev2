@@ -11,6 +11,7 @@ public class HighestValueVolume implements SelectionHeuristic{
 		
 	}
 	
+
 	@Override
 	public int getBestBlock(ArrayList<Resource> list){
 		
@@ -28,5 +29,4 @@ public class HighestValueVolume implements SelectionHeuristic{
 		return index;
 	}
 	private int index;
-
 }

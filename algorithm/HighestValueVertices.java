@@ -1,4 +1,5 @@
 package algorithm;
+
 import java.util.ArrayList;
 
 import models.Resource;
@@ -27,7 +28,7 @@ public class HighestValueVertices implements SelectionHeuristic {
 		}
 		return index;
 	}
-	private int index;
 
+	private int index;
 	
 }

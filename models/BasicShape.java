@@ -1,6 +1,8 @@
+
 package models;
 
 import geometry.Cuboid;
+import geometry.GaussElim;
 import geometry.IntersectionSolver;
 import geometry.Line;
 import geometry.Rectangle;
@@ -235,7 +237,7 @@ public class BasicShape
 		dimensions = new ArrayList<Integer>();
 		calcDim (vectors);
 		//initialize offset position
-		mGlue = new Glue (new IntegerMatrix (vectors.get (0).getRows(), 1));
+		glue (new Glue (new IntegerMatrix (dimensions.size(), 1)));
 		//create adjacency matrix
 		this.adjMatrix = adjMatrix.clone();
 		//set possible connections
@@ -530,6 +532,33 @@ public class BasicShape
 	}
 	
 	/**
+	 * @param lineStart start point of line
+	 * @param dir direction of line
+	 * @return line from lineStart to end point touching side of range of this shape in dir
+	 * or null if such an end point not equal to lineStart would be outside of the range
+	 */
+	public Line getLineToBorder (Glue lineStart, RelatPos dir)
+	{
+		Glue maxPos = getMaxDimension();
+		IntegerMatrix lineEnd = getRelativePosVector(dir, lineStart.getDimension());
+		for (int cDim = 0; cDim < lineStart.getDimension(); ++cDim)
+		{
+			int dirCoord = lineEnd.getCell (cDim, 0);
+			if (dirCoord != 0)
+			{
+				int border = (dirCoord >= 0 ? maxPos.getPosition (cDim) : mGlue.getPosition(cDim));
+				//check whether distance to border is not 0 if direction is not zero
+				if (border == lineStart.getPosition (cDim))
+					return null;
+				lineEnd.setCell (cDim, 0, border);
+			}
+			else
+				lineEnd.setCell (cDim, 0, lineStart.getPosition (cDim));
+		}
+		return new Line (lineStart, new Glue (lineEnd));
+	}
+	
+	/**
 	 * @param index index of vertex
 	 * @return vertex at index translated by glued offset
 	 */
@@ -542,14 +571,9 @@ public class BasicShape
 	 * @return the point within the container having the
 	 * largest coordinate values
      */
-	public Position getMaxDimension () 
+	public Glue getMaxDimension () 
 	{
-		ArrayList<Integer> maxPos = new ArrayList<Integer>();
-		maxPos.add(getDimensions(0) + mGlue.getPosition().get(0));
-		maxPos.add(getDimensions(1) + mGlue.getPosition().get(1));
-		maxPos.add(getDimensions(2) + mGlue.getPosition().get(2));
-		Position max = new Position(maxPos);
-		return max;
+		return mMax;
 	}
 	
 	/**
@@ -788,71 +812,15 @@ public class BasicShape
 		IntegerMatrix outerMax = new IntegerMatrix (mGlue.getDimension(), 1);
 		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
 			outerMax.setCell(cDim, 0, mGlue.getPosition(cDim) + getDimensions(cDim));
-		//iterate through vertices
-		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
-		{
-			//iterate through free connections
-			ArrayList<RelatPos> freeConn = mPossibleConnections.get(cVert);
-			if (!freeConn.isEmpty())
-			{
-				System.out.print ("vertex " + getVertex (cVert) + " has free connections ");
-				System.out.println (freeConn.toString());
-			}
-			
-			ArrayList <Intersection> inters = new ArrayList<>();
-			for (RelatPos free : freeConn)
-			{
-				//compute line through current vertex and current free connection vector
-				IntegerMatrix vertex = getVertex(cVert);
-				IntegerMatrix pDirect = getRelativePosVector(free, vertex.getRows());
-				boolean beyondDimension = false;
-				int cDim = 0;
-				while (!beyondDimension && cDim < pDirect.getRows())
-				{
-					int coordDir = pDirect.getCell (cDim, 0);
-					int borderDist = (coordDir >= 0 ? outerMax.getCell (cDim, 0) : mGlue.getPosition(cDim)) - vertex.getCell(cDim, 0);
-					//check whether distance to border is not 0 if direction is not zero
-					if (coordDir != 0 && borderDist == 0)
-						beyondDimension = true;
-					else
-						pDirect.setCell(cDim, 0, vertex.getCell (cDim, 0) + (coordDir != 0 ? borderDist : 0));
-					++cDim;
-				}
-				if (!beyondDimension)
-				{
-					Line intersect = new Line (new Glue (vertex), new Glue (pDirect));
-					intersect.setInclusion (false, true);
-					inters.addAll (getLineIntersections (intersect));
-				}
-			}
-			//add intersection vertices and manipulate connections
-			addVertices (inters);
-			//connect intersection vertices to current vertex
-			for (Intersection inter : inters)
-			{
-				int interVertIndex = getVertexIndex (inter.toVector());
-				modifyConnection(interVertIndex, cVert, true);
-			}
-		}
-		System.out.println ("finished inserting");
-	}
-	
-	
-	public void altAddMissingRectanglePoints()
-	{
-		//compute min and max point of cuboid encompassing entire shape
-		IntegerMatrix outerMax = new IntegerMatrix (mGlue.getDimension(), 1);
-		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
-			outerMax.setCell(cDim, 0, mGlue.getPosition(cDim) + getDimensions(cDim));
 		
 		//get well defined sides S
 		LinkedList <Rectangle> sides = new LinkedList <> (getRectangles());
-		ListIterator <Rectangle> iterSides = sides.listIterator();
+		int cSides = 0;
 		//for each side s in S
-		while (iterSides.hasNext())
+		while (cSides < sides.size())
 		{
 			//check: does it return first not second element?
-			Rectangle r = iterSides.next();
+			Rectangle r = sides.get (cSides);
 			//for all vertices v
 			int cVertex = 0;
 			boolean foundFreeConnInter = false;
@@ -866,69 +834,81 @@ public class BasicShape
 				{
 					RelatPos free = freeConns.get (cFree);
 					//if line from v in direction c intersects s:
-					IntegerMatrix endPos = new IntegerMatrix (r.getDimension(), 1);
-					IntegerMatrix dirVec = getRelativePosVector (free, endPos.getRows());
-					for (int cDim = 0; cDim < endPos.getRows(); ++cDim)
+					Line dirLine = getLineToBorder (vertex, free);
+					if (dirLine != null)
 					{
-						int endCoord = 0;
-						if (dirVec.getCell (cDim, 0).equals (0))
-							endCoord = vertex.getPosition (cDim);
-						else if (dirVec.getCell (cDim, 0).compareTo (0) >= 0)
-							endCoord = outerMax.getCell (cDim, 0);
-						else
-							endCoord = mGlue.getPosition (cDim);
-						endPos.setCell (cDim, 0, endCoord);
-					}
-					Line dirLine = new Line (vertex, new Glue (endPos));
-					dirLine.setInclusion (false, true);
-					IntersectionSolver solInter = new IntersectionSolver (dirLine, r);
-					if (solInter.getSolutionType() == IntersectionSolver.Result.ONE &&
-						solInter.isWithinBounds())
-					{
-						ArrayList <Intersection> localInters = new ArrayList<>();
-						//add intersection objects with lines touching the border of s through intersection
-						Glue inter = solInter.getIntersection();
-						ArrayList <Line> basisLines = r.getBasisLinesThroughPoint (inter);
-						//construct intersection objects from basis lines
-						int cBasisLine = 0;
-						boolean foundOnLine = false;
-						while (cBasisLine < basisLines.size() && !foundOnLine)
+						dirLine.setInclusion (false, true);
+						IntersectionSolver solInter = new IntersectionSolver (dirLine, r);
+						if (solInter.getSolutionType() == IntersectionSolver.Result.ONE &&
+							solInter.isWithinBounds())
 						{
-							Line bLine = basisLines.get (cBasisLine);
-							Intersection forLine = new Intersection (inter.toVector(), bLine.getFirst(), bLine.getSecond()); 
-							if (forLine.areVertices())
+							ArrayList <Intersection> inters = new ArrayList<>();
+							//add intersection objects with lines touching the border of s through intersection
+							Glue inter = solInter.getIntersection();
+							
+							//split s into smaller s[] and add s[] to S
+							ArrayList <Rectangle> splitSides = r.splitRectangle (inter);
+							
+							if (splitSides.size() > 1)
 							{
-								localInters.clear();
-								localInters.add (forLine);
-								foundOnLine = true;
+								ArrayList <Glue> addedRectVertices = new ArrayList<>(4);
+								//for each second split rectangle
+								for (int cSplit = 0; cSplit < splitSides.size(); cSplit += 2)
+								{
+									//add intersection objects for both non-defining point in shape's data structure
+									ArrayList <Glue> splitVertices = splitSides.get (cSplit).getVertices();
+									for (int cSplitVert = 1; cSplitVert < splitVertices.size(); cSplitVert += 2)
+									{
+										Glue splitVertex = splitVertices.get (cSplitVert);
+										addedRectVertices.add (splitVertex);
+										Line origLine = r.getPointLine (splitVertex);
+										inters.add (new Intersection (splitVertex.toVector(), origLine.getFirst(), origLine.getSecond()));
+									}
+								}
+								addVertices (inters);
+								inters.clear();
+								//add intersections objects for intersection point
+								for (int cAdded1 = 0; cAdded1 < addedRectVertices.size(); ++cAdded1)
+								{
+									if (addedRectVertices.get (cAdded1) != null)
+									{
+										int cAdded2 = cAdded1 + 1;
+										boolean lineEndFound = false;
+										while (!lineEndFound && cAdded2 < addedRectVertices.size())
+										{
+											if (addedRectVertices.get (cAdded2) != null)
+											{
+												Line addLine = new Line (addedRectVertices.get (cAdded1), addedRectVertices.get (cAdded2));
+												if (addLine.isInRange (inter));
+												{
+													inters.add (new Intersection (inter.toVector(), addLine.getFirst(), addLine.getSecond()));
+													addedRectVertices.set (cAdded1, null);
+													addedRectVertices.set (cAdded2, null);
+													lineEndFound = true;
+												}
+											}
+											++cAdded2;
+										}
+									}
+								}
+								addVertices (inters);
+								//add split rectangles, remove split rectangle
+								sides.addAll (splitSides);
+								sides.remove (cSides);
+								--cSides;
+								//skip remaining connections and vertices
+								foundFreeConnInter = true;
 							}
-							else
-							{
-								localInters.add (new Intersection (inter.toVector(), bLine.getFirst(), bLine.getSecond()));
-								Line p1Line = r.getPointLine (new Glue (bLine.getFirst()));
-								Line p2Line = r.getPointLine (new Glue (bLine.getSecond()));
-								localInters.add (new Intersection (bLine.getFirst(), p1Line.getFirst(), p1Line.getSecond()));
-								localInters.add (new Intersection (bLine.getSecond(), p2Line.getFirst(), p2Line.getSecond()));
-							}
-							++cBasisLine;
+							
+							int indInters = getVertexIndex (inter.toVector());
+							modifyConnection (cVertex, indInters, true);
 						}
-						//merge intersection objects into bs data structure
-						addVertices (localInters);
-						//split s into smaller s[] and add s[] to S
-						ArrayList <Glue> rectVertices = r.getVertices();
-						for (Glue rectVertex : rectVertices)
-							sides.add (new Rectangle (inter, rectVertex));
-						iterSides.remove();
-						if (iterSides.hasPrevious())
-							iterSides.previous();
-						else  //if iterator is before 1st element (see comment above)
-							iterSides = sides.listIterator();
-						
-						//skip remaining connections and vertices
-						foundFreeConnInter = true;
 					}
+					++cFree;
 				}
+				++cVertex;
 			}
+			++cSides;
 		}
 	}
 	
@@ -952,9 +932,14 @@ public class BasicShape
 	 */
 	public void glue (Glue g)
 	{
+		mGlue = g.clone();
+		IntegerMatrix maxVec = new IntegerMatrix (mGlue.getDimension(), 1);
+		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
+			maxVec.setCell (cDim, 0, g.getPosition(cDim) + getDimensions (cDim));
+		mMax = new Glue (maxVec);
 		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
 			vectors.set(cVertex, g.translateMat(vectors.get(cVertex), mGlue));
-		mGlue = g.clone();
+		
 	}
 	
 	public void print(PrintStream p)
@@ -1001,29 +986,25 @@ public class BasicShape
 		int offset = 0;
 		for (int cInter = 0; cInter < inters.size(); ++cInter)
 		{
-			//if vertices exist: disconnect
-			//else: add line vertices
-			//add intersection vertex
-			//connect line vertices with intersection vertices
-			
 			Intersection inter = inters.get (cInter);
 			//disconnect
-			modifyConnection (inter.getLineStart(), inter.getLineEnd(), false);
+			if (inter.areVertices())
+				modifyConnection (inter.getLineStartIndex(), inter.getLineEndIndex(), false);
 			
 			newVertices.add (inter.toVector());
 			int startingOffset = offset;
 			++offset;
 			int interVertex = getVertexIndex (inter.toVector());
-			if (interVertex != inter.getLineStart())
+			if (interVertex != inter.getLineStartIndex())
 			{
-				newVertices.add (getVertex (inter.getLineStart()));
+				newVertices.add (getVertex (inter.getLineStartIndex()));
 				adj.setCell (startingOffset, offset, 1);
 				adj.setCell (offset, startingOffset, 1);
 				++offset;
 			}
-			if (interVertex != inter.getLineEnd())
+			if (interVertex != inter.getLineEndIndex())
 			{
-				newVertices.add (getVertex (inter.getLineEnd()));
+				newVertices.add (getVertex (inter.getLineEndIndex()));
 				adj.setCell (startingOffset, offset, 1);
 				adj.setCell (offset, startingOffset, 1);
 				++offset;
@@ -1126,6 +1107,6 @@ public class BasicShape
 	private ArrayList<Integer> dimensions;
 	private ArrayList <ArrayList <RelatPos>> mPossibleConnections;
 	private IntegerMatrix adjMatrix;
-	private Glue mGlue;
+	private Glue mGlue, mMax;
 	private int mVolume;
 }

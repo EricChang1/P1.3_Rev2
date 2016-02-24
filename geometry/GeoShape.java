@@ -132,7 +132,7 @@ public abstract class GeoShape
 	 * @param g2 shape to compare orientation with
 	 * @return true if for all vectors of one shape, there are vectors of the same orientation in the other
 	 */
-	public boolean isSameOrientationisInRange (GeoShape g2)
+	public boolean isSameOrientation (GeoShape g2)
 	{
 		ArrayList <DoubleMatrix> vT = this.getVectors();
 		ArrayList <DoubleMatrix> vC = g2.getVectors();

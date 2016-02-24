@@ -1,4 +1,5 @@
 package algorithm;
+
 import models.*;
 public interface EvaluationHeuristic {
 	

@@ -7,7 +7,7 @@ public class MaximumDensity implements EvaluationHeuristic{
 	
 	public MaximumDensity(){
 	}
-	
+
 	@Override
 	public double getScore(Block block, Position pos){
 		
@@ -56,5 +56,4 @@ public class MaximumDensity implements EvaluationHeuristic{
 			x=prevZ;
 	}
 
-	
 }
