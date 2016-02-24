@@ -7,7 +7,6 @@ public class EvaluationHeuristicFactory {
 		switch(h)
 		{
 			case MaxDensity: return new MaximumDensity();
-			case MaxPieces: return new MaximumNumberPieces();
 			
 		}
 		

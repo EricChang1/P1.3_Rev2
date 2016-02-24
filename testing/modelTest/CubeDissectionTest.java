@@ -11,12 +11,14 @@ import geometry.Rectangle;
 import gui.*;
 import models.*;
 import models.Matrix.DoubleMatrix;
+<<<<<<< HEAD
 import models.ShapeParser.BadFileStructureException;
+=======
+>>>>>>> mine/master
 import algorithm.Scaler;
 
 public class CubeDissectionTest 
 {
-	
 	public static void main (String[] args) throws BadFileStructureException, IOException
 	{
 		CubeDissectionTest test = new CubeDissectionTest();
@@ -45,7 +47,7 @@ public class CubeDissectionTest
 		frame.addComponentListener(resizeListen);
 		return frame;
 	}
-	
+
 	public CubeDissectionTest() throws BadFileStructureException, IOException
 	{
 		

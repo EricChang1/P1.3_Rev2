@@ -4,6 +4,14 @@
 *~
 #directories
 bin/
+<<<<<<< HEAD
 #single files
 .classpath
 .project
+=======
+.settings/
+#single files
+.classpath
+.project
+
+>>>>>>> mine/master

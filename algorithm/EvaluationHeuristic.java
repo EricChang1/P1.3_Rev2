@@ -1,10 +1,9 @@
 package algorithm;
 
-import models.Container;
-
+import models.*;
 public interface EvaluationHeuristic {
 	
-	public double getScore(Container container);
+	public double getScore(Block block, Position pos);
 	
 
 }
