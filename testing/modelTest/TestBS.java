@@ -19,9 +19,10 @@ public class TestBS
 	public static void main(String[] args)
 	{ 	
 		TestBS test = new TestBS();
+		test.testRotation();
 		//error test.testRotation();
 		//test.testAdding();
-		test.testSideDivision();
+		//test.testSideDivision();
 	}
 	
 	public static BasicShape constructTriangle (IntegerMatrix v1, IntegerMatrix v2, IntegerMatrix v3)
@@ -49,9 +50,9 @@ public class TestBS
 		//1, 0, 0
 		Matrix.IntegerMatrix v2 = new Matrix.IntegerMatrix(3, 1);
 		v2.setCell(0, 0, 1);
-		//0, 1, 0
+		//0, 2, 0
 		Matrix.IntegerMatrix v3 = new Matrix.IntegerMatrix(3, 1);
-		v3.setCell(1, 0, 1);
+		v3.setCell(1, 0, 2);
 		
 		mBs = constructTriangle (v1, v2, v3);
 		
@@ -62,15 +63,34 @@ public class TestBS
 	public void testRotation()
 	{
 		System.out.println ("Before rotation");
+		System.out.print ("dimensions ");
+		for (int cDim = 0; cDim < 3; ++cDim)
+			System.out.print (mBs.getDimensions(cDim) + ", ");
+		System.out.println();
 		mBs.print (System.out);
 		Matrix<Double> rotMat = BasicShape.rotationMatrix(90.0, 90.0);
 		mBs.rotate (rotMat);
+		
 		System.out.println ("After rotation");
+		System.out.print ("dimensions ");
+		for (int cDim = 0; cDim < 3; ++cDim)
+			System.out.print (mBs.getDimensions(cDim) + ", ");
+		System.out.println();
 		mBs.print(System.out);
+		
 		Matrix<Double> rotBackMat = BasicShape.rotationMatrix(-90.0, -90.0);
 		mBs.rotate (rotBackMat);
 		System.out.println ("Undoing rotation");
+		System.out.print ("dimensions ");
+		for (int cDim = 0; cDim < 3; ++cDim)
+			System.out.print (mBs.getDimensions(cDim) + ", ");
+		System.out.println();
 		mBs.print(System.out);
+		
+		System.out.println ("mats multiplied");
+		Matrix <Double> rotMult = new DoubleMatrix (3, 3);
+		rotMat.multiply (rotBackMat, rotMult);
+		rotMult.print (System.out);
 	}
 	
 	public void testSideDivision()

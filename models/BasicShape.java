@@ -782,11 +782,13 @@ public class BasicShape
 	/** Calculates the dimensions of a shape
 	** @param vectors ArrayList containing all the vectors
 	*/
-	public void calcDim(ArrayList<IntegerMatrix> vectors) throws BadNumberOfRowsException{
+	public void calcDim(ArrayList<IntegerMatrix> vectors) throws BadNumberOfRowsException
+	{
 		
 		if (!numberOfMH(vectors)) 
 			throw new BadNumberOfRowsException ("vectors don't have the same dimension");
-
+		
+		dimensions.clear();
 		for(int i=0; i<vectors.get(0).getRows(); i++){
 
 			int max = maximum (vectors,i);
@@ -924,6 +926,7 @@ public class BasicShape
 			rotMatrix.multiply (vec, result);
 			vectors.set (cCounter, result.toIntegerMatrix());
 		}
+		calcDim (vectors);
 	}
 	
 	/**
