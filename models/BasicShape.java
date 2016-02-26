@@ -21,6 +21,8 @@ public class BasicShape
 {
 	public static enum RelatPos {FRONT, BACK, LEFT, RIGHT, ABOVE, BELOW};
 	
+	public static enum RotationDir {ONWARD, BACKWARD}
+	
 	@SuppressWarnings("serial")
 	public static class BadNumberOfRowsException extends IllegalArgumentException
 	{
@@ -71,7 +73,8 @@ public class BasicShape
 	 * @param angle2 Desired amount of rotation in x3 axis (in degrees)
 	 * @return rotation matrix
 	 */
-	public static Matrix<Double> rotationMatrix(double angle1, double angle2){
+	public static Matrix<Double> rotationMatrix (double angle1, double angle2, RotationDir d)
+	{
 		double radAngle1 = Math.toRadians (angle1);
 		double radAngle2 = Math.toRadians (angle2);
 		//rotation matrix for y axis
@@ -88,8 +91,16 @@ public class BasicShape
 		rotationMatrix2.setCell (0, 1, -Math.sin (radAngle2));
 		rotationMatrix2.setCell (1, 1, Math.cos (radAngle2));
 		rotationMatrix2.setCell (2, 2, 1.0);
-
-		return rotationMatrix1.multiply (rotationMatrix2, new Matrix.DoubleMatrix (3, 3));
+		
+		if (angle1 == 0.0)
+			return rotationMatrix2;
+		else if (angle2 == 0.0)
+			return rotationMatrix1;
+		else if (d == RotationDir.ONWARD)
+			return rotationMatrix1.multiply (rotationMatrix2, new Matrix.DoubleMatrix (3, 3));
+		else if (d == RotationDir.BACKWARD)
+			return rotationMatrix2.multiply (rotationMatrix1, new DoubleMatrix (3, 3));
+		throw new IllegalArgumentException ("uncaught case in rotation matrix creating method");
 	}
 	
 	/**
