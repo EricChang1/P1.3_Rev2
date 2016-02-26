@@ -237,6 +237,7 @@ public class BasicShape
 		dimensions = new ArrayList<Integer>();
 		calcDim (vectors);
 		//initialize offset position
+		mGlue = new Glue (new IntegerMatrix (dimensions.size(), 1));
 		glue (new Glue (new IntegerMatrix (dimensions.size(), 1)));
 		//create adjacency matrix
 		this.adjMatrix = adjMatrix.clone();
@@ -935,14 +936,16 @@ public class BasicShape
 	 */
 	public void glue (Glue g)
 	{
+		//translate vectors (uses needs old glue)
+		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
+			vectors.set(cVertex, g.translateMat(vectors.get(cVertex), mGlue));
+		//adapt glue
 		mGlue = g.clone();
+		//adapt max pos
 		IntegerMatrix maxVec = new IntegerMatrix (mGlue.getDimension(), 1);
 		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
 			maxVec.setCell (cDim, 0, g.getPosition(cDim) + getDimensions (cDim));
 		mMax = new Glue (maxVec);
-		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
-			vectors.set(cVertex, g.translateMat(vectors.get(cVertex), mGlue));
-		
 	}
 	
 	public void print(PrintStream p)
