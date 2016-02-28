@@ -397,7 +397,8 @@ public class PieceRenderPanel extends JPanel
 	
 	private void setAxisRotation()
 	{
-		Matrix<Double> rotMat = BasicShape.rotationMatrix(mCamera.getAngleX2(), mCamera.getAngleX3());
+		BasicShape.RotationDir d = BasicShape.RotationDir.ONWARD;
+		Matrix<Double> rotMat = BasicShape.rotationMatrix(mCamera.getAngleX2(), mCamera.getAngleX3(), d);
 		mAxisRotation.copyValues(rotMat, 0, 0, 0, 0, rotMat.getRows(), rotMat.getColumns());
 	}
 	

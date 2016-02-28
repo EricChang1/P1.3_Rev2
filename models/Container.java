@@ -179,14 +179,16 @@ public class Container extends Block
 		
 		Container cloneCont = this.clone();
 		cloneCont.addMissingRectanglePoints();
-		for (int cNewVert = cloneCont.getNumberOfVertices() - 1; cNewVert <= this.getNumberOfVertices(); --cNewVert)
+		
+		//new approach:
+		//iterate through new added vertices in reverse order
+		//iterate through all vertices until current new vertex in normal order
+		//search cuboid for current new vertex, rest vertex, exclude searched new vertices from connection look ups
+		for (int cNewVert = cloneCont.getNumberOfVertices() - 1; cNewVert >= this.getNumberOfVertices(); --cNewVert)
 		{
 			for (int cOldVert = 0; cOldVert < cNewVert; ++cOldVert)
 			{
-				//solution: exclude added vertices once explored
-				//works, since each cuboid needs to contain min 1 added vertex
-				//fixed 1, fixed 2, conn1 min, conn1 max, conn2 min, conn2 max
-				Cuboid c = cloneCont.getCuboid (cOldVert, cNewVert, 0, cNewVert - 1, 0, cNewVert - 1);
+				Cuboid c = cloneCont.getCuboid (cOldVert, cNewVert, 0, cNewVert, 0, cNewVert);
 				if (c != null)
 					free.add (c);
 			}

@@ -11,10 +11,9 @@ import geometry.Rectangle;
 import gui.*;
 import models.*;
 import models.Matrix.DoubleMatrix;
-<<<<<<< HEAD
+
 import models.ShapeParser.BadFileStructureException;
-=======
->>>>>>> mine/master
+
 import algorithm.Scaler;
 
 public class CubeDissectionTest 

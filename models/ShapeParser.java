@@ -7,7 +7,33 @@ import java.io.*;
 import models.Matrix.*;
 
 
-
+/**
+ * class parsing special files to construct blocks
+ * format needs to be the following
+ * <possibility for comments here>
+ * new
+ * (<z coord>, <x coord>, <y coord>)
+ * <repeat for every vertex>
+ * connect
+ * i0-i2-i5
+ * i3-i2
+ * <repeat for chain of connections>
+ * value
+ * <value>
+ * end
+ * <more comments>
+ * new
+ * ...
+ * end
+ * Note that round brackets for vertices are necessary
+ * Note that the commands new, connect, value, end need to be in separate lines
+ * To indicate connections, indices are used
+ * A vertex is accessed through a 0-based index corresponding to the order
+ * in which the vertices are listed in the file
+ * As many vertices can be connected using chains
+ * the hyphen between two indices establishes a connection between them (mutually)
+ * @author martin
+ */
 public class ShapeParser 
 {
 	@SuppressWarnings("serial")

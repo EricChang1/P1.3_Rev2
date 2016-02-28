@@ -74,6 +74,7 @@ public class ContainerTest
 		
 		Position posZero = setVector (0, 0, 0);
 		Position posOutsideConflict = setVector (11, 11, 11);
+		Position posMiddle = setVector (3, 3, 3);
 		
 		System.out.println ("demo 0|0|0");
 		printPlaceTest (mContainer, cuboid1, posZero);
@@ -92,9 +93,10 @@ public class ContainerTest
 		System.out.println ("demo 2|1|3");
 		printPlaceTest (mContainer, cuboid2, posInsideConflict_Placed);
 		
-		System.out.println ("demo 2|3|3: possible");
+		/*System.out.println ("demo 2|3|3: possible");
 		Position vertex = setVector (2, 3, 3);
 		ArrayList<Position> relatives = mContainer.getRelativePlacements(cuboid2, mContainer.getVertexIndex(vertex.toVector()));
+		*/
 		/*
 		for (Position relat : relatives)
 		{
@@ -147,10 +149,7 @@ public class ContainerTest
 		ArrayList <Cuboid> freeCubes = mContainer.getFreeCuboids();
 		System.out.println ("printing free cuboids");
 		for (Cuboid free : freeCubes)
-		{
 			System.out.println (free);
-		}
-		
 	}
 	
 	public void printPlaceTest (Container c, Block b, Glue g)

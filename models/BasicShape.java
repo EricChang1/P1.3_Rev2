@@ -21,6 +21,8 @@ public class BasicShape
 {
 	public static enum RelatPos {FRONT, BACK, LEFT, RIGHT, ABOVE, BELOW};
 	
+	public static enum RotationDir {ONWARD, BACKWARD}
+	
 	@SuppressWarnings("serial")
 	public static class BadNumberOfRowsException extends IllegalArgumentException
 	{
@@ -71,7 +73,8 @@ public class BasicShape
 	 * @param angle2 Desired amount of rotation in x3 axis (in degrees)
 	 * @return rotation matrix
 	 */
-	public static Matrix<Double> rotationMatrix(double angle1, double angle2){
+	public static Matrix<Double> rotationMatrix (double angle1, double angle2, RotationDir d)
+	{
 		double radAngle1 = Math.toRadians (angle1);
 		double radAngle2 = Math.toRadians (angle2);
 		//rotation matrix for y axis
@@ -88,8 +91,16 @@ public class BasicShape
 		rotationMatrix2.setCell (0, 1, -Math.sin (radAngle2));
 		rotationMatrix2.setCell (1, 1, Math.cos (radAngle2));
 		rotationMatrix2.setCell (2, 2, 1.0);
-
-		return rotationMatrix1.multiply (rotationMatrix2, new Matrix.DoubleMatrix (3, 3));
+		
+		if (angle1 == 0.0)
+			return rotationMatrix2;
+		else if (angle2 == 0.0)
+			return rotationMatrix1;
+		else if (d == RotationDir.ONWARD)
+			return rotationMatrix1.multiply (rotationMatrix2, new Matrix.DoubleMatrix (3, 3));
+		else if (d == RotationDir.BACKWARD)
+			return rotationMatrix2.multiply (rotationMatrix1, new DoubleMatrix (3, 3));
+		throw new IllegalArgumentException ("uncaught case in rotation matrix creating method");
 	}
 	
 	/**
@@ -237,6 +248,7 @@ public class BasicShape
 		dimensions = new ArrayList<Integer>();
 		calcDim (vectors);
 		//initialize offset position
+		mGlue = new Glue (new IntegerMatrix (dimensions.size(), 1));
 		glue (new Glue (new IntegerMatrix (dimensions.size(), 1)));
 		//create adjacency matrix
 		this.adjMatrix = adjMatrix.clone();
@@ -935,14 +947,16 @@ public class BasicShape
 	 */
 	public void glue (Glue g)
 	{
+		//translate vectors (uses needs old glue)
+		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
+			vectors.set(cVertex, g.translateMat(vectors.get(cVertex), mGlue));
+		//adapt glue
 		mGlue = g.clone();
+		//adapt max pos
 		IntegerMatrix maxVec = new IntegerMatrix (mGlue.getDimension(), 1);
 		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
 			maxVec.setCell (cDim, 0, g.getPosition(cDim) + getDimensions (cDim));
 		mMax = new Glue (maxVec);
-		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
-			vectors.set(cVertex, g.translateMat(vectors.get(cVertex), mGlue));
-		
 	}
 	
 	public void print(PrintStream p)

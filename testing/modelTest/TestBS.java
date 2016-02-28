@@ -68,7 +68,7 @@ public class TestBS
 			System.out.print (mBs.getDimensions(cDim) + ", ");
 		System.out.println();
 		mBs.print (System.out);
-		Matrix<Double> rotMat = BasicShape.rotationMatrix(90.0, 90.0);
+		Matrix<Double> rotMat = BasicShape.rotationMatrix(90.0, 90.0, BasicShape.RotationDir.ONWARD);
 		mBs.rotate (rotMat);
 		
 		System.out.println ("After rotation");
@@ -78,7 +78,7 @@ public class TestBS
 		System.out.println();
 		mBs.print(System.out);
 		
-		Matrix<Double> rotBackMat = BasicShape.rotationMatrix(-90.0, -90.0);
+		Matrix<Double> rotBackMat = BasicShape.rotationMatrix(-90.0, -90.0, BasicShape.RotationDir.BACKWARD);
 		mBs.rotate (rotBackMat);
 		System.out.println ("Undoing rotation");
 		System.out.print ("dimensions ");
