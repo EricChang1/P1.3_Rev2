@@ -12,7 +12,7 @@ import models.Matrix.*;
  * format needs to be the following
  * <possibility for comments here>
  * new
- * (<z coord>, <x coord>, <y coord>)
+ * (<z coord>,<x coord>,<y coord>)
  * <repeat for every vertex>
  * connect
  * i0-i2-i5
@@ -25,7 +25,8 @@ import models.Matrix.*;
  * new
  * ...
  * end
- * Note that round brackets for vertices are necessary
+ * Note that round brackets for vertices are necessary 
+ * and that no white spaces between coordinates are allowed
  * Note that the commands new, connect, value, end need to be in separate lines
  * To indicate connections, indices are used
  * A vertex is accessed through a 0-based index corresponding to the order
@@ -72,14 +73,21 @@ public class ShapeParser
 		while (mRead.ready())
 		{
 			//skip unusable part
-			while (mRead.ready() && !(mRead.readLine().equals(new String ("new")))) {}
+			boolean foundNewKey = false;
+			while (mRead.ready() && !foundNewKey) 
+			{
+				foundNewKey = mRead.readLine().equals(new String ("new"));
+			}
 			
-			ArrayList <IntegerMatrix> vecs = parseVectors();
-			IntegerMatrix adjacent = parseConnections (vecs);
-			double value = Double.parseDouble(mRead.readLine());
-			mBlocks.add (new Block (vecs, adjacent, value));
-			if (!mRead.readLine().startsWith("end"))
-				throw new BadFileStructureException ("missing terminating 'end' token");
+			if (foundNewKey)
+			{
+				ArrayList <IntegerMatrix> vecs = parseVectors();
+				IntegerMatrix adjacent = parseConnections (vecs);
+				double value = Double.parseDouble(mRead.readLine());
+				mBlocks.add (new Block (vecs, adjacent, value));
+				if (!mRead.readLine().startsWith("end"))
+					throw new BadFileStructureException ("missing terminating 'end' token");
+			}
 		}
 	}
 	
