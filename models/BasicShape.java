@@ -5,6 +5,7 @@ import geometry.Cuboid;
 import geometry.GaussElim;
 import geometry.IntersectionSolver;
 import geometry.Line;
+import geometry.Point;
 import geometry.Rectangle;
 import geometry.IntersectionSolver.Result;
 
@@ -149,6 +150,24 @@ public class BasicShape
 		if (p1.getPosition (2) > p2.getPosition (2))
 			return RelatPos.BELOW;
 		throw new IllegalArgumentException (p1 + " and " + p2 + " are identical");
+	}
+	
+	/**
+	 * @param relat a given relative position
+	 * @return the opposite relative position
+	 */
+	public static RelatPos getOpposite (RelatPos relat)
+	{
+		switch (relat)
+		{
+		case ABOVE: return RelatPos.BELOW;
+		case BACK: return RelatPos.FRONT;
+		case BELOW: return RelatPos.ABOVE;
+		case FRONT: return RelatPos.BACK;
+		case LEFT: return RelatPos.RIGHT;
+		case RIGHT: return RelatPos.LEFT;
+		default: throw new IllegalArgumentException ("invalid relat pos value, no opposite");
+		}
 	}
 	
 	/**
@@ -327,7 +346,6 @@ public class BasicShape
 	public ArrayList <Cuboid> getCuboids()
 	{	
 		ArrayList <Cuboid> cuboids = new ArrayList <Cuboid>();
-		int connConnReq = 3;
 		//condition: two points form a cuboid iff each of these points has 3 points which are connected to the other 3
 		//these two points must not be connected
 		
@@ -339,7 +357,7 @@ public class BasicShape
 			for (int cVert2 = cVert1 + 1; cVert2 < nOfV; ++cVert2)
 			{
 				//is +1 correct???
-				Cuboid cbd = getCuboid (cVert1, cVert2, cVert1 + 1, nOfV, cVert1 + 1, nOfV);
+				Cuboid cbd = getCuboid (cVert1, cVert2, cVert1 + 1, nOfV - 1, cVert1 + 1, nOfV - 1);
 				if (cbd != null)
 					cuboids.add (cbd);	
 			}
@@ -497,8 +515,10 @@ public class BasicShape
 	/**
 	 * @param indP1 index of first vertex
 	 * @param indP2 index of second vertex
-	 * @param offsP1Conn offset index of indP1's connections
-	 * @param offsP2Conn offset index of indP2's connections
+	 * @param minP1Conn offset index of indP1's connections (inclusive)
+	 * @param maxP1Conn max. index of indP1's connections (inclusive)
+	 * @param minP2Conn offset index of indP2's connections (inclusive)
+	 * @param maxP2Conn max. index of indP2's connections (inclusive)
 	 * @return a cuboid contained in this shape where the first and the second vertex are
 	 * diagonally opposite to each other, if such a cuboid exists. Otherwise this method
 	 * returns null
@@ -512,7 +532,7 @@ public class BasicShape
 			int cConnConnections = 0;
 			int cConn1 = minP1Conn;
 			//iterate through all connections of p1 starting at given offset
-			while (cConn1 < maxP1Conn && cConnConnections < connConnReq)
+			while (cConn1 <= maxP1Conn && cConnConnections < connConnReq)
 			{
 				if (adjMatrix.getCell (indP1, cConn1).equals (1))
 				{
@@ -520,11 +540,13 @@ public class BasicShape
 					int connConnFound = 0, connConnPerConn = 2;
 					//iterate through all connections of p2 starting at given offset
 					//until connections of connections is found
-					while (cConn2 < maxP2Conn && connConnFound < connConnPerConn)
+					while (cConn2 <= maxP2Conn && connConnFound < connConnPerConn)
 					{
+						
 						if (adjMatrix.getCell (indP2, cConn2).equals (1) &&
 							adjMatrix.getCell (cConn1, cConn2).equals (1))
 						{
+							//System.out.println ("mutual connection of connections " + new Glue (getVertex (cConn1)) + " to " + new Glue (getVertex (cConn2)));
 							++cConnConnections;
 							++connConnFound;
 						}
@@ -823,7 +845,7 @@ public class BasicShape
 	public void addMissingRectanglePoints()
 	{
 		//compute min and max point of cuboid encompassing entire shape
-		IntegerMatrix outerMax = new IntegerMatrix (mGlue.getDimension(), 1);
+		IntegerMatrix outerMax = new IntegerMatrix (mGlue.getDimension(), 1);	
 		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
 			outerMax.setCell(cDim, 0, mGlue.getPosition(cDim) + getDimensions(cDim));
 		
@@ -856,18 +878,103 @@ public class BasicShape
 						if (solInter.getSolutionType() == IntersectionSolver.Result.ONE &&
 							solInter.isWithinBounds())
 						{
-							ArrayList <Intersection> inters = new ArrayList<>();
-							//add intersection objects with lines touching the border of s through intersection
+							
 							Glue inter = solInter.getIntersection();
+							//if there is a split
+							if (!r.isVertex (inter))
+							{
+								//add intersection objects with lines touching the border of s through intersection
+								ArrayList <Intersection> inters = new ArrayList<>();
+								//split s into smaller s[] and add s[] to S
+								ArrayList <Rectangle> splitSides = r.splitRectangle (inter);
+								
+								if (splitSides.size() == 2)
+								{
+									Line interLine = r.getPointLine (inter);
+									//add intersection on intersection line
+									inters.add (new Intersection (inter.toVector(), interLine.getFirst(), interLine.getSecond()));
+									//add intersection on line parallel to intersection line
+									ArrayList <Glue> splitVertices = splitSides.get (0).getVertices();
+									IntersectionSolver isFirstOnInterLine = new IntersectionSolver (interLine, new Point (splitVertices.get(1)));
+									Glue onParallel = null;
+									if (isFirstOnInterLine.getSolutionType() == IntersectionSolver.Result.ONE)
+										onParallel = splitVertices.get (3);
+									else
+										onParallel = splitVertices.get (1);
+									Line parallelLine = r.getPointLine (onParallel);
+									inters.add (new Intersection (onParallel.toVector(), parallelLine.getFirst(), parallelLine.getSecond()));
+									addVertices(inters);
+									inters.clear();
+									//add intersection connecting above points
+									inters.add (new Intersection (inter.toVector(), inter.toVector(), onParallel.toVector()));
+								}
+								else if (splitSides.size() == 4)
+								{
+									ArrayList <Glue> addedRectVertices = new ArrayList<>(4);
+									//add unique non-defining vertices as intersections on original rectangle
+									//for each second split rectangle
+									int splitStep = splitSides.size() == 2 ? 1 : 2;
+									for (int cSplit = 0; cSplit < splitSides.size(); cSplit += splitStep)
+									{
+										//add intersection objects for both non-defining point in shape's data structure
+										ArrayList <Glue> splitVertices = splitSides.get (cSplit).getVertices();
+										for (int cSplitVert = 1; cSplitVert < splitVertices.size(); cSplitVert += 2)
+										{
+											Glue splitVertex = splitVertices.get (cSplitVert);
+											addedRectVertices.add (splitVertex);
+											Line origLine = r.getPointLine (splitVertex);
+											inters.add (new Intersection (splitVertex.toVector(), origLine.getFirst(), origLine.getSecond()));
+										}
+									}
+									addVertices (inters);
+									inters.clear();
+									//add intersections for intersection and new vertices added above
+									for (int cAdded1 = 0; cAdded1 < addedRectVertices.size(); ++cAdded1)
+									{
+										int cAdded2 = cAdded1 + 1;
+										boolean foundOppo = false;
+										while (!foundOppo && cAdded2 < addedRectVertices.size())
+										{
+											Line l = new Line (addedRectVertices.get (cAdded1), addedRectVertices.get (cAdded2));
+											IntersectionSolver testInterOnLine = new IntersectionSolver (l, new Point (inter));
+											if (testInterOnLine.getSolutionType() == IntersectionSolver.Result.ONE)
+											{
+												inters.add (new Intersection (inter.toVector(), l.getFirst(), l.getSecond()));
+												foundOppo = true;
+											}
+											++cAdded2;
+										}
+									}
+								}
+								//add all intersection objects
+								addVertices (inters);
+								//remove current rect & add split rects
+								sides.remove (r);
+								sides.addAll (splitSides);
+								--cSides;
+								foundFreeConnInter = true;
+								modifyConnection (cVertex, getVertexIndex (inter.toVector()), true);
+							}
+							else
+							{
+								int indInters = getVertexIndex (inter.toVector());
+								//if intersection has opposite free connection available
+								//applies if intersection already existed
+								if (getFreeConnections (indInters).contains (getOpposite (free)))
+									modifyConnection (cVertex, indInters, true);
+							}
 							
-							//split s into smaller s[] and add s[] to S
-							ArrayList <Rectangle> splitSides = r.splitRectangle (inter);
 							
+							/*
 							if (splitSides.size() > 1)
 							{
+								
+								
+								
 								ArrayList <Glue> addedRectVertices = new ArrayList<>(4);
 								//for each second split rectangle
-								for (int cSplit = 0; cSplit < splitSides.size(); cSplit += 2)
+								int splitStep = splitSides.size() == 2 ? 1 : 2;
+								for (int cSplit = 0; cSplit < splitSides.size(); cSplit += splitStep)
 								{
 									//add intersection objects for both non-defining point in shape's data structure
 									ArrayList <Glue> splitVertices = splitSides.get (cSplit).getVertices();
@@ -882,22 +989,26 @@ public class BasicShape
 								addVertices (inters);
 								inters.clear();
 								//add intersections objects for intersection point
+								//iterate 2d through added vertices to find matching ones
 								for (int cAdded1 = 0; cAdded1 < addedRectVertices.size(); ++cAdded1)
 								{
 									if (addedRectVertices.get (cAdded1) != null)
 									{
 										int cAdded2 = cAdded1 + 1;
 										boolean lineEndFound = false;
-										while (!lineEndFound && cAdded2 < addedRectVertices.size())
+										while (cAdded2 < addedRectVertices.size())
 										{
 											if (addedRectVertices.get (cAdded2) != null)
 											{
 												Line addLine = new Line (addedRectVertices.get (cAdded1), addedRectVertices.get (cAdded2));
-												if (addLine.isInRange (inter));
+												Point interPoint = new Point (inter);
+												IntersectionSolver solve = new IntersectionSolver (interPoint, addLine);
+												
+												//if vertices are on one line => add intersection
+												if (solve.getSolutionType() == IntersectionSolver.Result.ONE && solve.isWithinBounds() ||
+													splitSides.size() == 2)
 												{
 													inters.add (new Intersection (inter.toVector(), addLine.getFirst(), addLine.getSecond()));
-													addedRectVertices.set (cAdded1, null);
-													addedRectVertices.set (cAdded2, null);
 													lineEndFound = true;
 												}
 											}
@@ -915,7 +1026,11 @@ public class BasicShape
 							}
 							
 							int indInters = getVertexIndex (inter.toVector());
-							modifyConnection (cVertex, indInters, true);
+							//if intersection has opposite free connection available
+							//applies if intersection already existed
+							if (splitSides.size() > 1 || getFreeConnections (indInters).contains (getOpposite (free)))
+								modifyConnection (cVertex, indInters, true);
+							*/
 						}
 					}
 					++cFree;
