@@ -86,7 +86,7 @@ public class ContainerTest
 		printPlaceTest(mContainer, cuboid1, posInsideConflict_Bounds);
 		
 		System.out.println ("actually placing cuboid 1 at 0|0|0");
-		mContainer.placeBlock(cuboid1, posZero);
+		mContainer.placeBlock (cuboid1, posZero);
 		mContainer.print(System.out);
 		
 		Position posInsideConflict_Placed = setVector (1, 1, 2);
