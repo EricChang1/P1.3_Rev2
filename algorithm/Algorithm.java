@@ -95,7 +95,7 @@ public abstract class Algorithm implements Runnable
 	{
 		mContainer = container;
 		mPieces = pieces;
-		mAlgoStarted = true;//reset to false after testing
+		mAlgoStarted = false;
 		mAlgoDone = false;
 	}
 	
