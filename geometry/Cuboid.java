@@ -49,6 +49,31 @@ public class Cuboid extends GeoShape
 			dims.add (Math.abs (getSecond().getCell(cDim, 0) - getFirst().getCell(cDim, 0)));
 		return dims;
 	}
+	
+	public ArrayList<Glue> getVertices()
+	{
+		ArrayList<Glue> vertices = new ArrayList<>();
+		
+		vertices.add (new Glue (getFirst()));
+		for (int cSingle = 0; cSingle < getDimension(); ++cSingle)
+		{
+			IntegerMatrix glueBase = getFirst().clone();
+			glueBase.setCell (cSingle, 0, getSecond().getCell (cSingle, 0));
+			vertices.add (new Glue (glueBase));
+		}
+		for (int cDouble1 = 0; cDouble1 < getDimension() - 1; ++cDouble1)
+		{
+			for (int cDouble2 = cDouble1 + 1; cDouble2 < getDimension(); ++cDouble2)
+			{
+				IntegerMatrix glueBase = getFirst().clone();
+				glueBase.setCell (cDouble1, 0, getSecond().getCell (cDouble1, 0));
+				glueBase.setCell (cDouble2, 0, getSecond().getCell (cDouble2, 0));
+				vertices.add (new Glue (glueBase));
+			}
+		}
+		vertices.add (new Glue (getSecond()));
+		return vertices;
+	}
 
 	@Override
 	public DoubleMatrix loadEquationMatrix() 

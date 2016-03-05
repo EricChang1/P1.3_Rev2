@@ -106,6 +106,26 @@ public class Glue implements Cloneable
 	}
 	
 	/**
+	 * @param positions list of glue objects
+	 * @return glue object the closest to this
+	 */
+	public Glue getClosest (ArrayList <Glue> positions)
+	{
+		double min = Double.MAX_VALUE;
+		Glue minPos = null;
+		for (Glue pos : positions)
+		{
+			double dist = getDistance (pos); 
+			if (min > dist)
+			{
+				min = dist;
+				minPos = pos;
+			}
+		}
+		return minPos;
+	}
+	
+	/**
 	 * @param v matrix to translate
 	 * @return matrix v translated by position held by the object
 	 */
