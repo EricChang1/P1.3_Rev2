@@ -6,14 +6,15 @@ import models.Block;
 import models.Container;
 import models.Matrix;
 import models.Position;
-
+import models.Resource;
+import models.Resource.BlockType;
 import algorithm.*;
 
 public class GreedyAlgorithm extends Algorithm {
 	
-	public GreedyAlgorithm(EvaluationHeuristic e, SelectionHeuristic s){
+	public GreedyAlgorithm(EvaluationHeuristic e, ArrayList<Resource> list){
 		this.currentE = e;
-		this.currentS = s;
+		Resources = list;
 	}
 	
 	@Override
@@ -25,71 +26,121 @@ public class GreedyAlgorithm extends Algorithm {
 			placeBlock();
 		}
 	}
-	
-	public Position findLeftTopBack()
-	{
-		int X = getContainer().getDimensions(0);
-		int Y = getContainer().getDimensions(1);
-		int Z = getContainer().getDimensions(2);
-		
-		ArrayList<Integer> posMax = new ArrayList<Integer>();
-		posMax.add(X);posMax.add(Y);posMax.add(Z);
-		Position max = new Position(posMax);
-		for (int x=mX; x<=X;x++)
-		{
-			for (int y=mY;y<=Y; y++)
-			{
-				for (int z=mZ;z<=Z;z++)
-				{
-					ArrayList<Integer> pos = new ArrayList<Integer>();
-					pos.add(x);pos.add(y);pos.add(z);
-					Position position  = new Position(pos);
-					
-					//If no block, then position is free, return position
-					if (getContainer().hasBlockAt(position)==false)
-					{
-						return position;
-					}
-					mZ++; //Next time search is performed, doesn't have to start at 0,0,0
-				}
-				mY++;
-			}
-			mX++;
-		}
-		return max;
-	}
 	public void placeBlock()
 	{
 		//get left top back position
-		Position currentPos = this.findLeftTopBack();
-		//Use selection Heuristics to get best block
-		Block currentBlock = getPieces().get(currentS.getBestBlock(getPieces())).getBlock();
-		
-		for (int i=0; i<4; i++)
+		Position currentPos = currentE.freePos(this.getContainer());
+		pentPos = currentPos;
+		if (currentPos!=null)
 		{
-			for (int j=0;j<4;j++)
+			//Select Resource
+			for (int k=0; k<Resources.size(); k++)
 			{
-				Container cloneTruck = getContainer().clone();
-				Matrix<Double> rotationMatrix = BasicShape.rotationMatrix(i*90, j*90);
-				currentBlock.rotate(rotationMatrix);
-				cloneTruck.placeBlock(currentBlock, currentPos);
-				if (currentE.getScore(getContainer())>score)
+				//Select Block
+				if (Resources.get(k).isInfinite()==true||Resources.get(k).getInventory()>0)
 				{
-					score = currentE.getScore(getContainer());
-					getContainer().placeBlock(currentBlock, currentPos);
-				}				
+					
+					//Select Rotation
+					for (int l=0;l<Resources.get(k).getRot().size();l++)
+					{
+						Container cloneTruck = getContainer().clone();
+						Block currentBlock = Resources.get(k).getRot().get(l);	
+						//Adjust Position for PENT only
+						if (Resources.get(k).getType()==Resource.BlockType.PENT)
+						{
+							
+							ArrayList <Integer> Pos = new ArrayList <Integer> ();
+							int X = Resources.get(k).rotatedPos().get(l).getPosition(0)+pentPos.getPosition(0);
+							int Y = Resources.get(k).rotatedPos().get(l).getPosition(1)+pentPos.getPosition(1);
+							int Z = Resources.get(k).rotatedPos().get(l).getPosition(2)+pentPos.getPosition(2);
+							Pos.add(X); Pos.add(Y); Pos.add(Z); 
+							Position pos = new Position(Pos);
+							currentPos = pos;
+						}
+						if (Resources.get(k).getType()==Resource.BlockType.PARCEL&&currentE.checkPos(currentPos, currentBlock, cloneTruck))
+						{
+							cloneTruck.placeBlock(currentBlock, currentPos); //place
+							if (currentE.getScore(Resources.get(k), currentPos, l)>=score)//higher than score
+							{
+								score = currentE.getScore(Resources.get(k), currentPos, l);//update score
+								bestBlock = currentBlock;
+								state=l;
+								bool=false;
+								bestResource = Resources.get(k);
+							}	
+						}	
+						if (Resources.get(k).getType()==Resource.BlockType.PENT&&currentE.pentCheckPos(Resources.get(k), l, pentPos, cloneTruck))
+						{
+							cloneTruck.placeBlock(currentBlock, currentPos); //place
+							if (currentE.getScore(Resources.get(k), pentPos, l)>=score)//higher than score
+							{
+								score = currentE.getScore(Resources.get(k), pentPos, l);//update score
+								bestBlock = currentBlock;
+								state=l;
+								bool=false;
+								pentAdjPos = currentPos;
+								bestResource = Resources.get(k);
+								index =k;
+							}	
+						}	
+					}
+				}
 			}
-		}	
-		if(mX !=getContainer().getDimensions(0)&& mY !=getContainer().getDimensions(1)&& mZ !=getContainer().getDimensions(2))
+			if (bool)
+			{
+				currentE.nextPos();
+			}
+			if (bestBlock!=null)
+			{
+				if (bestResource.getType()==Resource.BlockType.PENT)
+				{
+					getContainer().placeBlock(bestBlock, pentAdjPos);
+					currentE.update(bestResource, pentPos, bestResource.getType(),state);
+				}
+				if (bestResource.getType()==Resource.BlockType.PARCEL)
+				{
+					getContainer().placeBlock(bestBlock, currentPos);
+					currentE.update(bestResource, currentPos, bestResource.getType(),state);
+				}
+				Resources.get(index).deduct();
+				bestBlock = null;
+				bool=true;
+			}	
+		}
+		if(currentPos==null||resourceEmpty())
+		{
+			setAlgoDone();
+			//currentE.print();
+		}
+		else if(currentPos!=null)
 		{
 			this.placeBlock();
 		}
-		
 	}
 	
+	public boolean resourceEmpty()
+	{
+		boolean bool = true;
+		for (int k=0; k<Resources.size(); k++)
+		{
+			if (Resources.get(k).getInventory()>0)
+			{
+				bool = false;
+				return bool;
+			}
+		}
+		return bool;
+	}
+
 	private EvaluationHeuristic currentE;
-	private SelectionHeuristic currentS;
-	private int mX,mY,mZ;
+	private ArrayList<Resource> Resources;
 	private double score;
-	
+	private Block bestBlock;
+	private int state;
+	private boolean bool;
+	private Position pentPos;
+	private Position pentAdjPos;
+	private Resource bestResource;
+	private int index;
+
 }

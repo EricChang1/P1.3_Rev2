@@ -801,7 +801,7 @@ public class BasicShape
 	 */
 	public boolean isWithin (Glue p)
 	{
-		Glue origin = new Glue (new IntegerMatrix (p.getDimension(), 3));
+		Glue origin = new Glue (new IntegerMatrix (p.getDimension(), 1));
 		int inters = 0;
 		for (Line l : getConnectingLines())
 		{

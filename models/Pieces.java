@@ -1,98 +1,120 @@
 package models;
 
-import java.util.*;
+import models.Matrix.IntegerMatrix;
 
-import models.Matrix.*;
+import java.util.*;
 
 public class Pieces {
 	
 	
-	public ArrayList<ArrayList<DoubleMatrix>> createPents()
+	public static Block createTBlock()
 	{
-		ArrayList<ArrayList<DoubleMatrix>>pentominos = new ArrayList<ArrayList<DoubleMatrix>>();
-		pentominos.add(createLPent());
-		pentominos.add(createPPent());
-		pentominos.add(createTPent());
-		return pentominos;
+		ArrayList<IntegerMatrix> T = createTPent();
+		ArrayList<ArrayList<IntegerMatrix>> cT = getConnectedT();
+		IntegerMatrix iT = BasicShape.buildAdjacencyMatrix(T, cT);
+		Block blockT = new Block(T, iT, 1);
+		
+		return blockT;
+		
 	}
 	
-	public ArrayList<DoubleMatrix> createLPent()
+	public static Block createPBlock()
 	{
-		ArrayList<DoubleMatrix> pentL = new ArrayList<DoubleMatrix>();
-		DoubleMatrix vectorL1 = new DoubleMatrix(3,1);
+		ArrayList<IntegerMatrix> P = createPPent();
+		ArrayList<ArrayList<IntegerMatrix>> cP = getConnectedP();
+		IntegerMatrix iP = BasicShape.buildAdjacencyMatrix(P, cP);
+		Block blockP = new Block(P, iP, 1);
+		
+		return blockP;
+	}
+	
+	public static Block createLBlock()
+	{
+		ArrayList<IntegerMatrix> L = createLPent();
+		ArrayList<ArrayList<IntegerMatrix>> cL = getConnectedL();
+		IntegerMatrix iL = BasicShape.buildAdjacencyMatrix(L, cL);
+		Block blockL = new Block(L, iL, 1);
+		
+		return blockL;
+	}
+	
+	public static ArrayList<IntegerMatrix> createLPent()
+	{
+		ArrayList<IntegerMatrix> pentL = new ArrayList<IntegerMatrix>();
+		IntegerMatrix vectorL1 = new IntegerMatrix(3,1);
 		vectorL1.setCell(0, 0, 0);
 		vectorL1.setCell(1, 0, 0);
 		vectorL1.setCell(2, 0, 0);
 		pentL.add(vectorL1);
 		
-		DoubleMatrix vectorL2 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL2 = new IntegerMatrix(3,1);
 		vectorL2.setCell(0, 0, 2);
 		vectorL2.setCell(1, 0, 0);
 		vectorL2.setCell(2, 0, 0);
 		pentL.add(vectorL2);
 		
-		DoubleMatrix vectorL3 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL3 = new IntegerMatrix(3,1);
 		vectorL3.setCell(0, 0, 2);
 		vectorL3.setCell(1, 0, 0);
 		vectorL3.setCell(2, 0, 1);
 		pentL.add(vectorL3);
 		
-		DoubleMatrix vectorL4 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL4 = new IntegerMatrix(3,1);
 		vectorL4.setCell(0, 0, 2);
 		vectorL4.setCell(1, 0, 1);
 		vectorL4.setCell(2, 0, 1);
 		pentL.add(vectorL4);
 		
-		DoubleMatrix vectorL5 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL5 = new IntegerMatrix(3,1);
 		vectorL5.setCell(0, 0, 2);
 		vectorL5.setCell(1, 0, 1);
 		vectorL5.setCell(2, 0, 0);
 		pentL.add(vectorL5);
 		
-		DoubleMatrix vectorL6 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL6 = new IntegerMatrix(3,1);
 		vectorL6.setCell(0, 0, 1);
 		vectorL6.setCell(1, 0, 1);
 		vectorL6.setCell(2, 0, 0);
 		pentL.add(vectorL6);
 		
-		DoubleMatrix vectorL7 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL7 = new IntegerMatrix(3,1);
 		vectorL7.setCell(0, 0, 1);
 		vectorL7.setCell(1, 0, 1);
 		vectorL7.setCell(2, 0, 1);
 		pentL.add(vectorL7);
 		
-		DoubleMatrix vectorL8 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL8 = new IntegerMatrix(3,1);
 		vectorL8.setCell(0, 0, 1);
 		vectorL8.setCell(1, 0, 4);
 		vectorL8.setCell(2, 0, 0);
 		pentL.add(vectorL8);
 		
-		DoubleMatrix vectorL9 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL9 = new IntegerMatrix(3,1);
 		vectorL9.setCell(0, 0, 1);
 		vectorL9.setCell(1, 0, 4);
 		vectorL9.setCell(2, 0, 1);
 		pentL.add(vectorL9);
 		
-		DoubleMatrix vectorL10 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL10 = new IntegerMatrix(3,1);
 		vectorL10.setCell(0, 0, 0);
 		vectorL10.setCell(1, 0, 4);
 		vectorL10.setCell(2, 0, 1);
 		pentL.add(vectorL10);
 		
-		DoubleMatrix vectorL11 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL11 = new IntegerMatrix(3,1);
 		vectorL11.setCell(0, 0, 0);
 		vectorL11.setCell(1, 0, 4);
 		vectorL11.setCell(2, 0, 0);
 		pentL.add(vectorL11);
 		
-		DoubleMatrix vectorL12 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorL12 = new IntegerMatrix(3,1);
 		vectorL12.setCell(0, 0, 0);
 		vectorL12.setCell(1, 0, 0);
 		vectorL12.setCell(2, 0, 1);
 		pentL.add(vectorL12);
 		return pentL;
 	}
-	public ArrayList<ArrayList<IntegerMatrix>> getConnectedL()
+	public static ArrayList<ArrayList<IntegerMatrix>> getConnectedL()
 	{
 		IntegerMatrix L1 = new IntegerMatrix(3,1);
 		L1.setCell(0, 0, 0);
@@ -148,37 +170,37 @@ public class Pieces {
 		connectL1.add(L2);connectL1.add(L11);connectL1.add(L12);
 		
 		ArrayList<IntegerMatrix> connectL2 = new ArrayList<IntegerMatrix>();
-		connectL2.add(L1);connectL1.add(L3);connectL1.add(L5);
+		connectL2.add(L1);connectL2.add(L3);connectL2.add(L5);
 		
 		ArrayList<IntegerMatrix> connectL3 = new ArrayList<IntegerMatrix>();
-		connectL3.add(L2);connectL1.add(L4);connectL1.add(L12);
+		connectL3.add(L2);connectL3.add(L4);connectL3.add(L12);
 		
 		ArrayList<IntegerMatrix> connectL4 = new ArrayList<IntegerMatrix>();
-		connectL4.add(L3);connectL1.add(L5);connectL1.add(L7);
+		connectL4.add(L3);connectL4.add(L5);connectL4.add(L7);
 		
 		ArrayList<IntegerMatrix> connectL5 = new ArrayList<IntegerMatrix>();
-		connectL5.add(L2);connectL1.add(L4);connectL1.add(L6);
+		connectL5.add(L2);connectL5.add(L4);connectL5.add(L6);
 		
 		ArrayList<IntegerMatrix> connectL6 = new ArrayList<IntegerMatrix>();
-		connectL6.add(L5);connectL1.add(L7);connectL1.add(L8);
+		connectL6.add(L5);connectL6.add(L7);connectL6.add(L8);
 		
 		ArrayList<IntegerMatrix> connectL7 = new ArrayList<IntegerMatrix>();
-		connectL7.add(L4);connectL1.add(L6);connectL1.add(L9);
+		connectL7.add(L4);connectL7.add(L6);connectL7.add(L9);
 		
 		ArrayList<IntegerMatrix> connectL8 = new ArrayList<IntegerMatrix>();
-		connectL8.add(L6);connectL1.add(L9);connectL1.add(L11);
+		connectL8.add(L6);connectL8.add(L9);connectL8.add(L11);
 		
 		ArrayList<IntegerMatrix> connectL9 = new ArrayList<IntegerMatrix>();
-		connectL9.add(L7);connectL1.add(L8);connectL1.add(L10);
+		connectL9.add(L7);connectL9.add(L8);connectL9.add(L10);
 		
 		ArrayList<IntegerMatrix> connectL10 = new ArrayList<IntegerMatrix>();
-		connectL10.add(L9);connectL1.add(L11);connectL1.add(L12);
+		connectL10.add(L9);connectL10.add(L11);connectL10.add(L12);
 		
 		ArrayList<IntegerMatrix> connectL11 = new ArrayList<IntegerMatrix>();
-		connectL11.add(L1);connectL1.add(L8);connectL1.add(L10);
+		connectL11.add(L1);connectL11.add(L8);connectL11.add(L10);
 		
 		ArrayList<IntegerMatrix> connectL12 = new ArrayList<IntegerMatrix>();
-		connectL12.add(L3);connectL1.add(L4);connectL1.add(L10);
+		connectL12.add(L3);connectL12.add(L1);connectL12.add(L10);
 		
 		connectLPent.add(connectL1);connectLPent.add(connectL2);connectLPent.add(connectL3);connectLPent.add(connectL4);connectLPent.add(connectL5);connectLPent.add(connectL6);
 		connectLPent.add(connectL7);connectLPent.add(connectL8);connectLPent.add(connectL9);connectLPent.add(connectL10);connectLPent.add(connectL11);connectLPent.add(connectL12);
@@ -187,72 +209,72 @@ public class Pieces {
 	}
 
 	
-	public ArrayList<DoubleMatrix> createPPent()
+	public static ArrayList<IntegerMatrix> createPPent()
 	{
-		ArrayList<DoubleMatrix>  pentP = new ArrayList<DoubleMatrix> ();
-		DoubleMatrix vectorP1 = new DoubleMatrix(3,1);
+		ArrayList<IntegerMatrix>  pentP = new ArrayList<IntegerMatrix> ();
+		IntegerMatrix vectorP1 = new IntegerMatrix(3,1);
 		vectorP1.setCell(0, 0, 0);
 		vectorP1.setCell(1, 0, 0);
 		vectorP1.setCell(2, 0, 0);
 		pentP.add(vectorP1);
-		DoubleMatrix vectorP2 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP2 = new IntegerMatrix(3,1);
 		vectorP2.setCell(0, 0, 1);
 		vectorP2.setCell(1, 0, 0);
 		vectorP2.setCell(2, 0, 0);
 		pentP.add(vectorP2);
-		DoubleMatrix vectorP3 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP3 = new IntegerMatrix(3,1);
 		vectorP3.setCell(0, 0, 1);
 		vectorP3.setCell(1, 0, 1);
 		vectorP3.setCell(2, 0, 0);
 		pentP.add(vectorP3);
-		DoubleMatrix vectorP4 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP4 = new IntegerMatrix(3,1);
 		vectorP4.setCell(0, 0, 2);
 		vectorP4.setCell(1, 0, 1);
 		vectorP4.setCell(2, 0, 0);
 		pentP.add(vectorP4);
-		DoubleMatrix vectorP5 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP5 = new IntegerMatrix(3,1);
 		vectorP5.setCell(0, 0, 2);
 		vectorP5.setCell(1, 0, 3);
 		vectorP5.setCell(2, 0, 0);
 		pentP.add(vectorP5);
-		DoubleMatrix vectorP6 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP6 = new IntegerMatrix(3,1);
 		vectorP6.setCell(0, 0, 0);
 		vectorP6.setCell(1, 0, 3);
 		vectorP6.setCell(2, 0, 0);
 		pentP.add(vectorP6);
-		DoubleMatrix vectorP7 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP7 = new IntegerMatrix(3,1);
 		vectorP7.setCell(0, 0, 0);
 		vectorP7.setCell(1, 0, 0);
 		vectorP7.setCell(2, 0, 1);
 		pentP.add(vectorP7);
-		DoubleMatrix vectorP8 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP8 = new IntegerMatrix(3,1);
 		vectorP8.setCell(0, 0, 1);
 		vectorP8.setCell(1, 0, 0);
 		vectorP8.setCell(2, 0, 1);
 		pentP.add(vectorP8);
-		DoubleMatrix vectorP9 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP9 = new IntegerMatrix(3,1);
 		vectorP9.setCell(0, 0, 1);
 		vectorP9.setCell(1, 0, 1);
 		vectorP9.setCell(2, 0, 1);
 		pentP.add(vectorP9);
-		DoubleMatrix vectorP10 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP10 = new IntegerMatrix(3,1);
 		vectorP10.setCell(0, 0, 2);
 		vectorP10.setCell(1, 0, 1);
 		vectorP10.setCell(2, 0, 1);
 		pentP.add(vectorP10);
-		DoubleMatrix vectorP11 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP11 = new IntegerMatrix(3,1);
 		vectorP11.setCell(0, 0, 2);
 		vectorP11.setCell(1, 0, 3);
 		vectorP11.setCell(2, 0, 1);
 		pentP.add(vectorP11);
-		DoubleMatrix vectorP12 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorP12 = new IntegerMatrix(3,1);
 		vectorP12.setCell(0, 0, 0);
 		vectorP12.setCell(1, 0, 3);
 		vectorP12.setCell(2, 0, 1);
 		pentP.add(vectorP12);
 		return pentP;
 	}
-	public ArrayList<ArrayList<IntegerMatrix>> getConnectedP()
+	public static ArrayList<ArrayList<IntegerMatrix>> getConnectedP()
 	{
 		IntegerMatrix P1 = new IntegerMatrix(3,1);
 		P1.setCell(0, 0, 0);
@@ -357,100 +379,100 @@ public class Pieces {
 		return connectPPent;
 	}
 	
-	public ArrayList<DoubleMatrix> createTPent()
+	public static ArrayList<IntegerMatrix> createTPent()
 	{
-		ArrayList <DoubleMatrix> pentT = new ArrayList<DoubleMatrix>();
-		DoubleMatrix vectorT1 = new DoubleMatrix(3,1);
+		ArrayList <IntegerMatrix> pentT = new ArrayList<IntegerMatrix>();
+		IntegerMatrix vectorT1 = new IntegerMatrix(3,1);
 		vectorT1.setCell(0, 0, 1);
 		vectorT1.setCell(1, 0, 0);
 		vectorT1.setCell(2, 0, 0);
 		pentT.add(vectorT1);
 		
-		DoubleMatrix vectorT2 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT2 = new IntegerMatrix(3,1);
 		vectorT2.setCell(0, 0, 2);
 		vectorT2.setCell(1, 0, 0);
 		vectorT2.setCell(2, 0, 0);
 		pentT.add(vectorT2);
 		
-		DoubleMatrix vectorT3 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT3 = new IntegerMatrix(3,1);
 		vectorT3.setCell(0, 0, 3);
 		vectorT3.setCell(1, 0, 2);
 		vectorT3.setCell(2, 0, 0);
 		pentT.add(vectorT3);
 		
-		DoubleMatrix vectorT4 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT4 = new IntegerMatrix(3,1);
 		vectorT4.setCell(0, 0, 3);
 		vectorT4.setCell(1, 0, 3);
 		vectorT4.setCell(2, 0, 0);
 		pentT.add(vectorT4);
 		
-		DoubleMatrix vectorT5 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT5 = new IntegerMatrix(3,1);
 		vectorT5.setCell(0, 0, 0);
 		vectorT5.setCell(1, 0, 3);
 		vectorT5.setCell(2, 0, 0);
 		pentT.add(vectorT5);
 		
-		DoubleMatrix vectorT6 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT6 = new IntegerMatrix(3,1);
 		vectorT6.setCell(0, 0, 0);
 		vectorT6.setCell(1, 0, 2);
 		vectorT6.setCell(2, 0, 0);
 		pentT.add(vectorT6);
 		
-		DoubleMatrix vectorT7 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT7 = new IntegerMatrix(3,1);
 		vectorT7.setCell(0, 0, 2);
 		vectorT7.setCell(1, 0, 0);
 		vectorT7.setCell(2, 0, 1);
 		pentT.add(vectorT7);
 		
-		DoubleMatrix vectorT8 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT8 = new IntegerMatrix(3,1);
 		vectorT8.setCell(0, 0, 1);
 		vectorT8.setCell(1, 0, 0);
 		vectorT8.setCell(2, 0, 1);
 		pentT.add(vectorT8);
 		
-		DoubleMatrix vectorT9 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT9 = new IntegerMatrix(3,1);
 		vectorT9.setCell(0, 0, 0);
 		vectorT9.setCell(1, 0, 3);
 		vectorT9.setCell(2, 0, 1);
 		pentT.add(vectorT9);
 		
-		DoubleMatrix vectorT10 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT10 = new IntegerMatrix(3,1);
 		vectorT10.setCell(0, 0, 3);
 		vectorT10.setCell(1, 0, 3);
 		vectorT10.setCell(2, 0, 1);
 		pentT.add(vectorT10);
 		
-		DoubleMatrix vectorT11 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT11 = new IntegerMatrix(3,1);
 		vectorT11.setCell(0, 0, 3);
 		vectorT11.setCell(1, 0, 2);
 		vectorT11.setCell(2, 0, 1);
 		pentT.add(vectorT11);
 		
-		DoubleMatrix vectorT12 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT12 = new IntegerMatrix(3,1);
 		vectorT12.setCell(0, 0, 0);
 		vectorT12.setCell(1, 0, 2);
 		vectorT12.setCell(2, 0, 1);
 		pentT.add(vectorT12);
 		
-		DoubleMatrix vectorT13 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT13 = new IntegerMatrix(3,1);
 		vectorT13.setCell(0, 0, 2);
 		vectorT13.setCell(1, 0, 2);
 		vectorT13.setCell(2, 0, 0);
 		pentT.add(vectorT13);
 		
-		DoubleMatrix vectorT14 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT14 = new IntegerMatrix(3,1);
 		vectorT14.setCell(0, 0, 2);
 		vectorT14.setCell(1, 0, 2);
 		vectorT14.setCell(2, 0, 1);
 		pentT.add(vectorT14);
 		
-		DoubleMatrix vectorT15 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT15 = new IntegerMatrix(3,1);
 		vectorT15.setCell(0, 0, 1);
 		vectorT15.setCell(1, 0, 2);
 		vectorT15.setCell(2, 0, 1);
 		pentT.add(vectorT15);
 		
-		DoubleMatrix vectorT16 = new DoubleMatrix(3,1);
+		IntegerMatrix vectorT16 = new IntegerMatrix(3,1);
 		vectorT16.setCell(0, 0, 1);
 		vectorT16.setCell(1, 0, 2);
 		vectorT16.setCell(2, 0, 0);
@@ -458,7 +480,7 @@ public class Pieces {
 		
 		return pentT;
 	}
-	public ArrayList<ArrayList<IntegerMatrix>> getConnectedT()
+	public static ArrayList<ArrayList<IntegerMatrix>> getConnectedT()
 	{
 		IntegerMatrix T1 = new IntegerMatrix(3,1);
 		T1.setCell(0, 0, 1);
