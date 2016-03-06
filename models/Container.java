@@ -288,42 +288,22 @@ public class Container extends Block
 		The position refers to the top-left corner of the smallest possible rectangle containig the block
 	**/
 	public boolean checkPositionOverlap (Block block, Glue pos)
-	{
-		//check whether not in container: works for cuboid containers
-		for (int cDim = 0; cDim < pos.getDimension(); ++cDim)
-		{
-			if (block.getGlue().getPosition(cDim) < 0 ||
-				block.getGlue().getPosition(cDim) + block.getDimensions(cDim) > this.getDimensions(cDim))
-				return false;
-		}
-		
+	{	
 		//check whether lines inside intersect with sides of block
 		Glue prevPos = block.getGlue();
 		block.glue(pos);
 		
 		BasicShape completed = new BasicShape (block);
 		completed.addMissingRectanglePoints();
-		ArrayList<Rectangle> blockSides = completed.getRectangles();
+		//@TODO optimize
+		//ArrayList<Rectangle> blockSides = completed.getRectangles();
 		
 		for (Block bPlaced : mPlacedBlocks)
 		{
-			ArrayList <Line> placeBlockLines = bPlaced.getConnectingLines();
-			//exclude begin/end points of placed lines
-			for (Line placedLine : placeBlockLines)
-				placedLine.setInclusion (false, false);
-			
-			for (Rectangle sBlock : blockSides)
-			{
-				for (Line lContainer : placeBlockLines)
-				{
-					
-					IntersectionSolver is = new IntersectionSolver(sBlock, lContainer);
-					if (is.getSolutionType() == IntersectionSolver.Result.ONE && is.isWithinBounds())
-					{
-						return false;
-					}	
-				}
-			}
+			BasicShape placedCompleted = new BasicShape (bPlaced);
+			placedCompleted.addMissingRectanglePoints();
+			if (placedCompleted.intersect (completed) || completed.intersect (placedCompleted))
+				return false;
 			
 			if (bPlaced.isWithin (block) || block.isWithin (bPlaced))
 				return false;

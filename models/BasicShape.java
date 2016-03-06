@@ -792,6 +792,31 @@ public class BasicShape
 	}
 	
 	/**
+	 * @param b a given basic shape
+	 * @return true if there is a line between two vertices of b on which
+	 * there is an intersection with a side of this
+	 * Precondition: there are enough vertices such that this and b
+	 * can be dissected into cuboids smaller or equal to the entire shape
+	 */
+	public boolean intersect (BasicShape b)
+	{
+		ArrayList<Rectangle> sides = this.getRectangles();
+		ArrayList<Line> lines = b.getConnectingLines();
+		
+		for (Rectangle side : sides)
+		{
+			for (Line line : lines)
+			{
+				IntersectionSolver checkInter = new IntersectionSolver(side, line);
+				if (checkInter.getSolutionType() == IntersectionSolver.Result.ONE && 
+					checkInter.isWithinBounds())
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
 	 * @param b a given basic shape in the same space as this shape
 	 * @return true if b is within this
 	 */
