@@ -732,14 +732,34 @@ public class BasicShape
 		return vectors.size();
 	}
 	
-	
-	public boolean equals (BasicShape comp)
+	/**
+	 * @param cmp basic shape to compare this to
+	 * @return true if volume, glue, adjacency matrix and vertices are equal
+	 */
+	public boolean equals (Object cmp)
 	{
-		if (this.mVolume != comp.mVolume || this.mGlue != comp.mGlue ||
-			!this.dimensions.equals(comp.dimensions) || !this.adjMatrix.equals(comp.adjMatrix) ||
-			!this.mPossibleConnections.equals(comp.mPossibleConnections) ||
-			!this.vectors.equals(comp.vectors))
+		BasicShape comp = (BasicShape) cmp;
+		if (this.mVolume != comp.mVolume)
 			return false;
+		if (this.getNumberOfVertices() != comp.getNumberOfVertices())
+			return false;
+		if (!this.mGlue.equals (comp.mGlue))
+			return false;
+		if (!this.adjMatrix.equals (comp.adjMatrix))
+			return false;
+		
+		for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+		{
+			if (this.getDimensions (cDim) != comp.getDimensions (cDim))
+				return false;
+		}
+		
+		for (int cVec = 0; cVec < getNumberOfVertices(); ++cVec)
+		{
+			if (!this.getVertex (cVec).equals (comp.getVertex (cVec)))
+				return false;
+		}
+			
 		return true;
 	}
 	
