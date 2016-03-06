@@ -1104,12 +1104,12 @@ public class BasicShape
 	public void updateMinPos()
 	{
 		Glue min = null;
-		int lowestSum = 0;
+		int lowestSum = Integer.MAX_VALUE;
 		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
 		{
 			IntegerMatrix vert = getVertex (cVert);
 			int sum = 0;
-			for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+			for (int cDim = 0; cDim < vert.getRows(); ++cDim)
 				sum += vert.getCell (cDim, 0);
 			if (sum < lowestSum)
 			{
@@ -1127,12 +1127,12 @@ public class BasicShape
 	public void updateMaxPos()
 	{
 		Glue max = null;
-		int largestSum = 0;
+		int largestSum = Integer.MIN_VALUE;
 		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
 		{
 			IntegerMatrix vert = getVertex (cVert);
 			int sum = 0;
-			for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+			for (int cDim = 0; cDim < vert.getRows(); ++cDim)
 				sum += vert.getCell (cDim, 0);
 			if (sum > largestSum)
 			{
