@@ -267,8 +267,8 @@ public class BasicShape
 		dimensions = new ArrayList<Integer>();
 		calcDim (vectors);
 		//initialize offset position
-		mGlue = new Glue (new IntegerMatrix (dimensions.size(), 1));
-		glue (new Glue (new IntegerMatrix (dimensions.size(), 1)));
+		updateMinPos();
+		updateMaxPos();
 		//create adjacency matrix
 		this.adjMatrix = adjMatrix.clone();
 		//set possible connections
@@ -732,14 +732,34 @@ public class BasicShape
 		return vectors.size();
 	}
 	
-	
-	public boolean equals (BasicShape comp)
+	/**
+	 * @param cmp basic shape to compare this to
+	 * @return true if volume, glue, adjacency matrix and vertices are equal
+	 */
+	public boolean equals (Object cmp)
 	{
-		if (this.mVolume != comp.mVolume || this.mGlue != comp.mGlue ||
-			!this.dimensions.equals(comp.dimensions) || !this.adjMatrix.equals(comp.adjMatrix) ||
-			!this.mPossibleConnections.equals(comp.mPossibleConnections) ||
-			!this.vectors.equals(comp.vectors))
+		BasicShape comp = (BasicShape) cmp;
+		if (this.mVolume != comp.mVolume)
 			return false;
+		if (this.getNumberOfVertices() != comp.getNumberOfVertices())
+			return false;
+		if (!this.mGlue.equals (comp.mGlue))
+			return false;
+		if (!this.adjMatrix.equals (comp.adjMatrix))
+			return false;
+		
+		for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+		{
+			if (this.getDimensions (cDim) != comp.getDimensions (cDim))
+				return false;
+		}
+		
+		for (int cVec = 0; cVec < getNumberOfVertices(); ++cVec)
+		{
+			if (!this.getVertex (cVec).equals (comp.getVertex (cVec)))
+				return false;
+		}
+			
 		return true;
 	}
 	
@@ -769,6 +789,31 @@ public class BasicShape
 			ind2 < 0 || ind2 >= adjMatrix.getRows())
 			throw new NonExistingVertexException ("there are no vertices with corresponding indices");
 		return (adjMatrix.getCell (ind1, ind2).equals (1));
+	}
+	
+	/**
+	 * @param b a given basic shape
+	 * @return true if there is a line between two vertices of b on which
+	 * there is an intersection with a side of this
+	 * Precondition: there are enough vertices such that this and b
+	 * can be dissected into cuboids smaller or equal to the entire shape
+	 */
+	public boolean intersect (BasicShape b)
+	{
+		ArrayList<Rectangle> sides = this.getRectangles();
+		ArrayList<Line> lines = b.getConnectingLines();
+		
+		for (Rectangle side : sides)
+		{
+			for (Line line : lines)
+			{
+				IntersectionSolver checkInter = new IntersectionSolver(side, line);
+				if (checkInter.getSolutionType() == IntersectionSolver.Result.ONE && 
+					checkInter.isWithinBounds())
+					return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -823,7 +868,8 @@ public class BasicShape
 			throw new BadNumberOfRowsException ("vectors don't have the same dimension");
 		
 		dimensions.clear();
-		for(int i=0; i<vectors.get(0).getRows(); i++){
+		for(int i=0; i<vectors.get(0).getRows(); i++)
+		{
 
 			int max = maximum (vectors,i);
 			int min = minimum (vectors,i);
@@ -1054,6 +1100,8 @@ public class BasicShape
 			vectors.set (cCounter, result.toIntegerMatrix());
 		}
 		calcDim (vectors);
+		updateMinPos();
+		updateMaxPos();
 	}
 	
 	/**
@@ -1062,7 +1110,7 @@ public class BasicShape
 	 */
 	public void glue (Glue g)
 	{
-		//translate vectors (uses needs old glue)
+		//translate vectors (needs old glue)
 		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
 			vectors.set(cVertex, g.translateMat(vectors.get(cVertex), mGlue));
 		//adapt glue
@@ -1072,6 +1120,52 @@ public class BasicShape
 		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
 			maxVec.setCell (cDim, 0, g.getPosition(cDim) + getDimensions (cDim));
 		mMax = new Glue (maxVec);
+	}
+	
+	/**
+	 * updates glue position based on vertices
+	 * call this method after changes were applied on vertices
+	 */
+	public void updateMinPos()
+	{
+		Glue min = null;
+		int lowestSum = Integer.MAX_VALUE;
+		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
+		{
+			IntegerMatrix vert = getVertex (cVert);
+			int sum = 0;
+			for (int cDim = 0; cDim < vert.getRows(); ++cDim)
+				sum += vert.getCell (cDim, 0);
+			if (sum < lowestSum)
+			{
+				lowestSum = sum;
+				min = new Glue (vert);
+			}
+		}
+		mGlue = min;
+	}
+	
+	/**
+	 * updates max position based on vertices
+	 * call this method after changes were applied on vertices
+	 */
+	public void updateMaxPos()
+	{
+		Glue max = null;
+		int largestSum = Integer.MIN_VALUE;
+		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
+		{
+			IntegerMatrix vert = getVertex (cVert);
+			int sum = 0;
+			for (int cDim = 0; cDim < vert.getRows(); ++cDim)
+				sum += vert.getCell (cDim, 0);
+			if (sum > largestSum)
+			{
+				largestSum = sum;
+				max = new Glue (vert);
+			}
+		}
+		mMax = max;
 	}
 	
 	public void print(PrintStream p)
