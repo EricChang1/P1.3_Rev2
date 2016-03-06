@@ -267,8 +267,8 @@ public class BasicShape
 		dimensions = new ArrayList<Integer>();
 		calcDim (vectors);
 		//initialize offset position
-		mGlue = new Glue (new IntegerMatrix (dimensions.size(), 1));
-		glue (new Glue (new IntegerMatrix (dimensions.size(), 1)));
+		updateMinPos();
+		updateMaxPos();
 		//create adjacency matrix
 		this.adjMatrix = adjMatrix.clone();
 		//set possible connections
@@ -843,7 +843,8 @@ public class BasicShape
 			throw new BadNumberOfRowsException ("vectors don't have the same dimension");
 		
 		dimensions.clear();
-		for(int i=0; i<vectors.get(0).getRows(); i++){
+		for(int i=0; i<vectors.get(0).getRows(); i++)
+		{
 
 			int max = maximum (vectors,i);
 			int min = minimum (vectors,i);
@@ -1074,6 +1075,8 @@ public class BasicShape
 			vectors.set (cCounter, result.toIntegerMatrix());
 		}
 		calcDim (vectors);
+		updateMinPos();
+		updateMaxPos();
 	}
 	
 	/**
@@ -1082,7 +1085,7 @@ public class BasicShape
 	 */
 	public void glue (Glue g)
 	{
-		//translate vectors (uses needs old glue)
+		//translate vectors (needs old glue)
 		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
 			vectors.set(cVertex, g.translateMat(vectors.get(cVertex), mGlue));
 		//adapt glue
@@ -1092,6 +1095,52 @@ public class BasicShape
 		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
 			maxVec.setCell (cDim, 0, g.getPosition(cDim) + getDimensions (cDim));
 		mMax = new Glue (maxVec);
+	}
+	
+	/**
+	 * updates glue position based on vertices
+	 * call this method after changes were applied on vertices
+	 */
+	public void updateMinPos()
+	{
+		Glue min = null;
+		int lowestSum = 0;
+		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
+		{
+			IntegerMatrix vert = getVertex (cVert);
+			int sum = 0;
+			for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+				sum += vert.getCell (cDim, 0);
+			if (sum < lowestSum)
+			{
+				lowestSum = sum;
+				min = new Glue (vert);
+			}
+		}
+		mGlue = min;
+	}
+	
+	/**
+	 * updates max position based on vertices
+	 * call this method after changes were applied on vertices
+	 */
+	public void updateMaxPos()
+	{
+		Glue max = null;
+		int largestSum = 0;
+		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
+		{
+			IntegerMatrix vert = getVertex (cVert);
+			int sum = 0;
+			for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+				sum += vert.getCell (cDim, 0);
+			if (sum > largestSum)
+			{
+				largestSum = sum;
+				max = new Glue (vert);
+			}
+		}
+		mMax = max;
 	}
 	
 	public void print(PrintStream p)
