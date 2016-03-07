@@ -85,20 +85,20 @@ public class MakePieces {
 	{
 		ArrayList<Position> posL = new ArrayList<Position>();
 		ArrayList <Integer> lp1= new ArrayList <Integer> (); 		lp1.add(0); lp1.add(0); lp1.add(0); 		Position LP1 = new Position(lp1); posL.add(LP1);
-		ArrayList <Integer> lp2= new ArrayList <Integer> (); 		lp2.add(4); lp2.add(0); lp2.add(0); 		Position LP2 = new Position(lp2); posL.add(LP2);
-		ArrayList <Integer> lp3= new ArrayList <Integer> (); 		lp3.add(2); lp3.add(4); lp3.add(0); 		Position LP3 = new Position(lp3); posL.add(LP3);
-		ArrayList <Integer> lp4= new ArrayList <Integer> (); 		lp4.add(0); lp4.add(2); lp4.add(0); 		Position LP4 = new Position(lp4); posL.add(LP4);
-		ArrayList <Integer> lp5= new ArrayList <Integer> (); 		lp5.add(0); lp5.add(0); lp5.add(2); 		Position LP5 = new Position(lp5); posL.add(LP5);
-		ArrayList <Integer> lp6= new ArrayList <Integer> (); 		lp6.add(4); lp6.add(0); lp6.add(2); 		Position LP6 = new Position(lp6); posL.add(LP6);
-		ArrayList <Integer> lp7= new ArrayList <Integer> (); 		lp7.add(1); lp7.add(4); lp7.add(2); 		Position LP7 = new Position(lp7); posL.add(LP7);
-		ArrayList <Integer> lp8= new ArrayList <Integer> (); 		lp8.add(0); lp8.add(1); lp8.add(2); 		Position LP8 = new Position(lp8); posL.add(LP8);
-		ArrayList <Integer> lp9= new ArrayList <Integer> (); 		lp9.add(2); lp9.add(0); lp9.add(1); 		Position LP9 = new Position(lp9); posL.add(LP9);
-		ArrayList <Integer> lp10= new ArrayList <Integer> (); 		lp10.add(4); lp10.add(2); lp10.add(1); 		Position LP10 = new Position(lp10); posL.add(LP10);
-		ArrayList <Integer> lp11= new ArrayList <Integer> (); 		lp11.add(0); lp11.add(4); lp11.add(1); 		Position LP11 = new Position(lp11); posL.add(LP11);
-		ArrayList <Integer> lp12= new ArrayList <Integer> (); 		lp12.add(0); lp12.add(0); lp12.add(1); 		Position LP12 = new Position(lp12); posL.add(LP12);
-		ArrayList <Integer> lp13= new ArrayList <Integer> (); 		lp13.add(1); lp13.add(0); lp13.add(0); 		Position LP13 = new Position(lp13); posL.add(LP13);
-		ArrayList <Integer> lp14= new ArrayList <Integer> (); 		lp14.add(4); lp14.add(1); lp14.add(0); 		Position LP14 = new Position(lp14); posL.add(LP14);
-		ArrayList <Integer> lp15= new ArrayList <Integer> (); 		lp15.add(0); lp15.add(4); lp15.add(0); 		Position LP15 = new Position(lp15); posL.add(LP15);
+		ArrayList <Integer> lp2= new ArrayList <Integer> (); 		lp2.add(0); lp2.add(0); lp2.add(0); 		Position LP2 = new Position(lp2); posL.add(LP2);
+		ArrayList <Integer> lp3= new ArrayList <Integer> (); 		lp3.add(1); lp3.add(0); lp3.add(0); 		Position LP3 = new Position(lp3); posL.add(LP3);
+		ArrayList <Integer> lp4= new ArrayList <Integer> (); 		lp4.add(0); lp4.add(0); lp4.add(0); 		Position LP4 = new Position(lp4); posL.add(LP4);
+		ArrayList <Integer> lp5= new ArrayList <Integer> (); 		lp5.add(0); lp5.add(0); lp5.add(0); 		Position LP5 = new Position(lp5); posL.add(LP5);
+		ArrayList <Integer> lp6= new ArrayList <Integer> (); 		lp6.add(0); lp6.add(0); lp6.add(1); 		Position LP6 = new Position(lp6); posL.add(LP6);
+		ArrayList <Integer> lp7= new ArrayList <Integer> (); 		lp7.add(0); lp7.add(0); lp7.add(1); 		Position LP7 = new Position(lp7); posL.add(LP7);
+		ArrayList <Integer> lp8= new ArrayList <Integer> (); 		lp8.add(0); lp8.add(0); lp8.add(0); 		Position LP8 = new Position(lp8); posL.add(LP8);
+		ArrayList <Integer> lp9= new ArrayList <Integer> (); 		lp9.add(0); lp9.add(0); lp9.add(0); 		Position LP9 = new Position(lp9); posL.add(LP9);
+		ArrayList <Integer> lp10= new ArrayList <Integer> (); 		lp10.add(0); lp10.add(1); lp10.add(0); 		Position LP10 = new Position(lp10); posL.add(LP10);
+		ArrayList <Integer> lp11= new ArrayList <Integer> (); 		lp11.add(0); lp11.add(0); lp11.add(0); 		Position LP11 = new Position(lp11); posL.add(LP11);
+		ArrayList <Integer> lp12= new ArrayList <Integer> (); 		lp12.add(0); lp12.add(0); lp12.add(0); 		Position LP12 = new Position(lp12); posL.add(LP12);
+		ArrayList <Integer> lp13= new ArrayList <Integer> (); 		lp13.add(0); lp13.add(0); lp13.add(0); 		Position LP13 = new Position(lp13); posL.add(LP13);
+		ArrayList <Integer> lp14= new ArrayList <Integer> (); 		lp14.add(0); lp14.add(0); lp14.add(0); 		Position LP14 = new Position(lp14); posL.add(LP14);
+		ArrayList <Integer> lp15= new ArrayList <Integer> (); 		lp15.add(0); lp15.add(0); lp15.add(0); 		Position LP15 = new Position(lp15); posL.add(LP15);
 		ArrayList <Integer> lp16= new ArrayList <Integer> (); 		lp16.add(0); lp16.add(0); lp16.add(0); 		Position LP16 = new Position(lp16); posL.add(LP16);
 		return posL;
 	}
@@ -134,20 +134,20 @@ public class MakePieces {
 	{
 		ArrayList<Position> posP = new ArrayList<Position>();
 		ArrayList <Integer> pp1= new ArrayList <Integer> (); 		pp1.add(0); pp1.add(0); pp1.add(0); 		Position PP1 = new Position(pp1); posP.add(PP1);
-		ArrayList <Integer> pp2= new ArrayList <Integer> (); 		pp2.add(3); pp2.add(0); pp2.add(0); 		Position PP2 = new Position(pp2); posP.add(PP2);
-		ArrayList <Integer> pp3= new ArrayList <Integer> (); 		pp3.add(2); pp3.add(3); pp3.add(0); 		Position PP3 = new Position(pp3); posP.add(PP3);
-		ArrayList <Integer> pp4= new ArrayList <Integer> (); 		pp4.add(0); pp4.add(2); pp4.add(0); 		Position PP4 = new Position(pp4); posP.add(PP4);
-		ArrayList <Integer> pp5= new ArrayList <Integer> (); 		pp5.add(0); pp5.add(0); pp5.add(2); 		Position PP5 = new Position(pp5); posP.add(PP5);
-		ArrayList <Integer> pp6= new ArrayList <Integer> (); 		pp6.add(3); pp6.add(0); pp6.add(2); 		Position PP6 = new Position(pp6); posP.add(PP6);
-		ArrayList <Integer> pp7= new ArrayList <Integer> (); 		pp7.add(1); pp7.add(3); pp7.add(2); 		Position PP7 = new Position(pp7); posP.add(PP7);
-		ArrayList <Integer> pp8= new ArrayList <Integer> (); 		pp8.add(0); pp8.add(1); pp8.add(2); 		Position PP8 = new Position(pp8); posP.add(PP8);
-		ArrayList <Integer> pp9= new ArrayList <Integer> (); 		pp9.add(2); pp9.add(0); pp9.add(1); 		Position PP9 = new Position(pp9); posP.add(PP9);
-		ArrayList <Integer> pp10= new ArrayList <Integer> (); 		pp10.add(3); pp10.add(2); pp10.add(1); 		Position PP10 = new Position(pp10); posP.add(PP10);
-		ArrayList <Integer> pp11= new ArrayList <Integer> (); 		pp11.add(0); pp11.add(3); pp11.add(1); 		Position PP11 = new Position(pp11); posP.add(PP11);
-		ArrayList <Integer> pp12= new ArrayList <Integer> (); 		pp12.add(0); pp12.add(0); pp12.add(1); 		Position PP12 = new Position(pp12); posP.add(PP12);
-		ArrayList <Integer> pp13= new ArrayList <Integer> (); 		pp13.add(1); pp13.add(0); pp13.add(0); 		Position PP13 = new Position(pp13); posP.add(PP13);
-		ArrayList <Integer> pp14= new ArrayList <Integer> (); 		pp14.add(3); pp14.add(1); pp14.add(0); 		Position PP14 = new Position(pp14); posP.add(PP14);
-		ArrayList <Integer> pp15= new ArrayList <Integer> (); 		pp15.add(0); pp15.add(3); pp15.add(0); 		Position PP15 = new Position(pp15); posP.add(PP15);
+		ArrayList <Integer> pp2= new ArrayList <Integer> (); 		pp2.add(0); pp2.add(0); pp2.add(0); 		Position PP2 = new Position(pp2); posP.add(PP2);
+		ArrayList <Integer> pp3= new ArrayList <Integer> (); 		pp3.add(0); pp3.add(0); pp3.add(0); 		Position PP3 = new Position(pp3); posP.add(PP3);
+		ArrayList <Integer> pp4= new ArrayList <Integer> (); 		pp4.add(0); pp4.add(1); pp4.add(0); 		Position PP4 = new Position(pp4); posP.add(PP4);
+		ArrayList <Integer> pp5= new ArrayList <Integer> (); 		pp5.add(0); pp5.add(0); pp5.add(1); 		Position PP5 = new Position(pp5); posP.add(PP5);
+		ArrayList <Integer> pp6= new ArrayList <Integer> (); 		pp6.add(0); pp6.add(0); pp6.add(0); 		Position PP6 = new Position(pp6); posP.add(PP6);
+		ArrayList <Integer> pp7= new ArrayList <Integer> (); 		pp7.add(0); pp7.add(0); pp7.add(0); 		Position PP7 = new Position(pp7); posP.add(PP7);
+		ArrayList <Integer> pp8= new ArrayList <Integer> (); 		pp8.add(0); pp8.add(0); pp8.add(1); 		Position PP8 = new Position(pp8); posP.add(PP8);
+		ArrayList <Integer> pp9= new ArrayList <Integer> (); 		pp9.add(1); pp9.add(0); pp9.add(0); 		Position PP9 = new Position(pp9); posP.add(PP9);
+		ArrayList <Integer> pp10= new ArrayList <Integer> (); 		pp10.add(0); pp10.add(0); pp10.add(0); 		Position PP10 = new Position(pp10); posP.add(PP10);
+		ArrayList <Integer> pp11= new ArrayList <Integer> (); 		pp11.add(0); pp11.add(0); pp11.add(0); 		Position PP11 = new Position(pp11); posP.add(PP11);
+		ArrayList <Integer> pp12= new ArrayList <Integer> (); 		pp12.add(0); pp12.add(0); pp12.add(0); 		Position PP12 = new Position(pp12); posP.add(PP12);
+		ArrayList <Integer> pp13= new ArrayList <Integer> (); 		pp13.add(0); pp13.add(0); pp13.add(0); 		Position PP13 = new Position(pp13); posP.add(PP13);
+		ArrayList <Integer> pp14= new ArrayList <Integer> (); 		pp14.add(0); pp14.add(0); pp14.add(0); 		Position PP14 = new Position(pp14); posP.add(PP14);
+		ArrayList <Integer> pp15= new ArrayList <Integer> (); 		pp15.add(0); pp15.add(0); pp15.add(0); 		Position PP15 = new Position(pp15); posP.add(PP15);
 		ArrayList <Integer> pp16= new ArrayList <Integer> (); 		pp16.add(0); pp16.add(0); pp16.add(0); 		Position PP16 = new Position(pp16); posP.add(PP16);
 		return posP;
 	}
@@ -176,18 +176,18 @@ public class MakePieces {
 	public static ArrayList<Position> getTPos()
 	{
 		ArrayList<Position> posT = new ArrayList<Position>();
-		ArrayList <Integer> tt1= new ArrayList <Integer> (); 		tt1.add(0); tt1.add(0); tt1.add(0); 		Position TT1 = new Position(tt1); posT.add(TT1);
-		ArrayList <Integer> tt2= new ArrayList <Integer> (); 		tt2.add(3); tt2.add(0); tt2.add(0); 		Position TT2 = new Position(tt2); posT.add(TT2);
-		ArrayList <Integer> tt3= new ArrayList <Integer> (); 		tt3.add(3); tt3.add(3); tt3.add(0); 		Position TT3 = new Position(tt3); posT.add(TT3);
-		ArrayList <Integer> tt4= new ArrayList <Integer> (); 		tt4.add(0); tt4.add(3); tt4.add(0); 		Position TT4 = new Position(tt4); posT.add(TT4);
-		ArrayList <Integer> tt5= new ArrayList <Integer> (); 		tt5.add(0); tt5.add(0); tt5.add(3); 		Position TT5 = new Position(tt5); posT.add(TT5);
-		ArrayList <Integer> tt6= new ArrayList <Integer> (); 		tt6.add(3); tt6.add(0); tt6.add(3); 		Position TT6 = new Position(tt6); posT.add(TT6);
-		ArrayList <Integer> tt7= new ArrayList <Integer> (); 		tt7.add(1); tt7.add(3); tt7.add(3); 		Position TT7 = new Position(tt7); posT.add(TT7);
-		ArrayList <Integer> tt8= new ArrayList <Integer> (); 		tt8.add(0); tt8.add(1); tt8.add(3); 		Position TT8 = new Position(tt8); posT.add(TT8);
-		ArrayList <Integer> tt9= new ArrayList <Integer> (); 		tt9.add(1); tt9.add(3); tt9.add(0); 		Position TT9 = new Position(tt9); posT.add(TT9);
-		ArrayList <Integer> tt10= new ArrayList <Integer> (); 		tt10.add(0); tt10.add(1); tt10.add(0); 		Position TT10 = new Position(tt10); posT.add(TT10);
-		ArrayList <Integer> tt11= new ArrayList <Integer> (); 		tt11.add(1); tt11.add(0); tt11.add(3); 		Position TT11 = new Position(tt11); posT.add(TT11);
-		ArrayList <Integer> tt12= new ArrayList <Integer> (); 		tt12.add(3); tt12.add(1); tt12.add(3); 		Position TT12 = new Position(tt12); posT.add(TT12);
+		ArrayList <Integer> tt1= new ArrayList <Integer> (); 		tt1.add(1); tt1.add(0); tt1.add(0); 		Position TT1 = new Position(tt1); posT.add(TT1);
+		ArrayList <Integer> tt2= new ArrayList <Integer> (); 		tt2.add(0); tt2.add(0); tt2.add(0); 		Position TT2 = new Position(tt2); posT.add(TT2);
+		ArrayList <Integer> tt3= new ArrayList <Integer> (); 		tt3.add(0); tt3.add(0); tt3.add(0); 		Position TT3 = new Position(tt3); posT.add(TT3);
+		ArrayList <Integer> tt4= new ArrayList <Integer> (); 		tt4.add(0); tt4.add(1); tt4.add(0); 		Position TT4 = new Position(tt4); posT.add(TT4);
+		ArrayList <Integer> tt5= new ArrayList <Integer> (); 		tt5.add(0); tt5.add(0); tt5.add(1); 		Position TT5 = new Position(tt5); posT.add(TT5);
+		ArrayList <Integer> tt6= new ArrayList <Integer> (); 		tt6.add(0); tt6.add(0); tt6.add(0); 		Position TT6 = new Position(tt6); posT.add(TT6);
+		ArrayList <Integer> tt7= new ArrayList <Integer> (); 		tt7.add(0); tt7.add(0); tt7.add(0); 		Position TT7 = new Position(tt7); posT.add(TT7);
+		ArrayList <Integer> tt8= new ArrayList <Integer> (); 		tt8.add(0); tt8.add(0); tt8.add(1); 		Position TT8 = new Position(tt8); posT.add(TT8);
+		ArrayList <Integer> tt9= new ArrayList <Integer> (); 		tt9.add(0); tt9.add(1); tt9.add(0); 		Position TT9 = new Position(tt9); posT.add(TT9);
+		ArrayList <Integer> tt10= new ArrayList <Integer> (); 		tt10.add(1); tt10.add(0); tt10.add(0); 		Position TT10 = new Position(tt10); posT.add(TT10);
+		ArrayList <Integer> tt11= new ArrayList <Integer> (); 		tt11.add(0); tt11.add(0); tt11.add(0); 		Position TT11 = new Position(tt11); posT.add(TT11);
+		ArrayList <Integer> tt12= new ArrayList <Integer> (); 		tt12.add(0); tt12.add(0); tt12.add(0); 		Position TT12 = new Position(tt12); posT.add(TT12);
 
 		return posT;
 	}

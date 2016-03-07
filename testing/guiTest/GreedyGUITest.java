@@ -23,9 +23,7 @@ public class GreedyGUITest extends JFrame
 	{
 		
 		GreedyAlgoTest T = new GreedyAlgoTest();
-		mContainer = T.getCont();
-		
-		
+		mContainer = T.getCont();		
 		mContainerPanel = new PieceRenderPanel (mContainer);
 		
 		setTitle ("container panel test");

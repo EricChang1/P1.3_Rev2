@@ -69,7 +69,7 @@ public class MaximumDensity implements EvaluationHeuristic{
 			{
 				for(int k=freeZ;k<truck.getDimensions(2);k++)
 				{	
-					if (containsPos(i, j, k, truck)==false)
+					if (containsPos(i, j, k)==false)
 					{
 						ArrayList<Integer> Pos = new ArrayList<Integer>();
 						Pos.add(i);Pos.add(j);Pos.add(k);
@@ -111,7 +111,7 @@ public class MaximumDensity implements EvaluationHeuristic{
 			{
 				for (int k=Pz;k<tempZ;k++)
 				{
-					if (containsPos(i, j, k, container)==true)
+					if (containsPos(i, j, k)==true)
 					{
 						return false;
 					}
@@ -147,7 +147,7 @@ public class MaximumDensity implements EvaluationHeuristic{
 				int x = res.getCells().get(i).get(j).get(0)+pos.getPosition(0);
 				int y = res.getCells().get(i).get(j).get(1)+pos.getPosition(1);
 				int z = res.getCells().get(i).get(j).get(2)+pos.getPosition(2);			
-				if (containsPos(x, y, z, container)==true)
+				if (containsPos(x, y, z)==true)
 				{
 					return false;
 				}
@@ -156,21 +156,14 @@ public class MaximumDensity implements EvaluationHeuristic{
 		return true;
 	}
 	
-	public boolean containsPos(int i, int j, int k, Container truck)
+	public boolean containsPos(int i, int j, int k)
 	{
 		boolean bool = false;
 		if (filled==null)
 		{
 			return false;
 		}
-		
-		
-		for (int m=filled.size();m>0;m--)
-		{
-			
-		}
-		
-		
+				
 		for (int l=0; l<filled.size();l++)
 		{
 			int X = filled.get(l).get(0);
@@ -182,6 +175,7 @@ public class MaximumDensity implements EvaluationHeuristic{
 				return true;
 			}
 		}
+		
 		return bool;	
 	}
 	public void fillFilled(Resource res, Position pos, int state)

@@ -106,10 +106,11 @@ public class GreedyAlgorithm extends Algorithm {
 				bool=true;
 			}	
 		}
-		if(resourceEmpty()||currentPos==null)
+		if(currentPos==null||resourceEmpty())
 		{
 			setAlgoDone();
 		}
+		
 		else if(currentPos!=null)
 		{
 			this.placeBlock();
