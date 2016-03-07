@@ -39,7 +39,6 @@ public class GreedyAlgorithm extends Algorithm {
 				//Select Block
 				if (Resources.get(k).isInfinite()==true||Resources.get(k).getInventory()>0)
 				{
-					
 					//Select Rotation
 					for (int l=0;l<Resources.get(k).getRot().size();l++)
 					{
@@ -48,7 +47,6 @@ public class GreedyAlgorithm extends Algorithm {
 						//Adjust Position for PENT only
 						if (Resources.get(k).getType()==Resource.BlockType.PENT)
 						{
-							
 							ArrayList <Integer> Pos = new ArrayList <Integer> ();
 							int X = Resources.get(k).rotatedPos().get(l).getPosition(0)+pentPos.getPosition(0);
 							int Y = Resources.get(k).rotatedPos().get(l).getPosition(1)+pentPos.getPosition(1);
@@ -67,6 +65,7 @@ public class GreedyAlgorithm extends Algorithm {
 								state=l;
 								bool=false;
 								bestResource = Resources.get(k);
+								index=k;
 							}	
 						}	
 						if (Resources.get(k).getType()==Resource.BlockType.PENT&&currentE.pentCheckPos(Resources.get(k), l, pentPos, cloneTruck))
@@ -80,7 +79,7 @@ public class GreedyAlgorithm extends Algorithm {
 								bool=false;
 								pentAdjPos = currentPos;
 								bestResource = Resources.get(k);
-								index =k;
+								index=k;
 							}	
 						}	
 					}
@@ -102,15 +101,14 @@ public class GreedyAlgorithm extends Algorithm {
 					getContainer().placeBlock(bestBlock, currentPos);
 					currentE.update(bestResource, currentPos, bestResource.getType(),state);
 				}
-				Resources.get(index).deduct();
+				Resources.get(index).deduct(); 
 				bestBlock = null;
 				bool=true;
 			}	
 		}
-		if(currentPos==null||resourceEmpty())
+		if(resourceEmpty()||currentPos==null)
 		{
 			setAlgoDone();
-			//currentE.print();
 		}
 		else if(currentPos!=null)
 		{
@@ -125,8 +123,7 @@ public class GreedyAlgorithm extends Algorithm {
 		{
 			if (Resources.get(k).getInventory()>0)
 			{
-				bool = false;
-				return bool;
+				return false;
 			}
 		}
 		return bool;

@@ -54,9 +54,9 @@ public class Resource implements Cloneable
 	public void deduct()
 	{
 		if (inventory>0)
-			inventory --;
+			inventory--;
 		
-		if (infinite)
+		if (infinite==true)
 			refill();
 	}
 	public int getInventory()

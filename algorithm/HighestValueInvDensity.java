@@ -20,10 +20,10 @@ public class HighestValueInvDensity implements SelectionHeuristic {
 		for(int box=0; box<list.size();box++){
 			if (list.get(box).getInventory()>0 || list.get(box).isInfinite()==true)
 			{
-				Position max = list.get(box).getBlock().getMaxDimension();
-				int x = max.getPosition().get(0);
-				int y = max.getPosition().get(1);
-				int z = max.getPosition().get(2);
+				int x = list.get(box).getBlock().getDimensions(0);
+				int y = list.get(box).getBlock().getDimensions(1);
+				int z = list.get(box).getBlock().getDimensions(2);
+				
 				double cubeVolume = x*y*z;
 				double newValue = cubeVolume/list.get(box).getBlock().getValue(); 
 				if(newValue > maxValue)
