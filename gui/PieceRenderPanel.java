@@ -21,7 +21,7 @@ import java.awt.Rectangle;
 import models.*;
 import models.Matrix.*;
 import models.Container;
-import geometry.*;
+
 
 /**
  * class used to draw a container
