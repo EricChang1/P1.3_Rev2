@@ -1,8 +1,15 @@
 package algorithm;
 
 import geometry.Cuboid;
+import gui.PieceRenderPanel;
+import gui.PieceRenderPanel.ResizeListener;
+import gui.PieceRenderPanel.RotationListener;
+import gui.PieceRenderPanel.ZoomListener;
 
+import java.awt.BorderLayout;
 import java.util.*;
+
+import javax.swing.JFrame;
 
 import models.Block;
 import models.Container;
@@ -52,6 +59,8 @@ public class DynamicAlgo extends Algorithm
 				s += r.getVolume() + " vol x " + r.getInventory() + ", ";
 			return s;
 		}
+		
+		public int size() { return mResources.size(); }
 		
 		public int getVolume()
 		{
@@ -186,10 +195,55 @@ public class DynamicAlgo extends Algorithm
 	{
 		for (Container part : filledParts)
 		{
-			assert (stump.checkPositionOverlap(part, part.getGlue()));
-			stump.placeBlock (part, part.getGlue());
+			for (int cInPart = 0; cInPart < part.getAmountOfBlocks(); ++cInPart)
+			{
+				Block place = part.getBlock (cInPart);
+				if (!stump.checkPositionOverlap (place, place.getGlue()));
+					assert (stump.checkPositionOverlap (place, place.getGlue()));
+				stump.placeBlock (place, place.getGlue());
+			}
 		}
 		return stump;
+	}
+	
+	/**
+	 * @param current container of current iteration to be compared with contents of table
+	 * @param subIndex current index of subset
+	 * @return the largest entry of look up table whose container and subset are smaller or equal
+	 * or current as Entry if current is larger than max in table
+	 */
+	public Entry getMax (Container current, int subIndex)
+	{
+		Entry max = mLookupTable.new Entry (current, current.getValue());
+		int d, w, h;
+		d = current.getDimensions(0);
+		w = current.getDimensions(1);
+		h = current.getDimensions(2);
+		if (d > w)
+		{
+			Entry less = mLookupTable.get (d - 1, w, h, subIndex);
+			if (less.getValue() > max.getValue())
+				max = less;
+		}
+		if (w > h)
+		{
+			Entry less = mLookupTable.get (d, w - 1, h, subIndex);
+			if (less.getValue() > max.getValue())
+				max = less;
+		}
+		if (h > 0)
+		{
+			Entry less = mLookupTable.get (d, w, h - 1, subIndex);
+			if (less.getValue() > max.getValue())
+				max = less;
+		}
+		if (subIndex > 0)
+		{
+			Entry less = mLookupTable.get (d, w, h, subIndex - 1);
+			if (less.getValue() > max.getValue())
+				max = less;
+		}
+		return max;
 	}
 	
 	/**
@@ -207,7 +261,7 @@ public class DynamicAlgo extends Algorithm
 				boolean equal = true;
 				while (equal && cElem < sub.getResources().size())
 				{
-					if (!sub.getResources().get (cElem).getBlock().equals (subset.get (cElem)))
+					if (!sub.getResources().get (cElem).getBlock().equals (subset.get (cElem).getBlock()))
 						equal = false;
 					++cElem;
 				}
@@ -218,54 +272,89 @@ public class DynamicAlgo extends Algorithm
 		return mSubsets.size();
 	}
 	
-	public void init (Container container, ArrayList <Resource> pieces)
-	{
-		super.init(container, pieces);
-		mLookupTable = new LookupTable(container.getDimensions(0), container.getDimensions(1), container.getDimensions(2), mSubsets.size());
-	}
-	
 	public void run()
 	{
 		super.run();
 		generatePowerSet();
+		generatePowerSet();
+		int dep = getContainer().getDimensions(0);
+		int wid = getContainer().getDimensions(1);
+		int hig = getContainer().getDimensions(2);
+		ArrayList <Integer> is = LookupTable.sortIndices (dep, wid, hig);
+		dep = is.get(0);
+		wid = is.get(1);
+		hig = is.get(2);
+		mLookupTable = new LookupTable(dep + 1, wid + 1, hig + 1, mSubsets.size());
+		
 		int dimension = 3;
 		Glue zeroPos = new Glue (new IntegerMatrix (dimension, 1));
+		Entry best = null;
 		
-		for (int cDepth = 0; cDepth <= getContainer().getDimensions(0); ++cDepth)
+		for (int cDepth = 0; cDepth <= dep; ++cDepth)
 		{
-			for (int cWidth = 0; cWidth <= getContainer().getDimensions(1); ++cWidth)
+			for (int cWidth = 0; cWidth <= cDepth && cWidth <= wid; ++cWidth)
 			{
-				for (int cHeight = 0; cHeight <= getContainer().getDimensions(2); ++cHeight)
+				for (int cHeight = 0; cHeight <= cWidth && cHeight <= hig; ++cHeight)
 				{
 					for (int cSet = 0; cSet < mSubsets.size(); ++cSet)
 					{
-						double bestVal = 0;
-						for (int cPiece = 0; cPiece < getPieces().size(); ++cPiece)
+						Subset useSub = mSubsets.get (cSet);
+						for (int cPiece = 0; cPiece < useSub.size(); ++cPiece)
 						{
-							Block bRef = getPieces().get(cPiece).getBlock();
-							double current = 0;
+							Block bRef = useSub.getResources().get(cPiece).getBlock();
+							Container c = null;
+							c = new Container (cDepth, cWidth, cHeight);
+							
 							if (bRef.getDimensions(0) <= cDepth && bRef.getDimensions(1) <= cWidth &&
 								bRef.getDimensions(2) <= cHeight)
 							{
-								Container c = new Container (cDepth, cHeight, cWidth);
 								c.placeBlock(bRef, zeroPos);
-								current += c.getValue();
 								
-								ArrayList <Cuboid> emptyCubes = c.getCuboids();
-								ArrayList <Container> filledCubes = orderFreeCuboids (emptyCubes, cSet);
-								putPiecesTogether (c, filledCubes);
-								Entry setEntry = mLookupTable.new Entry (c, c.getValue());
-								if (bestVal < current)
+								ArrayList <Cuboid> emptyCubes = c.getFreeCuboids();
+								if (!emptyCubes.isEmpty())
 								{
-									mLookupTable.set (setEntry, cDepth, cWidth, cHeight, cSet);
-									bestVal = setEntry.getValue();
+									ArrayList <Container> filledCubes = orderFreeCuboids (emptyCubes, cSet);
+									putPiecesTogether (c, filledCubes);
 								}
+								best = getMax (c, cSet);
 							}
+							//set value in table
+							if (best.getValue() == c.getValue())
+							{
+								best = mLookupTable.new Entry (c, c.getValue());
+								System.out.println ("new highest value found: " + best.getValue());
+								
+								JFrame frame = new JFrame ("best value: " + best.getValue());
+								frame.setSize (400, 400);
+								frame.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
+								frame.setLayout (new BorderLayout());
+								
+								PieceRenderPanel render = new PieceRenderPanel(c.clone());
+								
+								PieceRenderPanel.RotationListener rotListen = render.new RotationListener();
+								PieceRenderPanel.ResizeListener resizeListen = render.new ResizeListener();
+								PieceRenderPanel.ZoomListener zoomListen = render.new ZoomListener();
+								zoomListen.setSensitivity (0.1);
+								
+								frame.addMouseListener (rotListen);
+								frame.addMouseMotionListener(rotListen);
+								frame.addMouseWheelListener(zoomListen);
+								frame.addComponentListener(resizeListen);
+								
+								frame.add (render, BorderLayout.CENTER);
+								frame.setVisible(true);
+								render.init();
+								int x = 2;
+								x = x*2;
+							}
+							mLookupTable.set (best, cDepth, cWidth, cHeight, cSet);
 						}
 					}
 				}
 			}
 		}
+		setSolution (mLookupTable.getContainer (dep, wid, hig, mSubsets.size() - 1));
+		setAlgoDone();
 	}
 	
 	/**
@@ -288,6 +377,15 @@ public class DynamicAlgo extends Algorithm
 				added.addResource (res);
 				mSubsets.add (added);
 			}
+		}
+	}
+	
+	private void setSolution (Container sol)
+	{
+		for (int cBlock = 0; cBlock < sol.getAmountOfBlocks(); ++cBlock)
+		{
+			Block placed = sol.getBlock (cBlock);
+			getContainer().placeBlock (placed, placed.getGlue());
 		}
 	}
 	

@@ -68,6 +68,21 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	}
 	
 	/**
+	 * @param d depth index
+	 * @param w width index
+	 * @param h height index
+	 * @return list of given indices such that list[0]>=list[1]>=list[2]
+	 */
+	public static ArrayList<Integer> sortIndices (int d, int w, int h)
+	{
+		ArrayList<Integer> sorted = new ArrayList<>();
+		sorted.add (Math.max (d, Math.max (w, h)));
+		sorted.add (Math.min (d, Math.max (w, h)));
+		sorted.add (Math.min (d, Math.min (w, h)));
+		return sorted;
+	}
+	
+	/**
 	 * parametric constructor
 	 * initializes object to 4d matrix of size [d, w, h, sets]
 	 * each cell containing a null reference (caution!)
@@ -99,7 +114,8 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	
 	public Entry get (int d, int w, int h, int s)
 	{
-		return get (d).get(w).get(h).get(s);
+		ArrayList<Integer> is = sortIndices (d, w, h);
+		return get (is.get (0)).get (is.get (1)).get (is.get (2)).get(s);
 	}
 	
 	/**
@@ -111,12 +127,12 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	 */
 	public Container getContainer (int d, int w, int h, int s)
 	{
-		return get (d).get(w).get(h).get(s).mContainer;
+		return get (d, w, h, s).mContainer;
 	}
 	
 	public void set (Entry val, int d, int w, int h, int s)
 	{
-		get(d).get(w).get(h).set(s, val);
+		ArrayList<Integer> is = sortIndices (d, w, h);
+		get (is.get (0)).get (is.get (1)).get (is.get (2)).set (s, val);
 	}
-	
 }

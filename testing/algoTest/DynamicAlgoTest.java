@@ -17,9 +17,9 @@ public class DynamicAlgoTest
 {
 	public static void main (String[] args) throws IOException, ShapeParser.BadFileStructureException
 	{
-		int[] quants = {2, 3, 1};
+		int[] quants = {4, 4, 4};
 		boolean[] inf = {false, false, false};
-		int d = 5, w = 5, h = 5;
+		int d = 8, w = 3, h = 3;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "parcels.txt";
@@ -31,7 +31,7 @@ public class DynamicAlgoTest
 		test.setContainer (d, w, h);
 		test.run();
 		test.drawResult();
-		
+		test.printResult();
 	}
 	
 	public void setResources (ArrayList<Block> blocks, int[] quants, boolean[] infFlags)
@@ -40,8 +40,27 @@ public class DynamicAlgoTest
 		for (int cBlock = 0; cBlock < blocks.size(); ++cBlock)
 		{
 			Block b = blocks.get (cBlock);
+			rotateBlockDecreasingDims(b);
 			mRes.add (new Resource (b, quants[cBlock], b.getVolume(), infFlags[cBlock]));
 		}
+	}
+	
+	public void rotateBlockDecreasingDims (Block b)
+	{
+		Matrix<Double> rotX = b.rotationMatrix(90.0, 0.0, BasicShape.RotationDir.ONWARD);
+		Matrix<Double> rotY = b.rotationMatrix(0.0, 90, BasicShape.RotationDir.ONWARD);
+		
+		while (b.getDimensions(0) < b.getDimensions(1) || b.getDimensions(1) < b.getDimensions(2))
+		{
+			b.rotate(rotX);
+			int cRot = 0;
+			while (cRot < 4 && b.getDimensions(0) < b.getDimensions(1) || b.getDimensions(1) < b.getDimensions(2))
+			{
+				b.rotate(rotY);
+				++cRot;
+			}
+		}
+		b.glue (new Glue (new IntegerMatrix (3, 1)));
 	}
 	
 	public void setContainer (int d, int w, int h)
@@ -64,6 +83,13 @@ public class DynamicAlgoTest
 		System.out.println ("subsets generated " + algo.mSubsets.size());
 		for (DynamicAlgo.Subset subs : algo.mSubsets)
 			System.out.println (subs);
+	}
+	
+	public void printResult()
+	{
+		System.out.println ("algo terminated");
+		System.out.print (mAlgo.getFilledContainer().getAmountOfBlocks() + "blocks used ");
+		System.out.println (mAlgo.getFilledContainer().getValue() + " value");
 	}
 	
 	public void drawResult()
