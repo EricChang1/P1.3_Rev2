@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
