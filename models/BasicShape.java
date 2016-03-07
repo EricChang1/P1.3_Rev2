@@ -1289,20 +1289,20 @@ public class BasicShape
 		for (int cNewVertex = newVertices.size() - 1; cNewVertex >= 0; --cNewVertex)
 		{
 			int iVertex = addedIndices.get (cNewVertex);
-			for (int cAdj = 0; cAdj < iVertex; ++cAdj)
+			for (int cAdj = 0; cAdj < adjacent.getColumns(); ++cAdj)
 			{
 				if (adjacent.getCell (cNewVertex, cAdj).equals (1))
 				{
 					int iAdj = getVertexIndex (newVertices.get (cAdj));
 					modifyConnection (iVertex, iAdj, true);
 					//if new connected to old
-					if (iAdj <= lastOldIndex)
+					if (iAdj <= lastOldIndex || iVertex <= lastOldIndex)
 					{
 						//iterate through iAdj's connections
 						int cAdj2 = 0;
 						while (cAdj2 <= lastOldIndex)
 						{
-							if (isConnected (iAdj, cAdj2))
+							if (isConnected (iAdj, cAdj2) && cAdj2 != iVertex)
 							{
 								Glue newP = new Glue (getVertex (iVertex));
 								Glue identical = new Glue (getVertex (iAdj));
