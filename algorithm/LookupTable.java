@@ -77,7 +77,7 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	{
 		ArrayList<Integer> sorted = new ArrayList<>();
 		sorted.add (Math.max (d, Math.max (w, h)));
-		sorted.add (Math.min (d, Math.max (w, h)));
+		sorted.add (Math.max (Math.min (d, Math.max (w, h)), Math.min (Math.max (d, w), h)));
 		sorted.add (Math.min (d, Math.min (w, h)));
 		return sorted;
 	}
