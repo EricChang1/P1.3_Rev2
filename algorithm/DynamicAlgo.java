@@ -11,9 +11,12 @@ import java.util.*;
 
 import javax.swing.JFrame;
 
+import models.BasicShape;
 import models.Block;
 import models.Container;
 import models.Glue;
+import models.Matrix;
+import models.Matrix.DoubleMatrix;
 import models.Resource;
 import models.Matrix.*;
 
@@ -238,6 +241,47 @@ public class DynamicAlgo extends Algorithm
 				max = less;
 		}
 		return max;
+	}
+	
+	/**
+	 * @param obtained a given container
+	 * @param fit the cuboid obtained should fit
+	 * @return obtained rotated such that it fits fit
+	 */
+	public Container rotateToFit (Container obtained, Cuboid fit)
+	{
+		Glue offset = obtained.getGlue();
+		ArrayList<Integer> fitDim = fit.getDimensions();
+		
+		Matrix<Double> manipulation = new DoubleMatrix (3, 3);
+		manipulation.getScalarMatrix (1.0, manipulation);
+		//manipulate x1
+		if (obtained.getDimensions (0) != fitDim.get (0))
+		{
+			Matrix<Double> rot = null;
+			if (obtained.getDimensions (0) == fitDim.get (1))
+				rot = BasicShape.rotationMatrix (0.0, 90.0, BasicShape.RotationDir.ONWARD);
+			else if (obtained.getDimensions (0) == fitDim.get (2))
+				rot = BasicShape.rotationMatrix (90.0, 0.0, BasicShape.RotationDir.ONWARD);
+			manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
+		}
+		//manipulate x2
+		if (obtained.getDimensions (1) != fitDim.get (1))
+		{
+			if (obtained.getDimensions (1) == fitDim.get (2))
+			{
+				Matrix<Double> rot = null;
+				rot = BasicShape.rotationMatrix (0.0, 90.0, BasicShape.RotationDir.ONWARD);
+				manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
+				rot = BasicShape.rotationMatrix (90.0, 0.0, BasicShape.RotationDir.ONWARD);
+				manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
+				rot = BasicShape.rotationMatrix (0.0, -90.0, BasicShape.RotationDir.ONWARD);
+				manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
+			}
+		}
+		obtained.rotate (manipulation);
+		obtained.glue (offset);
+		return obtained;
 	}
 	
 	/**

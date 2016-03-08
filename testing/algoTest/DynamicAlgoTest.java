@@ -1,5 +1,6 @@
 package testing.algoTest;
 
+import geometry.Cuboid;
 import gui.PieceRenderPanel;
 
 import java.util.*;
@@ -15,6 +16,16 @@ import models.Matrix.*;
 
 public class DynamicAlgoTest 
 {
+	public static Glue getPos (int x1, int x2, int x3)
+	{
+		ArrayList<Integer> arr = new ArrayList<>();
+		arr.add (x1);
+		arr.add (x2);
+		arr.add (x3);
+		return new Glue (arr);
+	}
+	
+	
 	public static void main (String[] args) throws IOException, ShapeParser.BadFileStructureException
 	{
 		int[] quants = {4, 4, 4};
@@ -29,9 +40,12 @@ public class DynamicAlgoTest
 		DynamicAlgoTest test = new DynamicAlgoTest();
 		test.setResources (input.getBlocks(), quants, inf);
 		test.setContainer (d, w, h);
+		/*
 		test.run();
 		test.drawResult();
 		test.printResult();
+		*/
+		test.testRotateToFit();
 	}
 	
 	public void setResources (ArrayList<Block> blocks, int[] quants, boolean[] infFlags)
@@ -47,8 +61,8 @@ public class DynamicAlgoTest
 	
 	public void rotateBlockDecreasingDims (Block b)
 	{
-		Matrix<Double> rotX = b.rotationMatrix(90.0, 0.0, BasicShape.RotationDir.ONWARD);
-		Matrix<Double> rotY = b.rotationMatrix(0.0, 90, BasicShape.RotationDir.ONWARD);
+		Matrix<Double> rotX = BasicShape.rotationMatrix(90.0, 0.0, BasicShape.RotationDir.ONWARD);
+		Matrix<Double> rotY = BasicShape.rotationMatrix(0.0, 90, BasicShape.RotationDir.ONWARD);
 		
 		while (b.getDimensions(0) < b.getDimensions(1) || b.getDimensions(1) < b.getDimensions(2))
 		{
@@ -73,6 +87,44 @@ public class DynamicAlgoTest
 		mAlgo = new DynamicAlgo();
 		mAlgo.init (mCont, mRes);
 		mAlgo.run();
+	}
+	
+	public void testRotateToFit()
+	{
+		if (mAlgo == null)
+			mAlgo = new DynamicAlgo();
+		Container[] c = new Container[3];
+		c[0] = new Container (1, 2, 3);
+		c[1] = new Container (1, 2, 3);
+		c[2] = new Container (2, 3, 2);
+		
+		Cuboid[] fit = new Cuboid[3];
+		fit[0] = new Cuboid (getPos (0, 0, 0), getPos (2, 1, 3));
+		fit[1] = new Cuboid (getPos (0, 0, 0), getPos (3, 1, 2));
+		fit[2] = new Cuboid (getPos (0, 0, 0), getPos (3, 2, 2));
+		
+		for (int cnt = 0; cnt < 3; ++cnt)
+		{
+			mAlgo.rotateToFit (c[cnt], fit[cnt]);
+			boolean fits = true;
+			ArrayList<Integer> cubeDim = fit[cnt].getDimensions();
+			for (int cDim = 0; cDim < fit[cnt].getDimension(); ++cDim)
+			{
+				if (cubeDim.get(cDim) != c[cnt].getDimensions(cDim))
+					fits = false;
+			}
+			
+			if (fits)
+				System.out.println ("case " + cnt + " holds");
+			else
+			{
+				System.out.println ("case " + cnt + " does not hold");
+				System.out.print (c[cnt].getDimensions(0) + "," + c[cnt].getDimensions(1) + "," + c[cnt].getDimensions(2));
+				System.out.println (" does not match " + cubeDim);
+			}
+		}
+		
+		
 	}
 	
 	public void printSubsets()
