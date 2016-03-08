@@ -251,6 +251,32 @@ public class Container extends Block
 		addShape (cloneBlock);
 	}
 	
+	/**
+	 * glue container to specific position
+	 * translates all blocks by the difference between the previous
+	 * glue and the current glue
+	 */
+	public void glue (Glue pos)
+	{
+		if (!(mPlacedBlocks == null || mPlacedBlocks.isEmpty()))
+		{
+			Glue prev = getGlue();
+			//compute difference
+			IntegerMatrix diff = new IntegerMatrix (prev.getDimension(), 1);
+			for (int cDim = 0; cDim < diff.getRows(); ++cDim)
+				diff.setCell (cDim, 0, pos.getPosition (cDim) - prev.getPosition (cDim));
+			//glue placed blocks
+			for (Block placed : mPlacedBlocks)
+			{
+				Glue placedPrev = placed.getGlue();
+				IntegerMatrix blockGlue = new IntegerMatrix (placedPrev.getDimension(), 1);
+				for (int cDim = 0; cDim < blockGlue.getRows(); ++cDim)
+					blockGlue.setCell (cDim, 0, placedPrev.getPosition (cDim) + diff.getCell (cDim, 0));
+				placed.glue (new Glue (blockGlue));
+			}
+		}
+	}
+	
 	/** @param pos Position queried block is at
 		@return block at pos as clone
 		@throws BlockNotFoundException
