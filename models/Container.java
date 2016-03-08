@@ -275,6 +275,18 @@ public class Container extends Block
 				placed.glue (new Glue (blockGlue));
 			}
 		}
+		super.glue (pos);
+	}
+	
+	/**
+	 * rotates the container by given rotation matrix
+	 * rotates all blocks placed within
+	 */
+	public void rotate (Matrix<Double> rotMat)
+	{
+		for (Block placed : mPlacedBlocks)
+			placed.rotate (rotMat);
+		super.rotate (rotMat);
 	}
 	
 	/** @param pos Position queried block is at
