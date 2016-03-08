@@ -121,7 +121,7 @@ public class DynamicAlgo extends Algorithm
 					Entry e = mLookupTable.get (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex);
 					ArrayList <Resource> remainder = e.getUnusedResources (mSubsets.get (subsetIndex).getResources());
 					subsetIndex = getSubsetIndex (remainder);
-					Container lookedUp = mLookupTable.getContainer (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex); 
+					Container lookedUp = mLookupTable.getContainer (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex).clone(); 
 					Glue gluePos = new Glue (new IntegerMatrix (3, 1)).getClosest (free.getVertices());
 					lookedUp.glue (gluePos);
 					mConts.add (lookedUp);
@@ -131,10 +131,7 @@ public class DynamicAlgo extends Algorithm
 			
 			public ArrayList<Container> getOrderedContainers()
 			{
-				ArrayList <Container> ordered = new ArrayList<>();
-				for (Container c : mConts)
-					ordered.add (c.clone());
-				return ordered;
+				return mConts;
 			}
 			
 			public LinkedList <Cuboid> getOrderedCuboids() { return mCubes; }
@@ -154,26 +151,23 @@ public class DynamicAlgo extends Algorithm
 		for (int cFree = 0; cFree < freeCuboids.size(); ++cFree)
 		{
 			//set best to last
-			if (cFree == 0)
-				memo.add (new Order (new LinkedList <Cuboid>(), 0));
+			LinkedList<Cuboid> prev;
+			if (cFree > 0)
+				prev = (LinkedList<Cuboid>) memo.get (cFree - 1).getOrderedCuboids().clone();
 			else
-				memo.add (memo.get (cFree - 1));
+				prev = new LinkedList<Cuboid>();
+			prev.add (freeCuboids.get (cFree));
+			memo.add (new Order (prev, subsetIndex));
+			
 			//current cuboid needs to be added to a sequence of cuboids. Position? => determine
 			//iterate through [0, n] such that current value is index to place current cuboid
-			for (int cInsert = 0; cInsert <= cFree; ++cInsert)
+			for (int cInsert = 0; cInsert < cFree; ++cInsert)
 			{
 				//decision: keep current order with element inserted
 				//or: new order left and right of current index
-				LinkedList <Cuboid> newOrderList = new LinkedList<>();
-				//add elements left of insert position
-				if (cInsert > 0)
-					newOrderList.addAll (memo.get (cInsert - 1).getOrderedCuboids());
+				LinkedList <Cuboid> newOrderList = memo.get (cFree - 1).getOrderedCuboids();
 				//add element to be inserted
-				newOrderList.add (freeCuboids.get (cFree));
-				//add element right of the insert position
-				if (cFree - cInsert > 0)
-					newOrderList.addAll (memo.get (cFree - cInsert - 1).getOrderedCuboids());
-				
+				newOrderList.add (cInsert, freeCuboids.get (cFree));
 				//does subsetIndex refer to the correct subset
 				//=> did subset change? (i think so)
 				Order newOrder = new Order (newOrderList, subsetIndex);
@@ -222,25 +216,25 @@ public class DynamicAlgo extends Algorithm
 		if (d > w)
 		{
 			Entry less = mLookupTable.get (d - 1, w, h, subIndex);
-			if (less.getValue() > max.getValue())
+			if (less != null && less.getValue() > max.getValue())
 				max = less;
 		}
 		if (w > h)
 		{
 			Entry less = mLookupTable.get (d, w - 1, h, subIndex);
-			if (less.getValue() > max.getValue())
+			if (less != null && less.getValue() > max.getValue())
 				max = less;
 		}
 		if (h > 0)
 		{
 			Entry less = mLookupTable.get (d, w, h - 1, subIndex);
-			if (less.getValue() > max.getValue())
+			if (less != null && less.getValue() > max.getValue())
 				max = less;
 		}
 		if (subIndex > 0)
 		{
 			Entry less = mLookupTable.get (d, w, h, subIndex - 1);
-			if (less.getValue() > max.getValue())
+			if (less != null && less.getValue() > max.getValue())
 				max = less;
 		}
 		return max;
@@ -316,10 +310,10 @@ public class DynamicAlgo extends Algorithm
 									ArrayList <Container> filledCubes = orderFreeCuboids (emptyCubes, cSet);
 									putPiecesTogether (c, filledCubes);
 								}
-								best = getMax (c, cSet);
 							}
 							//set value in table
-							if (best.getValue() == c.getValue())
+							/*
+							if (best != null && best.getValue() == c.getValue())
 							{
 								best = mLookupTable.new Entry (c, c.getValue());
 								System.out.println ("new highest value found: " + best.getValue());
@@ -346,7 +340,8 @@ public class DynamicAlgo extends Algorithm
 								render.init();
 								int x = 2;
 								x = x*2;
-							}
+							}*/
+							best = getMax (c, cSet);
 							mLookupTable.set (best, cDepth, cWidth, cHeight, cSet);
 						}
 					}
