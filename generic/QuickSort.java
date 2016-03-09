@@ -15,12 +15,25 @@ public class QuickSort<T extends Comparable<T>> extends ArrayList<T>
 	private static long cnt = 100;
 	
 	/**
+	 * default constructor
+	 */
+	public QuickSort()
+	{
+		mRand = new Random (System.currentTimeMillis() % cnt);
+		if (cnt < Long.MAX_VALUE)
+			++cnt;
+		else
+			cnt = 100;
+	}
+	
+	/**
 	 * @param data list of data to be stored
 	 * data will not be deep copied
 	 */
 	public QuickSort (Collection<T> data)
 	{
 		super (data);
+		
 		mRand = new Random (System.currentTimeMillis() % cnt);
 		if (cnt < Long.MAX_VALUE)
 			++cnt;
