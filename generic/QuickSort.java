@@ -1,4 +1,4 @@
-package algorithm;
+package generic;
 
 import java.util.Collection;
 import java.util.ArrayList;
