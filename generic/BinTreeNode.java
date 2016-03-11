@@ -63,6 +63,24 @@ public class BinTreeNode<T>
 	 */
 	public T getElement() { return mVal; }
 	
+	
+	public String toString()
+	{
+		String ret =  new String();
+		if (!isRoot())
+			ret += "par " + getParent().getElement() + " ";
+		ret += "val = " + getElement() + " children: ";
+		if (hasChild (Side.LEFT))
+			ret += getChild (Side.LEFT).getElement() + " "; 
+		else
+			ret +=  "null ";
+		if (hasChild (Side.RIGHT))
+			ret += getChild (Side.RIGHT).getElement() + " ";
+		else
+			ret += "null";
+		return ret;
+	}
+	
 	/**
 	 * @return which side this node is on
 	 * Precondition: this node is not the tree's root
@@ -82,7 +100,9 @@ public class BinTreeNode<T>
 	{
 		if (isLeaf())
 			return 1;
-		return Math.max (getChild (Side.LEFT).getHeight(), getChild (Side.RIGHT).getHeight()) + 1;
+		int leftH = hasChild (Side.LEFT) ? getChild (Side.LEFT).getHeight() : 0;
+		int rightH = hasChild (Side.RIGHT) ? getChild (Side.RIGHT).getHeight() : 0;
+		return Math.max (leftH, rightH) + 1;
 	}
 	
 	/**
@@ -96,6 +116,18 @@ public class BinTreeNode<T>
 			return (check == mLeft); 
 		else
 			return (check == mRight);
+	}
+	
+	/**
+	 * @param s a given side
+	 * @return true if node has child on s
+	 */
+	public boolean hasChild (Side s)
+	{
+		if (s == Side.LEFT)
+			return mLeft != null;
+		else
+			return mRight != null;
 	}
 	
 	/**
@@ -117,6 +149,16 @@ public class BinTreeNode<T>
 	public boolean isLeaf() { return (mLeft == null && mRight == null); }
 	
 	/**
+	 * detaches this node from its parent
+	 * thus making this node the root of a tree
+	 */
+	public void makeRoot()
+	{
+		getParent().setChild (null, getSide());
+		mParent = null;
+	}
+	
+	/**
 	 * @param child node to set as child
 	 * @param s side of child
 	 * the references of the child node will be updated
@@ -124,21 +166,29 @@ public class BinTreeNode<T>
 	 */
 	public void setChild (BinTreeNode<T> child, Side s)
 	{
-		if (child != null)
+		if (child != (s == Side.LEFT ? mLeft : mRight))
 		{
-			if (!child.isRoot())
+			//modify child's parent field
+			if (child != null)
 			{
-				if (child.mParent.mLeft == child)
-					child.mParent.mLeft = null;
-				else
-					child.mParent.mRight = null;
+				if (!child.isRoot())
+					child.getParent().setChild (null, child.getSide());
+				child.mParent = this;
 			}
-			child.mParent = this;
+			//remove old child & set new child
+			if (s == Side.LEFT)
+			{
+				if (mLeft != null)
+					mLeft.mParent = null;
+				mLeft = child;
+			}
+			else
+			{
+				if (mRight != null)
+					mRight.mParent = null;
+				mRight = child;
+			}
 		}
-		if (s == Side.LEFT)
-			mLeft = child;
-		else
-			mRight = child;
 	}
 	
 	/**

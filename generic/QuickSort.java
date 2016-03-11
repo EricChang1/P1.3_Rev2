@@ -56,19 +56,22 @@ public class QuickSort<T extends Comparable<T>> extends ArrayList<T>
 		{
 			while (cLess <= cLarger && get (cLess).compareTo (pElem) <= 0)
 				++cLess;
-			while (cLess <= cLarger && get (cLarger).compareTo (pElem) >= 0)
+			while (cLess <= cLarger && get (cLarger).compareTo (pElem) > 0)
 				--cLarger;
 			if (cLess < cLarger)
 				swap (cLess, cLarger);
 		}
-		if (cLess < iEnd && get (cLess).compareTo (pElem) > 0)
+		if (cLess <= iEnd && get (cLess).compareTo (pElem) > 0)
+		{
+			cLess = pivot;
 			swap (cLess, pivot);
+		}
 		if (cLess > iEnd)
 			--cLess;
-		if (iStart < cLess)
-			sort (iStart, cLess);
-		if (cLess + 1 < iEnd)
-			sort (cLess + 1, iEnd);
+		if (iStart < cLess - 1)
+			sort (iStart, cLess - 1);
+		if (cLess < iEnd)
+			sort (cLess, iEnd);
 	}
 	
 	private void swap (int i1, int i2)

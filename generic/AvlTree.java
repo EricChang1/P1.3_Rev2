@@ -1,5 +1,7 @@
 package generic;
 
+import java.util.ArrayList;
+
 import generic.BinTreeNode.Side;
 
 
@@ -55,6 +57,12 @@ public class AvlTree<T extends Comparable<T>>
 		 */
 		public int compareTo (NodeOrderWrapper comp)
 		{
+			if (mNode == null && comp.mNode == null)
+				return 0;
+			else if (mNode == null)
+				return -1;
+			else if (comp.mNode == null)
+				return 1;
 			return mNode.getElement().compareTo (comp.mNode.getElement());
 		}
 		
@@ -66,7 +74,15 @@ public class AvlTree<T extends Comparable<T>>
 	 */
 	public AvlTree()
 	{
-		
+		mSize = 0;
+	}
+	
+	
+	public String toString()
+	{
+		ArrayList<BinTreeNode<T>> level = new ArrayList<>();
+		level.add (mRoot);
+		return treeToString (level);
 	}
 	
 	/**
@@ -98,9 +114,15 @@ public class AvlTree<T extends Comparable<T>>
 			BinTreeNode<T> leaf = getClosestLeaf (addVal);
 			//add new node to tree
 			if (addVal.compareTo (leaf.getElement()) < 0)
+			{
 				leaf.setChild (new BinTreeNode<> (addVal, leaf), Side.LEFT);
+				leaf = leaf.getChild (Side.LEFT);
+			}
 			else
+			{
 				leaf.setChild (new BinTreeNode<> (addVal, leaf), Side.RIGHT);
+				leaf = leaf.getChild (Side.RIGHT);
+			}
 			//check for restructuring
 			BinTreeNode<T> child = null, grandchild = null;
 			boolean restored = false;
@@ -112,9 +134,11 @@ public class AvlTree<T extends Comparable<T>>
 				
 				if (grandchild != null)
 				{
-					int heightL, heightR;
-					heightL = leaf.getChild (Side.LEFT).getHeight();
-					heightR = leaf.getChild (Side.RIGHT).getHeight();
+					int heightL = 0, heightR = 0;
+					if (leaf.hasChild (Side.LEFT))
+						heightL = leaf.getChild (Side.LEFT).getHeight();
+					if (leaf.hasChild (Side.RIGHT))
+						heightR = leaf.getChild (Side.RIGHT).getHeight();
 					//restructure
 					if (Math.abs (heightL - heightR) > 1)
 					{
@@ -160,9 +184,11 @@ public class AvlTree<T extends Comparable<T>>
 		{
 			child = node;
 			node = node.getParent();
-			int heightL, heightR;
-			heightL = node.getChild (Side.LEFT).getHeight();
-			heightR = node.getChild (Side.RIGHT).getHeight();
+			int heightL = 0, heightR = 0;
+			if (node.hasChild (Side.LEFT))
+				heightL = node.getChild (Side.LEFT).getHeight();
+			if (node.hasChild (Side.RIGHT))
+				heightR = node.getChild (Side.RIGHT).getHeight();
 			//if unbalanced
 			if (Math.abs (heightL - heightR) > 1)
 			{
@@ -246,6 +272,25 @@ public class AvlTree<T extends Comparable<T>>
 		return curr;
 	}
 	
+	
+	private String treeToString (ArrayList<BinTreeNode<T>> cs)
+	{
+		String ret = new String();
+		ArrayList<BinTreeNode<T>> next = new ArrayList<>();
+		for (BinTreeNode<T> c : cs)
+		{
+			ret += c.getElement() + ", ";
+			if (c.hasChild (Side.LEFT))
+				next.add (c.getChild (Side.LEFT));
+			if (c.hasChild (Side.RIGHT))
+				next.add (c.getChild (Side.RIGHT));
+		}
+		ret += "\n";
+		if (!next.isEmpty())
+			ret += treeToString (next);
+		return ret;
+	}
+	
 	/**
 	 * 
 	 * @param x bottom up first unbalanced node
@@ -256,36 +301,44 @@ public class AvlTree<T extends Comparable<T>>
 	{
 		//map x, y, z to inorder sequence
 		QuickSort<NodeOrderWrapper> orderInput = new QuickSort<>();
-		//store inorder of subtrees of x, y, z != x, y, z
-		QuickSort <NodeOrderWrapper> orderSubtrees = new QuickSort<>();
 		
 		orderInput.add (new NodeOrderWrapper (x));
 		orderInput.add (new NodeOrderWrapper (y));
 		orderInput.add (new NodeOrderWrapper (z));
 		
-		if (x.isChild (y, Side.LEFT))
-			orderSubtrees.add (new NodeOrderWrapper (x.getChild (Side.RIGHT)));
-		else
-			orderSubtrees.add (new NodeOrderWrapper (x.getChild (Side.LEFT)));
-		if (y.isChild (z, Side.LEFT))
-			orderSubtrees.add (new NodeOrderWrapper (y.getChild (Side.RIGHT)));
-		else
-			orderSubtrees.add (new NodeOrderWrapper (y.getChild (Side.LEFT)));
-		orderSubtrees.add (new NodeOrderWrapper (z.getChild (Side.LEFT)));
-		orderSubtrees.add (new NodeOrderWrapper (z.getChild (Side.RIGHT)));
-		
 		orderInput.sort (0, orderInput.size() - 1);
-		orderSubtrees.sort (0, orderSubtrees.size() - 1);
+		
+		//store inorder of subtrees of x, y, z != x, y, z
+		ArrayList<BinTreeNode<T>> orderSubtrees = new ArrayList<>();
+		for (NodeOrderWrapper w : orderInput)
+		{
+			for (Side s : Side.values())
+			{	
+				BinTreeNode<T> child = w.mNode.getChild (s);
+				if (child != y && child != z)
+					orderSubtrees.add (child);
+			}
+		}
+		
 		//restructure parameters
-		Side xSide = x.getParent().isChild (x, Side.LEFT) ? Side.LEFT : Side.RIGHT;
-		x.getParent().setChild (orderInput.get (1).mNode, xSide);
+		if (!x.isRoot())
+		{
+			Side xSide = x.getParent().isChild (x, Side.LEFT) ? Side.LEFT : Side.RIGHT;
+			x.getParent().setChild (orderInput.get (1).mNode, xSide);
+		}
+		else
+		{
+			mRoot = orderInput.get (1).mNode;
+			mRoot.makeRoot();
+		}
+		
 		orderInput.get (1).mNode.setChild (orderInput.get (0).mNode, Side.LEFT);
 		orderInput.get (1).mNode.setChild (orderInput.get (2).mNode, Side.RIGHT);
 		//restructure subtrees
-		orderInput.get (0).mNode.setChild (orderSubtrees.get (0).mNode, Side.LEFT);
-		orderInput.get (0).mNode.setChild (orderSubtrees.get (1).mNode, Side.RIGHT);
-		orderInput.get (2).mNode.setChild (orderSubtrees.get (2).mNode, Side.LEFT);
-		orderInput.get (2).mNode.setChild (orderSubtrees.get (3).mNode, Side.RIGHT);
+		orderInput.get (0).mNode.setChild (orderSubtrees.get (0), Side.LEFT);
+		orderInput.get (0).mNode.setChild (orderSubtrees.get (1), Side.RIGHT);
+		orderInput.get (2).mNode.setChild (orderSubtrees.get (2), Side.LEFT);
+		orderInput.get (2).mNode.setChild (orderSubtrees.get (3), Side.RIGHT);
 	}
 	
 	/**
