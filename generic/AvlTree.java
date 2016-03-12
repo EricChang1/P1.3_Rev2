@@ -1,10 +1,17 @@
 package generic;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 import generic.BinTreeNode.Side;
 
-
+/**
+ * Avl tree implementation
+ * offers possibility to query existence of a value
+ * add a value or remove a value.
+ * @author martin
+ * @param <T> type to store in tree
+ */
 public class AvlTree<T extends Comparable<T>> 
 {
 	/**
@@ -78,6 +85,52 @@ public class AvlTree<T extends Comparable<T>>
 	}
 	
 	
+	public ArrayList<T> getOrderedElements()
+	{
+		ArrayList<T> order = new ArrayList<>();
+		Stack<BinTreeNode<T>> nodesToVisit = new Stack<>();
+		BinTreeNode<T> curr = mRoot;
+		boolean done = false;
+		
+		do
+		{
+			//go down left
+			if (curr.hasChild (Side.LEFT))
+			{
+				nodesToVisit.add (curr);
+				curr = curr.getChild (Side.LEFT);
+			}
+			else
+			{
+				//visit
+				order.add (curr.getElement());
+				if (curr.hasChild (Side.RIGHT))
+					curr = curr.getChild (Side.RIGHT);
+				else
+				{
+					boolean goneRight = false;
+					//go up stack until front of stack has right child
+					while (!goneRight && !nodesToVisit.isEmpty())
+					{
+						BinTreeNode<T> stacked = nodesToVisit.pop();
+						order.add (stacked.getElement());
+						//go to right child
+						if (stacked.hasChild (Side.RIGHT))
+						{
+							curr = stacked.getChild (Side.RIGHT);
+							goneRight = true;
+						}
+					}
+					if (!goneRight && nodesToVisit.isEmpty())
+						done = true;
+				}
+			}
+		}
+		while (!done);
+		return order;
+	}
+	
+	
 	public String toString()
 	{
 		ArrayList<BinTreeNode<T>> level = new ArrayList<>();
@@ -101,6 +154,20 @@ public class AvlTree<T extends Comparable<T>>
 	 * @return number of nodes stored
 	 */
 	public int getSize() { return mSize; }
+	
+	/**
+	 * @param val value to search for
+	 * @return true if element was found in tree, false otherwise
+	 */
+	public boolean hasElement (T val)
+	{
+		BinTreeNode<T> node = getNode (val);
+		if (node == null)
+			return false;
+		else
+			return true;
+	}
+	
 	
 	/**
 	 * @param addVal value to add to tree
@@ -234,11 +301,12 @@ public class AvlTree<T extends Comparable<T>>
 	}
 	
 	
-	/**
+	/*
 	 * @param oldVal value stored in tree to replace
 	 * @param newVal value to replace oldVal with
 	 * the first occurrence of oldVal will be replaced
 	 */
+	/*
 	public void replace (T oldVal, T newVal)
 	{
 		BinTreeNode<T> node = getNode (oldVal);
@@ -246,7 +314,7 @@ public class AvlTree<T extends Comparable<T>>
 			throw new NotInTreeException ("value requested is not in tree and cannot be replaced");
 		node.setElement (newVal);
 	}
-	
+	*/
 	
 	/**
 	 * @param elem value of node to retrieve
