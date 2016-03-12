@@ -3,12 +3,16 @@ package generic;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import javax.print.attribute.Size2DSyntax;
+
 import generic.BinTreeNode.Side;
 
 /**
  * Avl tree implementation
  * offers possibility to query existence of a value
  * add a value or remove a value.
+ * Certain methods retrieving elements store it in a cache variable
+ * which will be used on next look up and overwritten
  * @author martin
  * @param <T> type to store in tree
  */
@@ -87,6 +91,8 @@ public class AvlTree<T extends Comparable<T>>
 	
 	public ArrayList<T> getOrderedElements()
 	{
+		if (getSize() == 0)
+			return new ArrayList<>();
 		ArrayList<T> order = new ArrayList<>();
 		Stack<BinTreeNode<T>> nodesToVisit = new Stack<>();
 		BinTreeNode<T> curr = mRoot;
@@ -141,10 +147,11 @@ public class AvlTree<T extends Comparable<T>>
 	/**
 	 * @param val a given value in the tree
 	 * @return height of first node of value val found
+	 * Note: uses cache
 	 */
 	public int getHeight (T val)
 	{
-		BinTreeNode<T> node = getNode (val);
+		BinTreeNode<T> node = getNode (val, true);
 		if (new NullNode().isNull (node))
 			throw new NotInTreeException ("value requested is not in tree and cannot be replaced");
 		return node.getHeight();
@@ -158,11 +165,12 @@ public class AvlTree<T extends Comparable<T>>
 	/**
 	 * @param val value to search for
 	 * @return true if element was found in tree, false otherwise
+	 * Note: uses cache
 	 */
 	public boolean hasElement (T val)
 	{
-		BinTreeNode<T> node = getNode (val);
-		if (node == null)
+		BinTreeNode<T> node = getNode (val, true);
+		if (new NullNode().isNull (node))
 			return false;
 		else
 			return true;
@@ -220,11 +228,12 @@ public class AvlTree<T extends Comparable<T>>
 	
 	/**
 	 * @param remVal value of node to remove
+	 * Note: uses cache, clears cache
 	 */
 	public void remove (T remVal)
 	{
 		//search node
-		BinTreeNode<T> node = getNode (remVal);
+		BinTreeNode<T> node = getNode (remVal, false);
 		if (new NullNode().isNull (node))
 			throw new NotInTreeException ("value requested is not in tree and cannot be replaced");
 		//binary tree removal
@@ -318,16 +327,30 @@ public class AvlTree<T extends Comparable<T>>
 	
 	/**
 	 * @param elem value of node to retrieve
+	 * @param caching boolean flag indicating whether to cache value retrieved (true) or 
+	 * whether to set cache variable to null (false)
 	 * @return node having elem as value or null node if none is found
 	 */
-	private BinTreeNode<T> getNode (T elem)
+	private BinTreeNode<T> getNode (T elem, boolean caching)
 	{
+		if (mCache != null && mCache.getElement().compareTo (elem) == 0)
+		{
+			if (!caching)
+				mCache = null;
+			return mCache;
+		}
 		BinTreeNode<T> currNode = mRoot;
 		while (currNode != null)
 		{
 			int indicator = currNode.getElement().compareTo (elem);
 			if (indicator == 0)
+			{
+				if (caching)
+					mCache = currNode;
+				else
+					mCache = null;
 				return currNode;
+			}
 			else if (indicator > 0)
 				currNode = currNode.getChild (Side.LEFT);
 			else
@@ -345,14 +368,20 @@ public class AvlTree<T extends Comparable<T>>
 		BinTreeNode<T> curr = mRoot;
 		while (!curr.isLeaf())
 		{
-			if (val.compareTo (curr.getElement()) < 0)
+			if (curr.isInternal() || curr.isRoot())
+			{
+				if (val.compareTo (curr.getElement()) < 0)
+					curr = curr.getChild (Side.LEFT);
+				else
+					curr = curr.getChild (Side.RIGHT);
+			}
+			else if (curr.hasChild (Side.LEFT))
 				curr = curr.getChild (Side.LEFT);
 			else
 				curr = curr.getChild (Side.RIGHT);
 		}
 		return curr;
 	}
-	
 	
 	private String treeToString (ArrayList<BinTreeNode<T>> cs)
 	{
@@ -434,6 +463,7 @@ public class AvlTree<T extends Comparable<T>>
 		n2.setElement (temp);
 	}
 	
-	private BinTreeNode<T> mRoot;
+	//stores root, last node accessed via getNode()
+	private BinTreeNode<T> mRoot, mCache;
 	private int mSize;
 }
