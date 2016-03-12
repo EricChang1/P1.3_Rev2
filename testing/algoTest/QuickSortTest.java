@@ -1,15 +1,16 @@
 package testing.algoTest;
 
+import generic.QuickSort;
+
 import java.util.*;
 
-import algorithm.QuickSort;
 
 public class QuickSortTest 
 {
 	
 	public static void main (String[] args)
 	{
-		QuickSortTest test = new QuickSortTest(10);
+		QuickSortTest test = new QuickSortTest(5);
 		test.test();
 	}
 	

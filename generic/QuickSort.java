@@ -42,6 +42,19 @@ public class QuickSort<T extends Comparable<T>> extends ArrayList<T>
 	}
 	
 	/**
+	 * @return true if range is sorted in ascending order
+	 */
+	public boolean sortCheck()
+	{
+		for (int cCheck = 0; cCheck < size() - 1; ++cCheck)
+		{
+			if (get (cCheck).compareTo (get (cCheck + 1)) < 0)
+				return false;
+		}
+		return true;
+	}
+	
+	/**
 	 * @param iStart first index of sequence
 	 * @param iEnd last index of sequence
 	 * sorts sequence from iStart to iEnd (inclusive)
@@ -54,24 +67,31 @@ public class QuickSort<T extends Comparable<T>> extends ArrayList<T>
 		
 		while (cLess <= cLarger)
 		{
-			while (cLess <= cLarger && get (cLess).compareTo (pElem) <= 0)
+			while (cLess <= cLarger && get (cLess).compareTo (pElem) < 0)
 				++cLess;
-			while (cLess <= cLarger && get (cLarger).compareTo (pElem) > 0)
+			while (cLess <= cLarger && get (cLarger).compareTo (pElem) >= 0)
 				--cLarger;
 			if (cLess < cLarger)
 				swap (cLess, cLarger);
 		}
-		if (cLess <= iEnd && get (cLess).compareTo (pElem) > 0)
+		
+		//no element less than pivot after iStart
+		if (cLess == iStart)
 		{
-			cLess = pivot;
 			swap (cLess, pivot);
+			if (cLess + 1 < iEnd)
+				sort (iStart + 1, iEnd);
 		}
-		if (cLess > iEnd)
-			--cLess;
-		if (iStart < cLess - 1)
-			sort (iStart, cLess - 1);
-		if (cLess < iEnd)
-			sort (cLess, iEnd);
+		else
+		{
+			if (iStart < cLess - 1)
+				sort (iStart, cLess - 1);
+			if (cLess < iEnd)
+				sort (cLess, iEnd);
+		}
+		
+		if (iStart == 0 && iEnd == size() - 1)
+			assert (sortCheck());
 	}
 	
 	private void swap (int i1, int i2)
