@@ -161,9 +161,21 @@ public class AvlTree<T extends Comparable<T>>
 		if (new NullNode().isNull (node))
 			throw new NotInTreeException ("value requested is not in tree and cannot be replaced");
 		//binary tree removal
-		if (node.isRoot())
-			mRoot = null;
-		else if (!node.isInternal())
+		/*if (node.isRoot())
+			mRoot = null;*/
+		if (node.hasChild (Side.LEFT) && node.hasChild (Side.RIGHT))
+		{
+			BinTreeNode<T> leaf = getClosestLeaf (remVal);
+			node.setElement (leaf.getElement());
+			leaf.makeRoot();	//practically removes leaf node
+			
+			/*Side remSide = node.getSide();
+			node = node.getParent();
+			node.setChild (leaf, remSide);*/
+			//node.getParent().getChild (node.getSide()).setElement (leaf.getElement());
+			
+		}
+		else
 		{
 			BinTreeNode<T> replace = null;
 			if (node.getChild (Side.LEFT) != null)
@@ -171,19 +183,18 @@ public class AvlTree<T extends Comparable<T>>
 			else if (node.getChild (Side.RIGHT) != null)
 				replace = node.getChild (Side.RIGHT);
 			
-			node.getParent().setChild (replace, node.getSide());
-		}
-		else
-		{
-			BinTreeNode<T> leaf = getClosestLeaf (remVal);
-			node.getParent().getChild (node.getSide()).setElement (leaf.getElement());
+			if (node.isRoot())
+				mRoot = replace;
+			else
+			{
+				Side remSide = node.getSide();
+				node = node.getParent();
+				node.setChild (replace, remSide);
+			}
 		}
 		//trinode restructuring
-		BinTreeNode<T> child = null; 
-		while (!node.isRoot())
+		do
 		{
-			child = node;
-			node = node.getParent();
 			int heightL = 0, heightR = 0;
 			if (node.hasChild (Side.LEFT))
 				heightL = node.getChild (Side.LEFT).getHeight();
@@ -194,7 +205,7 @@ public class AvlTree<T extends Comparable<T>>
 			{
 				BinTreeNode<T> lvl2, lvl3;
 				Side sideChosen;
-				if (node.isChild (child, Side.LEFT))
+				if (heightL < heightR)
 				{
 					lvl2 = node.getChild (Side.RIGHT);
 					sideChosen = Side.RIGHT;
@@ -216,7 +227,9 @@ public class AvlTree<T extends Comparable<T>>
 					lvl3 = lvl2.getChild (sideChosen);
 				restructure (node, lvl2, lvl3);
 			}
-		}
+			if (!node.isRoot())
+				node = node.getParent();
+		} while (!node.isRoot());
 		--mSize;
 	}
 	
@@ -247,10 +260,10 @@ public class AvlTree<T extends Comparable<T>>
 			int indicator = currNode.getElement().compareTo (elem);
 			if (indicator == 0)
 				return currNode;
-			else if (indicator < 0)
-				currNode.getChild (Side.LEFT);
+			else if (indicator > 0)
+				currNode = currNode.getChild (Side.LEFT);
 			else
-				currNode.getChild (Side.RIGHT);
+				currNode = currNode.getChild (Side.RIGHT);
 		}
 		return new NullNode();
 	}
@@ -326,7 +339,7 @@ public class AvlTree<T extends Comparable<T>>
 			Side xSide = x.getParent().isChild (x, Side.LEFT) ? Side.LEFT : Side.RIGHT;
 			x.getParent().setChild (orderInput.get (1).mNode, xSide);
 		}
-		else
+		else if (!orderInput.get (1).mNode.isRoot())
 		{
 			mRoot = orderInput.get (1).mNode;
 			mRoot.makeRoot();

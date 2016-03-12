@@ -7,6 +7,7 @@ package generic;
  */
 public class BinTreeNode<T> 
 {
+	
 	public enum Side {LEFT, RIGHT}
 	
 	/**
@@ -154,6 +155,7 @@ public class BinTreeNode<T>
 	 */
 	public void makeRoot()
 	{
+		assert (!isRoot());
 		getParent().setChild (null, getSide());
 		mParent = null;
 	}
