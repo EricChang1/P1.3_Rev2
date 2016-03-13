@@ -159,6 +159,19 @@ public class AvlTree<T extends Comparable<T>> implements Cloneable
 	}
 	
 	/**
+	 * @param val value to search for
+	 * @return reference to object with same value as val
+	 * Note: uses cache
+	 */
+	public T getElement (T val)
+	{
+		BinTreeNode<T> node = getNode (val, true);
+		if (new NullNode().isNull (node))
+			throw new NotInTreeException ("value requested is not in tree and cannot be replaced");
+		return node.getElement();
+	}
+	
+	/**
 	 * @param val a given value in the tree
 	 * @return height of first node of value val found
 	 * Note: uses cache

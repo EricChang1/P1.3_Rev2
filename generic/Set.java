@@ -5,7 +5,6 @@ import java.util.ArrayList;
 /**
  * 
  * @author martin
- *
  * @param <T>
  */
 public class Set<T extends Comparable<T>> implements Cloneable
@@ -54,6 +53,7 @@ public class Set<T extends Comparable<T>> implements Cloneable
 	/**
 	 * @param op2 another given set of same type
 	 * @return intersection of both sets
+	 * Note: references of this object will be used
 	 */
 	public Set<T> getIntersection (Set<T> op2)
 	{
@@ -103,6 +103,16 @@ public class Set<T extends Comparable<T>> implements Cloneable
 		return mStore.getOrderedElements();
 	}
 	
+	/**
+	 * @param val a given value
+	 * @return element stored with same value as val
+	 */
+	public T getElement (T val)
+	{
+		if (!mStore.hasElement (val))
+			throw new SetException ("value " + val + " to be added exists already");
+		return mStore.getElement (val);
+	}
 	
 	public String toString()
 	{
