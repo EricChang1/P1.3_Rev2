@@ -340,7 +340,8 @@ public class Container extends Block
 		{
 			BasicShape placedCompleted = new BasicShape (bPlaced);
 			placedCompleted.addMissingRectanglePoints();
-			if (placedCompleted.intersect (completed) || completed.intersect (placedCompleted))
+			if (placedCompleted.intersect (completed, false) || 
+				completed.intersect (placedCompleted, false))
 				return false;
 			
 			if (bPlaced.isWithin (block) || block.isWithin (bPlaced))

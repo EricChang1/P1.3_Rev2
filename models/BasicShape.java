@@ -807,6 +807,7 @@ public class BasicShape
 		{
 			for (Line line : lines)
 			{
+				line.setInclusion (false, false);
 				IntersectionSolver checkInter = new IntersectionSolver(side, line);
 				if (checkInter.getSolutionType() == IntersectionSolver.Result.ONE && 
 					checkInter.isWithinBounds())
