@@ -1,15 +1,18 @@
 package algorithm;
 
-import geometry.Cuboid;
+import geometry.Cuboid; 
 import gui.PieceRenderPanel;
 import gui.PieceRenderPanel.ResizeListener;
 import gui.PieceRenderPanel.RotationListener;
 import gui.PieceRenderPanel.ZoomListener;
 
 import java.awt.BorderLayout;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 import javax.swing.JFrame;
+
+import generic.Set;
 
 import models.BasicShape;
 import models.Block;
@@ -17,7 +20,6 @@ import models.Container;
 import models.Glue;
 import models.Matrix;
 import models.Matrix.DoubleMatrix;
-import models.Resource;
 import models.Matrix.*;
 
 import algorithm.LookupTable.Entry;
@@ -29,41 +31,92 @@ import algorithm.LookupTable.Entry;
 public class DynamicAlgo extends Algorithm 
 {
 	/**
+	 * comparable resource class for finite amounts
+	 * @author martin
+	 */
+	public static class Resource extends models.Resource implements Comparable<Resource>
+	{
+		/**
+		 * @param b block to store
+		 * @param capacity capacity of b to store
+		 * constructs finite resource
+		 */
+		public Resource (Block b, int capacity)
+		{
+			super (b, capacity, b.getVolume(), false);
+		}
+		
+		
+		public Resource clone()
+		{
+			return new Resource (this.getBlock(), this.getInventory());
+		}
+		
+		/**
+		 * @param comp resource to compare with
+		 * @return 	-1 if volume of block stored is less than volume of block in comp,
+		 * 0 if volume is equal, 1 if volume is greater
+		 */
+		public int compareTo (Resource comp)
+		{
+			if (this.getVolume() < comp.getVolume())
+				return -1;
+			else if (this.getVolume() == comp.getVolume())
+				return 0;
+			else
+				return 1;
+		}
+		
+	}
+	
+	
+	/**
 	 * class storing a set of blocks
 	 * modelling a subset
 	 * @author martin
 	 */
-	public static class Subset
+	public static class Subset extends Set<Resource> implements Comparable<Subset>
 	{	
 		public Subset ()
 		{
-			mResources = new LinkedList<>();
 			mVolume = 0;
 		}
 		
 		public Subset clone()
 		{
-			Subset s = new Subset();
-			for (Resource r : this.mResources)
-				s.mResources.add (r.clone());
-			s.mVolume = this.mVolume;
-			return s;
+			Subset clone = new Subset();
+			for (Resource r : getOrderedElements())
+				clone.add (r);
+			return clone;
 		}
 		
 		public LinkedList <Resource> getResources()
 		{
-			return mResources;
+			return new LinkedList<Resource> (getOrderedElements());
 		}
 		
 		public String toString()
 		{
 			String s = new String();
-			for (Resource r : mResources)
+			for (Resource r : getOrderedElements())
 				s += r.getVolume() + " vol x " + r.getInventory() + ", ";
 			return s;
 		}
 		
-		public int size() { return mResources.size(); }
+		/**
+		 * @param comp subset to compare this subset to
+		 * @return -1 if volume of this subset is less than
+		 * volume of comp, 0 if volumes are equal, 1 if volume is greater
+		 */
+		public int compareTo (Subset comp)
+		{
+			if (this.getVolume() < comp.getVolume())
+				return -1;
+			else if (this.getVolume() == comp.getVolume())
+				return 0;
+			else
+				return 1;
+		}
 		
 		public int getVolume()
 		{
@@ -72,24 +125,40 @@ public class DynamicAlgo extends Algorithm
 		
 		public boolean equals (Subset comp)
 		{
-			return this.mResources.equals (comp.mResources);
+			if (this.getVolume() == comp.getVolume())
+				return super.equals (comp);
+			return false;
 		}
 		
-		public boolean equals (LinkedList <Resource> comp)
-		{
-			return comp.equals (mResources);
-		}
-		
-		public void addResource (Resource bAdd)
+		public void add (Resource bAdd)
 		{
 			if (bAdd.isInfinite())
 				throw new IllegalArgumentException ("only finite resources can be added to form finite subsets");
-			mResources.add(bAdd.clone());
+			super.add (bAdd);
 			mVolume += bAdd.getVolume() * bAdd.getInventory();
 		}
 		
-		private LinkedList <Resource> mResources;
 		private int mVolume;
+	}
+	
+	/**
+	 * mapping of index to specific subset
+	 * @author martin
+	 */
+	public static class SubsetAtIndex
+	{
+		public SubsetAtIndex (Subset s, int index)
+		{
+			mSet = s;
+			mIndex = index;
+		}
+		
+		public Subset getSet() { return mSet; }
+		
+		public int getIndex() { return mIndex; }
+		
+		private Subset mSet;
+		private int mIndex;
 	}
 	
 	
@@ -104,7 +173,7 @@ public class DynamicAlgo extends Algorithm
 	 * @param subsetIndex index of subset available
 	 * @return optimal order in which the free cuboids should be filled to the full extent
 	 */
-	public ArrayList <Container> orderFreeCuboids (ArrayList <Cuboid> freeCuboids, int subsetIndex)
+	public ArrayList <Container> fillFreeCuboids (ArrayList <Cuboid> freeCuboids, int subsetIndex)
 	{
 		/**
 		 * class used to compute and store list of containers
@@ -121,10 +190,19 @@ public class DynamicAlgo extends Algorithm
 				for (Cuboid free : mCubes)
 				{
 					ArrayList <Integer> cubeDims = free.getDimensions();
+					//if entry needed is not set
+					if (!mLookupTable.isSet (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex))
+					{
+						Container x = new Container (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2));
+						explore (x, mSubsets.get (subsetIndex));
+					}
+					//get optimal for parameters
 					Entry e = mLookupTable.get (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex);
-					ArrayList <Resource> remainder = e.getUnusedResources (mSubsets.get (subsetIndex).getResources());
+					ArrayList <Resource> remainder = e.getUnusedResources (mSubsets.get (subsetIndex));
 					subsetIndex = getSubsetIndex (remainder);
+					//get container, set to fit current cuboid
 					Container lookedUp = mLookupTable.getContainer (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex).clone(); 
+					rotateToFit (lookedUp, free);
 					Glue gluePos = new Glue (new IntegerMatrix (3, 1)).getClosest (free.getVertices());
 					lookedUp.glue (gluePos);
 					mConts.add (lookedUp);
@@ -168,7 +246,7 @@ public class DynamicAlgo extends Algorithm
 			{
 				//decision: keep current order with element inserted
 				//or: new order left and right of current index
-				LinkedList <Cuboid> newOrderList = memo.get (cFree - 1).getOrderedCuboids();
+				LinkedList <Cuboid> newOrderList = (LinkedList<Cuboid>) memo.get (cFree - 1).getOrderedCuboids().clone();
 				//add element to be inserted
 				newOrderList.add (cInsert, freeCuboids.get (cFree));
 				//does subsetIndex refer to the correct subset
@@ -211,7 +289,7 @@ public class DynamicAlgo extends Algorithm
 	 */
 	public Entry getMax (Container current, int subIndex)
 	{
-		Entry max = mLookupTable.new Entry (current, current.getValue());
+		Entry max = mLookupTable.new Entry (current);
 		int d, w, h;
 		d = current.getDimensions(0);
 		w = current.getDimensions(1);
@@ -290,6 +368,8 @@ public class DynamicAlgo extends Algorithm
 	 */
 	public int getSubsetIndex (ArrayList <Resource> subset)
 	{
+		//FIND INDEX USING SET IMPLEMENTATION SORTING RESOURCES BASED ON VOLUME
+		
 		for (int cSub = 0; cSub < mSubsets.size(); ++cSub)
 		{
 			Subset sub = mSubsets.get (cSub);
@@ -314,86 +394,54 @@ public class DynamicAlgo extends Algorithm
 	{
 		super.run();
 		generatePowerSet();
-		generatePowerSet();
 		int dep = getContainer().getDimensions(0);
 		int wid = getContainer().getDimensions(1);
 		int hig = getContainer().getDimensions(2);
-		ArrayList <Integer> is = LookupTable.sortIndices (dep, wid, hig);
-		dep = is.get(0);
-		wid = is.get(1);
-		hig = is.get(2);
-		mLookupTable = new LookupTable(dep + 1, wid + 1, hig + 1, mSubsets.size());
 		
-		int dimension = 3;
-		Glue zeroPos = new Glue (new IntegerMatrix (dimension, 1));
-		Entry best = null;
+		explore (getContainer(), mSubsets.get (mSubsets.size() - 1));
 		
-		for (int cDepth = 0; cDepth <= dep; ++cDepth)
-		{
-			for (int cWidth = 0; cWidth <= cDepth && cWidth <= wid; ++cWidth)
-			{
-				for (int cHeight = 0; cHeight <= cWidth && cHeight <= hig; ++cHeight)
-				{
-					for (int cSet = 0; cSet < mSubsets.size(); ++cSet)
-					{
-						Subset useSub = mSubsets.get (cSet);
-						for (int cPiece = 0; cPiece < useSub.size(); ++cPiece)
-						{
-							Block bRef = useSub.getResources().get(cPiece).getBlock();
-							Container c = null;
-							c = new Container (cDepth, cWidth, cHeight);
-							
-							if (bRef.getDimensions(0) <= cDepth && bRef.getDimensions(1) <= cWidth &&
-								bRef.getDimensions(2) <= cHeight)
-							{
-								c.placeBlock(bRef, zeroPos);
-								
-								ArrayList <Cuboid> emptyCubes = c.getFreeCuboids();
-								if (!emptyCubes.isEmpty())
-								{
-									ArrayList <Container> filledCubes = orderFreeCuboids (emptyCubes, cSet);
-									putPiecesTogether (c, filledCubes);
-								}
-							}
-							//set value in table
-							/*
-							if (best != null && best.getValue() == c.getValue())
-							{
-								best = mLookupTable.new Entry (c, c.getValue());
-								System.out.println ("new highest value found: " + best.getValue());
-								
-								JFrame frame = new JFrame ("best value: " + best.getValue());
-								frame.setSize (400, 400);
-								frame.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
-								frame.setLayout (new BorderLayout());
-								
-								PieceRenderPanel render = new PieceRenderPanel(c.clone());
-								
-								PieceRenderPanel.RotationListener rotListen = render.new RotationListener();
-								PieceRenderPanel.ResizeListener resizeListen = render.new ResizeListener();
-								PieceRenderPanel.ZoomListener zoomListen = render.new ZoomListener();
-								zoomListen.setSensitivity (0.1);
-								
-								frame.addMouseListener (rotListen);
-								frame.addMouseMotionListener(rotListen);
-								frame.addMouseWheelListener(zoomListen);
-								frame.addComponentListener(resizeListen);
-								
-								frame.add (render, BorderLayout.CENTER);
-								frame.setVisible(true);
-								render.init();
-								int x = 2;
-								x = x*2;
-							}*/
-							best = getMax (c, cSet);
-							mLookupTable.set (best, cDepth, cWidth, cHeight, cSet);
-						}
-					}
-				}
-			}
-		}
 		setSolution (mLookupTable.getContainer (dep, wid, hig, mSubsets.size() - 1));
 		setAlgoDone();
+	}
+	
+	/**
+	 * @param c a given empty container
+	 * @param s a given subset
+	 * computes optimal filling for c using s
+	 */
+	public void explore (Container c, Subset s)
+	{
+		final int MAXDIM = 3;
+		
+		Entry best = null;
+		
+		//ONLY EXPLORE RESOURCES WHICH ARE NOT A SUBSET OF OTHER RESOURCES
+		for (Resource piece : s.getResources())
+		{
+			Block bRef = piece.getBlock();
+			ArrayList<Integer> sortContDims, sortPieceDims;
+			sortContDims = LookupTable.sortIndices (c.getDimensions (0), c.getDimensions (1), c.getDimensions (2));
+			sortPieceDims = LookupTable.sortIndices (bRef.getDimensions (0), bRef.getDimensions (1), bRef.getDimensions (2));
+			//if piece fits
+			if (sortContDims.get (0) >= sortPieceDims.get (0) && 
+				sortContDims.get (1) >= sortPieceDims.get (1) &&
+				sortContDims.get (2) >= sortPieceDims.get (2))
+			{
+				//place
+				int iSub = getSubsetIndex (new ArrayList<Resource> (s.getResources()));
+				c.placeBlock (piece.getBlock().clone(), new Glue (new IntegerMatrix (MAXDIM, 1)));
+				//cut remainder, fill remainder, assemble remainder
+				ArrayList <Container> filled = fillFreeCuboids (c.getFreeCuboids(), iSub);
+				if (!filled.isEmpty())
+					putPiecesTogether (c, filled);
+				//check for new max
+				Entry current = mLookupTable.new Entry (c);
+				if (best == null || current.getValue() > best.getValue())
+					best = current;
+				//set max value to current cell
+				mLookupTable.set (best, c.getDimensions (0), c.getDimensions (1), c.getDimensions (2), iSub);
+			}
+		}
 	}
 	
 	/**
@@ -405,19 +453,37 @@ public class DynamicAlgo extends Algorithm
 		//iterate through resources
 		for (int cRes = 0; cRes < getPieces().size(); ++cRes)
 		{
-			Resource res = getPieces().get(cRes);
+			Block block = getPieces().get(cRes).getBlock();
+			int inventory = getPieces().get (cRes).getInventory();
+			Resource res = new Resource (block, inventory);
 			int maxIndex = mSubsets.size();
 			//iterate through partially existing subsets
 			for (int cExistSub = 0; cExistSub < maxIndex; ++cExistSub)
 			{
 				Subset last = mSubsets.get(cExistSub);
 				//clone subset and add resource
-				Subset added = last.clone();
-				added.addResource (res);
-				mSubsets.add (added);
+				if (res.isInfinite())
+				{
+					Subset add = last.clone();
+					add.add (res.clone());
+					mSubsets.add (add);
+				}
+				else
+				{
+					int cAdd = 1;
+					while (last.getVolume() + cAdd * res.getVolume() <= getContainer().getVolume() && cAdd <= res.getInventory())
+					{
+						Subset add = last.clone();
+						Resource addRes = new Resource (res.getBlock().clone(), cAdd);
+						add.add (addRes);
+						mSubsets.add (add);
+						++cAdd;
+					}
+				}
 			}
 		}
 	}
+	
 	
 	private void setSolution (Container sol)
 	{
