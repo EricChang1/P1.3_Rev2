@@ -16,8 +16,8 @@ import generic.BinTreeNode.Side;
  * @author martin
  * @param <T> type to store in tree
  */
-public class AvlTree<T extends Comparable<T>> 
-{
+public class AvlTree<T extends Comparable<T>> implements Cloneable
+{	
 	/**
 	 * exception thrown if node requested does not exist
 	 * @author martin
@@ -88,52 +88,66 @@ public class AvlTree<T extends Comparable<T>>
 		mSize = 0;
 	}
 	
-	
+	/**
+	 * @return elements stored in order
+	 */
 	public ArrayList<T> getOrderedElements()
 	{
-		if (getSize() == 0)
-			return new ArrayList<>();
-		ArrayList<T> order = new ArrayList<>();
-		Stack<BinTreeNode<T>> nodesToVisit = new Stack<>();
-		BinTreeNode<T> curr = mRoot;
-		boolean done = false;
-		
-		do
+		class Order implements Visitor<T>
 		{
-			//go down left
-			if (curr.hasChild (Side.LEFT))
+			public Order()
 			{
-				nodesToVisit.add (curr);
-				curr = curr.getChild (Side.LEFT);
+				mOrdered = new ArrayList<>();
 			}
-			else
+			
+			public void visit (T elem)
 			{
-				//visit
-				order.add (curr.getElement());
-				if (curr.hasChild (Side.RIGHT))
-					curr = curr.getChild (Side.RIGHT);
+				mOrdered.add (elem);
+			}
+			
+			public ArrayList<T> mOrdered;
+		}
+		
+		Order o = new Order();
+		inorder (o);
+		return o.mOrdered;
+	}
+	
+	/**
+	 * @return cloned avl tree
+	 * Note: elements stored are shallowly copied
+	 * but deep copy is performed on structure
+	 */
+	public AvlTree<T> clone()
+	{
+		class Cloner implements Visitor<T>
+		{
+			public Cloner()
+			{
+				mClone = new AvlTree<>();
+			}
+			
+			public void visit (T elem)
+			{
+				if (mLast == null || mLast.getElement().compareTo (elem) < 0)
+				{
+					mClone.add (elem);
+					mLast = mClone.getNode (elem, true);
+				}
 				else
 				{
-					boolean goneRight = false;
-					//go up stack until front of stack has right child
-					while (!goneRight && !nodesToVisit.isEmpty())
-					{
-						BinTreeNode<T> stacked = nodesToVisit.pop();
-						order.add (stacked.getElement());
-						//go to right child
-						if (stacked.hasChild (Side.RIGHT))
-						{
-							curr = stacked.getChild (Side.RIGHT);
-							goneRight = true;
-						}
-					}
-					if (!goneRight && nodesToVisit.isEmpty())
-						done = true;
+					mLast.getChild (Side.LEFT).setChild (new BinTreeNode<> (elem), Side.LEFT);
+					mLast = mLast.getChild (Side.LEFT);
 				}
 			}
+			
+			public AvlTree<T> mClone;
+			private BinTreeNode<T> mLast;
 		}
-		while (!done);
-		return order;
+		
+		Cloner c = new Cloner();
+		inorder (c);
+		return c.mClone;
 	}
 	
 	
@@ -176,6 +190,52 @@ public class AvlTree<T extends Comparable<T>>
 			return true;
 	}
 	
+	
+	public void inorder (Visitor<T> v)
+	{
+		if (getSize() == 0)
+			return;
+		
+		Stack<BinTreeNode<T>> nodesToVisit = new Stack<>();
+		BinTreeNode<T> curr = mRoot;
+		boolean done = false;
+		
+		do
+		{
+			//go down left
+			if (curr.hasChild (Side.LEFT))
+			{
+				nodesToVisit.add (curr);
+				curr = curr.getChild (Side.LEFT);
+			}
+			else
+			{
+				//visit
+				v.visit (curr.getElement());
+				if (curr.hasChild (Side.RIGHT))
+					curr = curr.getChild (Side.RIGHT);
+				else
+				{
+					boolean goneRight = false;
+					//go up stack until front of stack has right child
+					while (!goneRight && !nodesToVisit.isEmpty())
+					{
+						BinTreeNode<T> stacked = nodesToVisit.pop();
+						v.visit (stacked.getElement());
+						//go to right child
+						if (stacked.hasChild (Side.RIGHT))
+						{
+							curr = stacked.getChild (Side.RIGHT);
+							goneRight = true;
+						}
+					}
+					if (!goneRight && nodesToVisit.isEmpty())
+						done = true;
+				}
+			}
+		}
+		while (!done);
+	}
 	
 	/**
 	 * @param addVal value to add to tree
@@ -336,7 +396,11 @@ public class AvlTree<T extends Comparable<T>>
 		if (mCache != null && mCache.getElement().compareTo (elem) == 0)
 		{
 			if (!caching)
+			{
+				BinTreeNode<T> tmp = mCache;
 				mCache = null;
+				return tmp;
+			}
 			return mCache;
 		}
 		BinTreeNode<T> currNode = mRoot;
