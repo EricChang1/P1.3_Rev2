@@ -10,7 +10,7 @@ import geometry.Cuboid;
 import geometry.Rectangle;
 import gui.*;
 import models.*;
-import models.Matrix.DoubleMatrix;
+import models.Matrix.*;
 
 import models.ShapeParser.BadFileStructureException;
 
@@ -21,17 +21,19 @@ public class CubeDissectionTest
 	public static void main (String[] args) throws BadFileStructureException, IOException
 	{
 		CubeDissectionTest test = new CubeDissectionTest();
-		test.showBefore();
-		test.showAfter();
+		/*test.showBefore();
+		test.showAfter();*/
 		
 		//test.testSidesDecompos();
 		//test.testCubeDecompos();
+		test.testContainerDecompos();
 	}
 	
 	public static JFrame getFrame (PieceRenderPanel render, String title)
 	{
 		PieceRenderPanel.RotationListener rotListen = render.new RotationListener();
 		PieceRenderPanel.ZoomListener zoomListen = render.new ZoomListener();
+		zoomListen.setSensitivity(0.15);
 		PieceRenderPanel.ResizeListener resizeListen = render.new ResizeListener();
 		
 		JFrame frame = new JFrame();
@@ -51,20 +53,11 @@ public class CubeDissectionTest
 	{
 		
 		mShape = null;
-		/*try
-		{
-			ShapeParser readInShapes = new ShapeParser(new File ("pieces.txt"));
-			readInShapes.parse();
-			mShape = readInShapes.getShapes().get(0);
-		}
-		catch (Exception e)
-		{
-			System.out.println ("oh no");
-			e.printStackTrace();
-		}*/
-		ShapeParser readInShapes = new ShapeParser(new File ("pieces.txt"));
+
+		ShapeParser readInShapes = new ShapeParser(new File ("parcels.txt"));
 		readInShapes.parse();
 		mShape = readInShapes.getShapes().get(0);
+		mCont = new Container (4, 3, 3);
 	}
 	
 	public void showBefore()
@@ -118,7 +111,27 @@ public class CubeDissectionTest
 		System.out.println ("volume V = " + decompose.getVolume());
 	}
 	
+	public void testContainerDecompos()
+	{
+		
+		mShape.rotate (BasicShape.rotationMatrix (90.0, 0, BasicShape.RotationDir.ONWARD));
+		mCont.placeBlock (new Block (mShape, 3), new Glue (new IntegerMatrix (3, 1)));
+		
+		System.out.println ("free cuboids");
+		for (Cuboid c : mCont.getFreeCuboids())
+			System.out.println (c);
+		
+		mCont.addMissingRectanglePoints();
+		PieceRenderPanel render = new PieceRenderPanel(mCont);
+		JFrame win = getFrame (render, "dissected container");
+		win.setVisible(true);
+		render.init();
+		
+		
+	}
+	
 	
 	private JFrame mBeforeWin, mAfterWin;
 	private BasicShape mShape;
+	private Container mCont;
 }

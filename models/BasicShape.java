@@ -1248,6 +1248,7 @@ public class BasicShape
 	 */
 	private void addVertices (ArrayList <IntegerMatrix> newVertices, IntegerMatrix adjacent)
 	{
+		int lastOldIndex = getNumberOfVertices() - 1;
 		//stores indices in list in this object of every element in newVertices
 		ArrayList <Integer> addedIndices = new ArrayList<Integer>();
 		//add vertices not yet contained to the end
@@ -1271,6 +1272,7 @@ public class BasicShape
 		}
 		
 		//fill in connections in adjacent
+		/* legacy
 		for (int cNewVertex = 0; cNewVertex < newVertices.size(); ++cNewVertex)
 		{
 			int iVertex = addedIndices.get(cNewVertex);
@@ -1282,6 +1284,159 @@ public class BasicShape
 					modifyConnection (iVertex, iAdj, true);
 				}
 			}
+		}
+		*/
+		for (int cNewVertex = newVertices.size() - 1; cNewVertex >= 0; --cNewVertex)
+		{
+			int iVertex = addedIndices.get (cNewVertex);
+			for (int cAdj = 0; cAdj < adjacent.getColumns(); ++cAdj)
+			{
+				if (adjacent.getCell (cNewVertex, cAdj).equals (1))
+				{
+					int iAdj = getVertexIndex (newVertices.get (cAdj));
+					modifyConnection (iVertex, iAdj, true);
+					//if new connected to old
+					if (iAdj <= lastOldIndex || iVertex <= lastOldIndex)
+					{
+						//iterate through iAdj's connections
+						int cAdj2 = 0;
+						while (cAdj2 <= lastOldIndex)
+						{
+							if (isConnected (iAdj, cAdj2) && cAdj2 != iVertex)
+							{
+								Glue newP = new Glue (getVertex (iVertex));
+								Glue identical = new Glue (getVertex (iAdj));
+								Glue oldP = new Glue (getVertex (cAdj2));
+								IntersectionSolver checkOneLine = new IntersectionSolver (new Line (oldP, identical), new Point (newP));
+								//if oldP is connected to identical s.t. new, old, identical are on one line
+								if (checkOneLine.getSolutionType() == IntersectionSolver.Result.ONE)
+								{
+									//if newP is between oldP and identical
+									if (checkOneLine.isWithinBounds())
+									{
+										modifyConnection (iAdj, cAdj2, false);
+										modifyConnection (iVertex, cAdj2, true);
+									}
+									else
+									{
+										modifyConnection (iAdj, iVertex, false);
+										modifyConnection (cAdj2, iVertex, true);
+									}
+								}
+							}
+							++cAdj2;
+						}
+					}
+					else
+					{
+						//search for connection line both connected points are on
+						for (int cLine1 = 0; cLine1 < lastOldIndex; ++cLine1)
+						{
+							for (int cLine2 = cLine1 + 1; cLine2 <= lastOldIndex; ++cLine2)
+							{
+								Glue exist1, exist2, newP, newAdj;
+								exist1 = new Glue (getVertex (cLine1));
+								exist2 = new Glue (getVertex (cLine2));
+								newP = new Glue (getVertex (iVertex));
+								newAdj = new Glue (getVertex (iAdj));
+								
+								Line connExist = new Line (exist1, exist2);
+								Line connAdd = new Line (newP, newAdj);
+								
+								//if existing contains added
+								if (connExist.isInRange (newP) && connExist.isInRange (newAdj) || 
+									connAdd.isInRange (exist1) && connAdd.isInRange (exist2))
+								{
+									Line outer;
+									Glue in1, in2;
+									int iOut1, iOut2, iIn1, iIn2;
+									if (connExist.isInRange (newP) && connExist.isInRange (newAdj))
+									{
+										outer = connExist;
+										in1 = newP;
+										in2 = newAdj;
+										iOut1 = cLine1;
+										iOut2 = cLine2;
+										iIn1 = iVertex;
+										iIn2 = iAdj;
+									}
+									else
+									{
+										outer = connAdd;
+										in1 = exist1;
+										in2 = exist2;
+										iOut1 = iVertex;
+										iOut2 = iAdj;
+										iIn1 = cLine1;
+										iIn2 = cLine2;
+									}
+									
+									IntersectionSolver solve1 = new IntersectionSolver (outer, new Point (in1));
+									IntersectionSolver solve2 = new IntersectionSolver (outer, new Point (in2));
+									if (solve1.getSolutionType() == IntersectionSolver.Result.ONE && 
+										solve2.getSolutionType() == IntersectionSolver.Result.ONE &&
+										solve1.isWithinBounds() && solve2.isWithinBounds())
+									{
+										modifyConnection (iOut1, iOut2, false);
+										if (in1.getDistance (new Glue (outer.getFirst())) < in1.getDistance (new Glue (outer.getSecond())))
+										{
+											modifyConnection (iIn1, iOut1, true);
+											modifyConnection (iIn2, iOut2, true);
+										}
+										else
+										{
+											modifyConnection (iIn1, iOut2, true);
+											modifyConnection (iIn2, iOut1, true);
+										}
+									}
+								}
+								//if one each is contained within the other
+								else if ((connExist.isInRange (newP) || connExist.isInRange (newAdj)) && 
+										(connAdd.isInRange (exist1) || connAdd.isInRange (exist2)))
+								{
+									Glue in1, in2;
+									int iIn1, iIn2;
+									if (connExist.isInRange(newP))
+									{
+										in1 = newP;
+										iIn1 = iVertex;
+									}
+									else
+									{
+										in1 = newAdj;
+										iIn1 = iAdj;
+									}
+									if (connAdd.isInRange (exist1))
+									{
+										in2 = exist1;
+										iIn2 = cLine1;
+									}
+									else
+									{
+										in2 = exist2;
+										iIn2 = cLine2;
+									}
+									IntersectionSolver solve1 = new IntersectionSolver (connExist, new Point (in1));
+									IntersectionSolver solve2 = new IntersectionSolver (connAdd, new Point (in2));
+									if (solve1.getSolutionType() == IntersectionSolver.Result.ONE && 
+										solve2.getSolutionType() == IntersectionSolver.Result.ONE &&
+										solve1.isWithinBounds() && solve2.isWithinBounds())
+									{
+										modifyConnection (cLine1, cLine2, false);
+										modifyConnection (iVertex, iAdj, false);
+										modifyConnection (cLine1, iIn1, true);
+										modifyConnection (cLine2, iIn1, true);
+										modifyConnection (iVertex, iIn2, true);
+										modifyConnection (iAdj, iIn2, true);
+									}
+								}
+								
+							}
+						}
+					}
+				}
+			}
+			
 		}
 		
 		//compute remaining connections

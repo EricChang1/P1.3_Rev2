@@ -2,6 +2,7 @@ package geometry;
 
 import java.util.ArrayList;
 
+import generic.QuickSort;
 import models.Matrix.*;
 
 
@@ -240,6 +241,70 @@ public class GaussElim implements Runnable
 	 */
 	public void order()
 	{
+		/**
+		 * wrapper class for row and pivot
+		 * @author martin
+		 */
+		class Row implements Comparable<Row>
+		{
+			/**
+			 * parametric constructor
+			 * @param data row to store
+			 * @param pivotIndex index of pivot in row
+			 */
+			public Row (Double[] data, int pivotIndex)
+			{
+				mData = data;
+				mPivotIndex = pivotIndex;
+			}
+			
+			/**
+			 * @return row stored
+			 */
+			public Double[] getRow() { return mData; }
+			
+			/**
+			 * @return pivot index stored
+			 */
+			public int getPivot() { return mPivotIndex; }
+			
+			/**
+			 * @param comp row object to compare this row object to
+			 * @return 	-1 if pivot index of this row < pivot index of comp
+			 * 			0 if pivot index of this row == pivot index of comp
+			 * 			1 if pivot index of this row > pivot index of comp
+			 */
+			public int compareTo (Row comp)
+			{
+				if (this.mPivotIndex < comp.mPivotIndex)
+					return -1;
+				else if (this.mPivotIndex == comp.mPivotIndex)
+					return 0;
+				else
+					return 1;
+			}
+			
+			private Double[] mData;
+			private int mPivotIndex;
+		}
+		
+		QuickSort<Row> sorter = new QuickSort<>();
+		for (int cRow = 0; cRow < mMat.getRows(); ++cRow)
+			sorter.add (new Row (mMat.getRow (cRow).clone(), mPivots[cRow]));
+		
+		sorter.sort (0, sorter.size() - 1);
+
+		for (int cRow = 0; cRow < mMat.getRows(); ++cRow)
+		{
+			Double[] row = sorter.get (cRow).getRow();
+			mPivots[cRow] = sorter.get (cRow).getPivot();
+			for (int cCol = 0; cCol < mMat.getColumns(); ++cCol)
+				mMat.setCell(cRow, cCol, row[cCol]);
+		}
+		
+		int x = 2;
+		x = x + 1;
+		/* legacy
 		Double[][] rows = new Double[mMat.getRows()][mMat.getColumns()];
 		for (int cRow = 0; cRow < rows.length; ++cRow)
 			rows[cRow] = mMat.getRow(cRow).clone();
@@ -250,6 +315,7 @@ public class GaussElim implements Runnable
 			for (int cCol = 0; cCol < rows[cRow].length; ++cCol)
 				mMat.setCell(cRow, cCol, rows[cRow][cCol]);
 		}
+		*/
 	}
 	
 	/**
@@ -287,7 +353,7 @@ public class GaussElim implements Runnable
 	{
 		for (int cRow = mMat.getRows() - 1; cRow > 0; --cRow)
 		{
-			if (mPivots[cRow] != mMat.getColumns())
+			if (mPivots[cRow] < mMat.getColumns())
 			{
 				double pivot = mMat.getCell (cRow, mPivots[cRow]);
 				for (int cRestRow = cRow - 1; cRestRow >= 0; --cRestRow)
@@ -307,7 +373,7 @@ public class GaussElim implements Runnable
 	public void scaleToOne()
 	{
 		int cRow = 0;
-		while (cRow < mMat.getRows() && mPivots[cRow] != mMat.getColumns())
+		while (cRow < mMat.getRows() && mPivots[cRow] < mMat.getColumns())
 		{
 			double c = 1 / mMat.getCell(cRow, mPivots[cRow]);
 			for (int cCol = mPivots[cRow]; cCol < mMat.getColumns(); ++cCol)
