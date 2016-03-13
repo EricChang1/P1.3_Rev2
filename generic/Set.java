@@ -8,7 +8,7 @@ import java.util.ArrayList;
  *
  * @param <T>
  */
-public class Set<T extends Comparable<T>>
+public class Set<T extends Comparable<T>> implements Cloneable
 {
 	/**
 	 * default exception for set class
@@ -81,6 +81,18 @@ public class Set<T extends Comparable<T>>
 		return difference;
 	}
 	
+	/**
+	 * @return cloned set
+	 * performs deep clone on data structure
+	 * though elements are shallowly copied
+	 */
+	public Set<T> clone()
+	{
+		Set<T> clone = new Set<>();
+		clone.mStore = this.mStore.clone();
+		return clone;
+	}
+	
 	
 	/**
 	 * @return elements stored in order
@@ -100,6 +112,29 @@ public class Set<T extends Comparable<T>>
 			ret += elem + ", ";
 		ret += " ]";
 		return ret;
+	}
+	
+	/**
+	 * @param sub another given subset
+	 * @return true if sub is a subset of this set
+	 */
+	public boolean isSubset (Set<T> sub)
+	{
+		for (T subElem : sub.getOrderedElements())
+		{
+			if (!this.hasElement (subElem))
+				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * @param comp set to compare this set to
+	 * @return true if this and comp are subsets of each other
+	 */
+	public boolean equals (Set<T> comp)
+	{
+		return (this.isSubset (comp) && comp.isSubset (this));
 	}
 	
 	/**
