@@ -30,7 +30,7 @@ public class DynamicAlgoTest
 	{
 		int[] quants = {4, 4, 4};
 		boolean[] inf = {false, false, false};
-		int d = 5, w = 4, h = 4;
+		int d = 16, w = 10, h = 10;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "parcels.txt";

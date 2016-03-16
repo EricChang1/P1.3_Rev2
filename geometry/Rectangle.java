@@ -220,7 +220,7 @@ public class Rectangle extends GeoShape {
 	{
 		for (int cDim = 0; cDim < getDimension(); ++cDim)
 		{
-			int pDiff = getFirst().getCell(cDim, 0) - getSecond().getCell(cDim, 0);
+			int pDiff = getSecond().getCell(cDim, 0) - getFirst().getCell(cDim, 0);
 			if (pDiff != 0)
 			{
 				DoubleMatrix v = new DoubleMatrix(getDimension(), 1);

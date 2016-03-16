@@ -48,7 +48,7 @@ public class QuickSort<T extends Comparable<T>> extends ArrayList<T>
 	{
 		for (int cCheck = 0; cCheck < size() - 1; ++cCheck)
 		{
-			if (get (cCheck).compareTo (get (cCheck + 1)) < 0)
+			if (get (cCheck).compareTo (get (cCheck + 1)) > 0)
 				return false;
 		}
 		return true;

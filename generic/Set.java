@@ -110,7 +110,7 @@ public class Set<T extends Comparable<T>> implements Cloneable
 	public T getElement (T val)
 	{
 		if (!mStore.hasElement (val))
-			throw new SetException ("value " + val + " to be added exists already");
+			throw new SetException ("value " + val + " does not exist");
 		return mStore.getElement (val);
 	}
 	
@@ -123,6 +123,11 @@ public class Set<T extends Comparable<T>> implements Cloneable
 		ret += " ]";
 		return ret;
 	}
+	
+	/**
+	 * @return number of elements stored
+	 */
+	public int getSize() { return mStore.getSize(); }
 	
 	/**
 	 * @param sub another given subset

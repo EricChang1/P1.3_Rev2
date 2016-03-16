@@ -1,11 +1,13 @@
 package algorithm;
 
+import generic.Set;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 import models.Container;
 import models.Block;
-import models.Resource;
+import algorithm.DynamicAlgo.Resource;
 
 import algorithm.LookupTable.Entry;
 
@@ -27,36 +29,41 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 		 * parametric constructor
 		 * @param cont container to store
 		 */
-		public Entry (Container cont, double vals)
+		public Entry (Container cont)
 		{
 			mContainer = cont;
+			mUsed = new Set<>();
+			for (int cBlock = 0; cBlock < mContainer.getAmountOfBlocks(); ++cBlock)
+			{
+				Resource currRes = new Resource(mContainer.getBlock (cBlock), 1);
+				if (mUsed.hasElement (currRes))
+					mUsed.getElement (currRes).refill();
+				else
+					mUsed.add (currRes);
+			}
 		}
 		
 		/**
 		 * @param available list of resources available (will remain untouched)
 		 * @return list of resources available minus resources used at this entry
+		 * Note: no block objects will be cloned
+		 * Note: only resource objects whose inventory is altered will be constructed
 		 */
-		public ArrayList <Resource> getUnusedResources (LinkedList <Resource> available)
+		public ArrayList <Resource> getUnusedResources (Set<Resource> available)
 		{
-			LinkedList <Resource> nowAvailable = new LinkedList<>();
-			for (Resource cpyR : available)
-				nowAvailable.add (cpyR.clone());
-			
-			for (int cPlaced = 0; cPlaced < mContainer.getAmountOfBlocks(); ++cPlaced)
+			//unused = difference + intersection deducting quantities
+			Set<Resource> unused = available.clone();
+			for (Resource avail : available.getOrderedElements())
 			{
-				int cRes = 0;
-				while (	cRes < nowAvailable.size() && 
-						!nowAvailable.get (cRes).getBlock().equals (mContainer.getBlock(cPlaced)))
-					++cRes;
-				if (cRes < nowAvailable.size())
+				if (mUsed.hasElement (avail))
 				{
-					Resource found = nowAvailable.get (cRes);
-					found.deduct();
-					if (found.getInventory() <= 0)
-						nowAvailable.remove (cRes);
+					int left = avail.getInventory() - mUsed.getElement (avail).getInventory(); 
+					if (left > 0)
+						unused.add (new Resource (avail.getBlock(), left));
 				}
 			}
-			return new ArrayList <Resource> (nowAvailable);
+			
+			return unused.getOrderedElements();
 		}
 		
 		/**
@@ -65,6 +72,7 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 		public double getValue() { return mContainer.getValue(); }
 		
 		private Container mContainer;
+		private Set<Resource> mUsed;
 	}
 	
 	/**
@@ -128,6 +136,18 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	public Container getContainer (int d, int w, int h, int s)
 	{
 		return get (d, w, h, s).mContainer;
+	}
+	
+	/**
+	 * @param d depth index
+	 * @param w width index
+	 * @param h height index
+	 * @param s subset index
+	 * @return true if cell requested is no longer default initialized to null
+	 */
+	public boolean isSet (int d, int w, int h , int s)
+	{
+		return (get (d, w, h, h) != null);
 	}
 	
 	public void set (Entry val, int d, int w, int h, int s)

@@ -76,6 +76,37 @@ public class BasicShape
 		}
 	}
 	
+	public static class IndexVertex extends Glue implements Comparable<IndexVertex>
+	{
+		public IndexVertex (Matrix<Integer> vertex, int index)
+		{
+			super (vertex);
+			mIndex = index;
+		}
+		
+		public int getIndex() { return mIndex; }
+		
+		public int compareTo (IndexVertex comp)
+		{
+			for (int cDim = 0; cDim < this.getDimension() && cDim < comp.getDimension(); ++cDim)
+			{
+				if (this.getPosition (cDim) < comp.getPosition (cDim))
+					return -1;
+				else if (this.getPosition (cDim) > comp.getPosition (cDim))
+					return 1;
+			}
+			if (this.getDimension() < comp.getDimension())
+				return -1;
+			else if (this.getDimension() > comp.getDimension())
+				return 1;
+			else
+				return 0;
+		}
+		
+		
+		private int mIndex;
+	}
+	
 	/**
 	 * @param points list of points
 	 * @param connected 2d list of points connected to points
@@ -288,8 +319,13 @@ public class BasicShape
 	{
 		//init vertices
 		this.vectors = new ArrayList<IntegerMatrix>();
+		mOrderedVectors = new Set<>();
 		for (IntegerMatrix vec : vectors)
-			this.vectors.add (vec.clone());
+		{
+			IntegerMatrix ref = vec.clone();
+			this.vectors.add (ref);
+			mOrderedVectors.add (new IndexVertex (ref, mOrderedVectors.getSize()));
+		}
 		if (!numberOfCols(vectors)) 
 			throw new BadNumberOfCollumsException ("The vectors introduced are not 3x1");
 		//compute dimensions
@@ -893,7 +929,9 @@ public class BasicShape
 			for (Line line : lines)
 			{
 				line.setInclusion (includeEndPoints, includeEndPoints);
+				side.setInclusion (includeEndPoints, includeEndPoints);
 				IntersectionSolver checkInter = new IntersectionSolver(side, line);
+				IntersectionSolver testSolver = new IntersectionSolver(side, line);
 				if (checkInter.getSolutionType() == IntersectionSolver.Result.ONE && 
 					checkInter.isWithinBounds())
 					return true;
@@ -1691,6 +1729,7 @@ public class BasicShape
 			if (cVertex == vectors.size())
 			{
 				vectors.add (newVertices.get(cNewVertex));
+				mOrderedVectors.add (new IndexVertex (newVertices.get (cNewVertex), mOrderedVectors.getSize()));
 				mPossibleConnections.add (getHypoPossibleConnections (newVertices.get (cNewVertex)));
 			}
 			addedIndices.add (cVertex);
@@ -1922,6 +1961,7 @@ public class BasicShape
 	}
 	
 	private ArrayList<IntegerMatrix> vectors;
+	private Set<IndexVertex> mOrderedVectors;
 	private ArrayList<Integer> dimensions;
 	private ArrayList <ArrayList <RelatPos>> mPossibleConnections;
 	private IntegerMatrix adjMatrix;
