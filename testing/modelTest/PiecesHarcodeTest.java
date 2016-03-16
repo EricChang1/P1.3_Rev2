@@ -4,6 +4,9 @@ import java.util.*;
 import java.io.*;
 
 import javax.swing.*;
+
+import algorithm.ShapeRotator;
+
 import java.awt.GridLayout;
 
 import models.*;
@@ -21,6 +24,12 @@ public class PiecesHarcodeTest
 		inputPent.parse();
 		inputParcel.parse();
 		ArrayList <Block> blocks = inputPent.getBlocks();
+		
+		ShapeRotator rotator = new ShapeRotator (blocks.get (2));
+		ArrayList<BasicShape> rotations = rotator.getRotations();
+		System.out.println ("number of rotations " + rotations.size());
+		
+		/*
 		//blocks.addAll (inputParcel.getBlocks());
 		for (int cBlock = 0; cBlock < blocks.size(); ++cBlock)
 		{
@@ -37,7 +46,7 @@ public class PiecesHarcodeTest
 			frame.setVisible (true);
 			render.init();
 			
-			if (cBlock != 4)
+			if (cBlock != 5)
 			{
 				JFrame dissFrame = new JFrame ("dissected piece " + cBlock);
 				dissFrame.setLayout (new GridLayout (1, 1));
@@ -66,5 +75,6 @@ public class PiecesHarcodeTest
 			}
 			
 		}
+		*/
 	}
 }

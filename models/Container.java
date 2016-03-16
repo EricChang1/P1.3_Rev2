@@ -199,7 +199,8 @@ public class Container extends Block
 	}
 	
 	/**
-	 * @return deep copy of this
+	 * @return deep copy of this by placing the cloned blocks
+	 * at the same positions in the cloned container
 	 */
 	public Container clone()
 	{

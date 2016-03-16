@@ -30,7 +30,7 @@ public class DynamicAlgoTest
 	{
 		int[] quants = {4, 4, 4};
 		boolean[] inf = {false, false, false};
-		int d = 8, w = 3, h = 3;
+		int d = 5, w = 4, h = 4;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "parcels.txt";
@@ -40,12 +40,12 @@ public class DynamicAlgoTest
 		DynamicAlgoTest test = new DynamicAlgoTest();
 		test.setResources (input.getBlocks(), quants, inf);
 		test.setContainer (d, w, h);
-		/*
+		
 		test.run();
 		test.drawResult();
 		test.printResult();
-		*/
-		test.testRotateToFit();
+		
+		//test.testRotateToFit();
 	}
 	
 	public void setResources (ArrayList<Block> blocks, int[] quants, boolean[] infFlags)

@@ -5,6 +5,7 @@ import javax.swing.*;
 
 import algorithm.*;
 
+import models.BasicShape;
 import models.Block;
 import models.Container;
 import models.Glue;
@@ -15,7 +16,7 @@ import geometry.Cuboid;
 import gui.PieceRenderPanel;
 
 /**
- * test class for container class
+ * test class for ccontainer class
  * @author martin
  */
 public class ContainerTest 
@@ -24,7 +25,7 @@ public class ContainerTest
 	{
 		
 		ContainerTest test = new ContainerTest();
-		test.addTest();
+		//test.addTest();
 		test.freeCuboidTest();
 		
 		
@@ -45,7 +46,7 @@ public class ContainerTest
 	
 	public ContainerTest()
 	{
-		mContainer = new Container(10, 10, 10);
+		mContainer = new Container(5, 4, 4);
 	}
 	
 	public Position setVector (int c1, int c2, int c3)
@@ -119,6 +120,10 @@ public class ContainerTest
 	
 	public void freeCuboidTest()
 	{
+		ArrayList<IntegerMatrix> bVerts = Container.computeInitDimVectors (4, 2, 2);
+		IntegerMatrix bAdj = Container.computeInitAdjacencyMatrix (bVerts);
+		mContainer.placeBlock (new Block (new BasicShape (bVerts, bAdj), 3), new Glue (new IntegerMatrix (3, 1)));
+		
 		PieceRenderPanel show = new PieceRenderPanel (mContainer.clone());
 		JFrame frame = new JFrame ("container");
 		frame.setSize(400, 400);
@@ -131,10 +136,13 @@ public class ContainerTest
 		frame.addMouseMotionListener(rListen);
 		show.init();
 		
-		Container diss = mContainer.clone();
+		Container diss = mContainer;
+		System.out.println ("=======");
 		diss.addMissingRectanglePoints();
+		Container dissClone = diss.clone();
+		dissClone.addMissingRectanglePoints();
 		
-		PieceRenderPanel showDiss = new PieceRenderPanel (diss);
+		PieceRenderPanel showDiss = new PieceRenderPanel (dissClone);
 		JFrame dissFrame = new JFrame ("dissected container");
 		dissFrame.setSize (400, 400);
 		dissFrame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
@@ -146,10 +154,10 @@ public class ContainerTest
 		dissFrame.setVisible (true);
 		showDiss.init();
 		
-		ArrayList <Cuboid> freeCubes = mContainer.getFreeCuboids();
+		ArrayList <Cuboid> freeCubes = diss.getFreeCuboids();
 		System.out.println ("printing free cuboids");
 		for (Cuboid free : freeCubes)
-			System.out.println (free);
+			System.out.println (free + " dims " + free.getDimensions());
 	}
 	
 	public void printPlaceTest (Container c, Block b, Glue g)
