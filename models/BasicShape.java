@@ -593,31 +593,6 @@ public class BasicShape
 	 */
 	public Cuboid getCuboid (int indP1, int indP2, int minP1Conn, int maxP1Conn, int minP2Conn, int maxP2Conn)
 	{
-		if (indP1 == 9 && indP2 == 24)
-		{
-			BasicShape clone = new BasicShape (this);
-			clone.addMissingRectanglePoints();
-			JFrame frame = new JFrame ("result");
-			frame.setSize (400, 400);
-			frame.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
-			frame.setLayout (new BorderLayout());
-			
-			PieceRenderPanel render = new PieceRenderPanel(clone);
-			
-			PieceRenderPanel.RotationListener rotListen = render.new RotationListener();
-			PieceRenderPanel.ResizeListener resizeListen = render.new ResizeListener();
-			PieceRenderPanel.ZoomListener zoomListen = render.new ZoomListener();
-			
-			frame.addMouseListener (rotListen);
-			frame.addMouseMotionListener(rotListen);
-			frame.addMouseWheelListener(zoomListen);
-			frame.addComponentListener(resizeListen);
-			
-			frame.add (render, BorderLayout.CENTER);
-			frame.setVisible(true);
-			render.init();
-		}
-		
 		int connConnReq = 6;
 		//if p1, p2 are disconnected
 		if (adjMatrix.getCell (indP1, indP2).equals(0) && indP1 != indP2)
@@ -1015,6 +990,61 @@ public class BasicShape
 	public void addMissingRectanglePoints()
 	{
 		
+		//store sides
+		ArrayList<Rectangle> sides = getRectangles();
+		boolean change;
+		//while change happened
+		do
+		{
+			change = false;
+			ArrayList<Intersection> inters = new ArrayList<>();
+			//iterate through vertices
+			for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
+			{
+				Glue vertex = new Glue (getVertex (cVertex));
+				//iterate through free connections
+				for (RelatPos free : getFreeConnections (cVertex))
+				{
+					Line freeLine = getLineToBorder (vertex, free);
+					if (freeLine != null)
+					{
+						freeLine.setInclusion (false, true);
+						//iterate through sides
+						for (Rectangle s : sides)
+						{
+							IntersectionSolver solver = new IntersectionSolver (freeLine, s);
+							//if intersections found
+							if (solver.getSolutionType() == IntersectionSolver.Result.ONE && solver.isWithinBounds())
+							{
+								Glue inter = solver.getIntersection();
+								//add intersection vertex-intersection
+								inters.add (new Intersection (inter.toVector(), vertex.toVector(), inter.toVector()));
+								//if intersection is on side line
+								Line sideLine = s.getPointLine (inter);
+								if (sideLine != null)
+									//add side line intersection and normal intersection
+									inters.add (new Intersection (inter.toVector(), sideLine.getFirst(), sideLine.getSecond()));
+								change = true;
+							}
+						}
+					}
+				}
+				//add vertices but keep old sides
+				if (cVertex == getNumberOfVertices() - 1)
+				{
+					addVertices (inters);
+					inters.clear();
+				}
+			}
+			if (change)
+			{
+				addVertices (inters);
+				sides = getRectangles();
+			}
+		
+		} while (change);
+		
+		/* SIDE PARALLEL APPROACH
 		boolean change;
 		IntegerMatrix oldAdjacency = null;
 		//load sides
@@ -1113,7 +1143,7 @@ public class BasicShape
 					addVertices (depIntersections);
 					
 					sides = getRectangles();
-					/*
+					
 					PieceRenderPanel show = new PieceRenderPanel (new BasicShape (this));
 					JFrame dissFrame = new JFrame ();
 					dissFrame.setSize (400, 400);
@@ -1124,7 +1154,7 @@ public class BasicShape
 					dissFrame.addMouseListener (dissRListen);
 					dissFrame.addMouseMotionListener (dissRListen);
 					dissFrame.setVisible (true);
-					show.init();*/
+					show.init();
 					
 					int x = 1;
 					x += 2;
@@ -1133,7 +1163,7 @@ public class BasicShape
 			
 						
 		} while (!adjMatrix.equals (oldAdjacency));
-		
+		*/
 		
 		/*
 		//add current vertices to points to search
