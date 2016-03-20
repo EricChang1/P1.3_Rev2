@@ -445,7 +445,7 @@ public class AvlTree<T extends Comparable<T>> implements Cloneable
 		BinTreeNode<T> curr = mRoot;
 		while (!curr.isLeaf())
 		{
-			if (curr.isInternal() || curr.isRoot())
+			if (curr.hasChild (Side.LEFT) && curr.hasChild (Side.RIGHT))
 			{
 				if (val.compareTo (curr.getElement()) < 0)
 					curr = curr.getChild (Side.LEFT);
