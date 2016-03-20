@@ -328,15 +328,15 @@ public class Container extends Block
 	**/
 	public boolean checkPositionOverlap (Block block, Glue pos)
 	{	
-		//check whether lines inside intersect with sides of block
-		Glue prevPos = block.getGlue();
-		block.glue(pos);
-		
+		if (!this.isWithin (block))
+			return false;
+		//glue and dissect block to place
 		BasicShape completed = new BasicShape (block);
+		completed.glue (block.getGlue());
 		completed.addMissingRectanglePoints();
 		//@TODO optimize
-		//ArrayList<Rectangle> blockSides = completed.getRectangles();
-		
+		//for every placed block: check whether block intersects with place or
+		//whether place intersects block
 		for (Block bPlaced : mPlacedBlocks)
 		{
 			BasicShape placedCompleted = new BasicShape (bPlaced);
@@ -348,7 +348,6 @@ public class Container extends Block
 			if (bPlaced.isWithin (block) || block.isWithin (bPlaced))
 				return false;
 		}
-		block.glue (prevPos);
 		return true;
 	}
 	

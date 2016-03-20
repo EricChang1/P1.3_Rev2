@@ -21,12 +21,27 @@ import gui.PieceRenderPanel;
  */
 public class ContainerTest 
 {
+	/**
+	 * @param d depth
+	 * @param w width
+	 * @param h height
+	 * @return new cuboid basic shape of size d x w x h 
+	 */
+	public static BasicShape getCube (int d, int w, int h)
+	{
+		ArrayList<IntegerMatrix> verts = Container.computeInitDimVectors (d, w, h);
+		IntegerMatrix adjMat = Container.computeInitAdjacencyMatrix (verts);
+		return new BasicShape (verts, adjMat);
+	}
+	
+	
 	public static void main (String[] args)
 	{
 		
 		ContainerTest test = new ContainerTest();
 		//test.addTest();
-		test.freeCuboidTest();
+		//test.freeCuboidTest();
+		test.intersectionTest();
 		
 		
 		/*
@@ -116,6 +131,14 @@ public class ContainerTest
 		}
 		*/
 		
+	}
+	
+	
+	public void intersectionTest()
+	{
+		Container c = new Container (7, 2, 3);
+		Block s = new Block (getCube (4, 3, 2), 3);
+		assert (!c.checkPositionOverlap (s, new Glue (new IntegerMatrix (3, 1))));
 	}
 	
 	public void freeCuboidTest()
