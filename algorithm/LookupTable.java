@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import models.Container;
 import models.Block;
 import algorithm.DynamicAlgo.Resource;
+import algorithm.DynamicAlgo.BlockResource;
+import algorithm.DynamicAlgo.Subset;
 
 import algorithm.LookupTable.Entry;
 
@@ -35,7 +37,7 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 			mUsed = new Set<>();
 			for (int cBlock = 0; cBlock < mContainer.getAmountOfBlocks(); ++cBlock)
 			{
-				Resource currRes = new Resource(mContainer.getBlock (cBlock), 1);
+				BlockResource currRes = new BlockResource (mContainer.getBlock (cBlock), 1);
 				if (mUsed.hasElement (currRes))
 					mUsed.getElement (currRes).refill();
 				else
@@ -49,21 +51,22 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 		 * Note: no block objects will be cloned
 		 * Note: only resource objects whose inventory is altered will be constructed
 		 */
-		public ArrayList <Resource> getUnusedResources (Set<Resource> available)
+		public Subset getUnusedResources (Subset available)
 		{
 			//unused = difference + intersection deducting quantities
-			Set<Resource> unused = available.clone();
+			Subset unused = new Subset();
 			for (Resource avail : available.getOrderedElements())
 			{
-				if (mUsed.hasElement (avail))
+				BlockResource bAvail = new BlockResource (avail);
+				if (mUsed.hasElement (bAvail))
 				{
-					int left = avail.getInventory() - mUsed.getElement (avail).getInventory(); 
+					int left = avail.getInventory() - mUsed.getElement (bAvail).getInventory(); 
 					if (left > 0)
 						unused.add (new Resource (avail.getBlock(), left));
 				}
 			}
 			
-			return unused.getOrderedElements();
+			return unused;
 		}
 		
 		/**
@@ -72,7 +75,7 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 		public double getValue() { return mContainer.getValue(); }
 		
 		private Container mContainer;
-		private Set<Resource> mUsed;
+		private Set<BlockResource> mUsed;
 	}
 	
 	/**
@@ -147,7 +150,7 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	 */
 	public boolean isSet (int d, int w, int h , int s)
 	{
-		return (get (d, w, h, h) != null);
+		return (get (d, w, h, s) != null);
 	}
 	
 	public void set (Entry val, int d, int w, int h, int s)

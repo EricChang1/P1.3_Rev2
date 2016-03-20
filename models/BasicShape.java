@@ -1030,7 +1030,7 @@ public class BasicShape
 					}
 				}
 				//add vertices but keep old sides
-				if (cVertex == getNumberOfVertices() - 1)
+				if (change && cVertex == getNumberOfVertices() - 1)
 				{
 					addVertices (inters);
 					inters.clear();
@@ -1652,21 +1652,23 @@ public class BasicShape
 	 */
 	public void updateMaxPos()
 	{
-		Glue max = null;
-		int largestSum = Integer.MIN_VALUE;
+		IntegerMatrix max = null;
 		for (int cVert = 0; cVert < getNumberOfVertices(); ++cVert)
 		{
 			IntegerMatrix vert = getVertex (cVert);
-			int sum = 0;
-			for (int cDim = 0; cDim < vert.getRows(); ++cDim)
-				sum += vert.getCell (cDim, 0);
-			if (sum > largestSum)
+			
+			if (max == null)
+				max = vert;
+			else
 			{
-				largestSum = sum;
-				max = new Glue (vert);
+				for (int cDim = 0; cDim < vert.getRows(); ++cDim)
+				{
+					if (max.getCell (cDim, 0) < vert.getCell (cDim, 0))
+						max.setCell (cDim, 0, vert.getCell (cDim, 0));
+				}
 			}
 		}
-		mMax = max;
+		mMax = new Glue (max);
 	}
 	
 	public void print(PrintStream p)

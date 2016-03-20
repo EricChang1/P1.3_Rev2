@@ -30,7 +30,7 @@ public class DynamicAlgoTest
 	{
 		int[] quants = {4, 4, 4};
 		boolean[] inf = {false, false, false};
-		int d = 16, w = 10, h = 10;
+		int d = 8, w = 8, h = 8;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "parcels.txt";
@@ -129,12 +129,12 @@ public class DynamicAlgoTest
 	
 	public void printSubsets()
 	{
-		DynamicAlgo algo = new DynamicAlgo();
+		/*DynamicAlgo algo = new DynamicAlgo();
 		algo.init (mCont, mRes);
 		algo.generatePowerSet();
 		System.out.println ("subsets generated " + algo.mSubsets.size());
 		for (DynamicAlgo.Subset subs : algo.mSubsets)
-			System.out.println (subs);
+			System.out.println (subs);*/
 	}
 	
 	public void printResult()

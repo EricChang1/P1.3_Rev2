@@ -136,13 +136,11 @@ public class ContainerTest
 		frame.addMouseMotionListener(rListen);
 		show.init();
 		
-		Container diss = mContainer;
+		Container diss = mContainer.clone();
 		System.out.println ("=======");
 		diss.addMissingRectanglePoints();
-		Container dissClone = diss.clone();
-		dissClone.addMissingRectanglePoints();
 		
-		PieceRenderPanel showDiss = new PieceRenderPanel (dissClone);
+		PieceRenderPanel showDiss = new PieceRenderPanel (diss);
 		JFrame dissFrame = new JFrame ("dissected container");
 		dissFrame.setSize (400, 400);
 		dissFrame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
@@ -154,7 +152,7 @@ public class ContainerTest
 		dissFrame.setVisible (true);
 		showDiss.init();
 		
-		ArrayList <Cuboid> freeCubes = diss.getFreeCuboids();
+		ArrayList <Cuboid> freeCubes = mContainer.getFreeCuboids();
 		System.out.println ("printing free cuboids");
 		for (Cuboid free : freeCubes)
 			System.out.println (free + " dims " + free.getDimensions());

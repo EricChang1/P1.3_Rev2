@@ -25,11 +25,13 @@ public class PiecesHarcodeTest
 		inputParcel.parse();
 		ArrayList <Block> blocks = inputPent.getBlocks();
 		
+		/*
 		ShapeRotator rotator = new ShapeRotator (blocks.get (2));
 		ArrayList<BasicShape> rotations = rotator.getRotations();
 		System.out.println ("number of rotations " + rotations.size());
+		*/
 		
-		/*
+		
 		//blocks.addAll (inputParcel.getBlocks());
 		for (int cBlock = 0; cBlock < blocks.size(); ++cBlock)
 		{
@@ -46,7 +48,7 @@ public class PiecesHarcodeTest
 			frame.setVisible (true);
 			render.init();
 			
-			if (cBlock != 5)
+			if (cBlock == 0)
 			{
 				JFrame dissFrame = new JFrame ("dissected piece " + cBlock);
 				dissFrame.setLayout (new GridLayout (1, 1));
@@ -75,6 +77,6 @@ public class PiecesHarcodeTest
 			}
 			
 		}
-		*/
+		
 	}
 }

@@ -53,26 +53,63 @@ public class DynamicAlgo extends Algorithm
 		
 		/**
 		 * @param comp resource to compare with
-		 * @return 	-1 if volume of block stored is less than volume of block in comp,
-		 * 0 if volume is equal, 1 if volume is greater
+		 * @return -1 if this is considered lesser, 1 if this is considered larger, 0 if this is considered equal
+		 * criteria: volume of block stored, number of blocks stored (2nd), number of vertices of block stored (3rd), value of block stored (4th)
 		 */
 		public int compareTo (Resource comp)
 		{
 			if (this.getVolume() < comp.getVolume())
 				return -1;
-			else if (this.getVolume() == comp.getVolume())
-			{
-				if (this.getInventory() < comp.getInventory())
-					return -1;
-				else if (this.getInventory() > comp.getInventory())
-					return 1;
-				else
-					return 0;
-			}
-			else
+			else if (this.getVolume() > comp.getVolume())
 				return 1;
+			else if (this.getInventory() < comp.getInventory())
+				return -1;
+			else if (this.getInventory() > comp.getInventory())
+				return 1;
+			else if (this.getBlock().getNumberOfVertices() < comp.getBlock().getNumberOfVertices())
+				return -1;
+			else if (this.getBlock().getNumberOfVertices() > comp.getBlock().getNumberOfVertices())
+				return 1;
+			else if (this.getBlock().getValue() < comp.getBlock().getValue())
+				return -1;
+			else if (this.getBlock().getValue() > comp.getBlock().getValue())
+				return 1;
+			else 
+				return 0;
 		}
+	}
+	
+	/**
+	 * wrapper for models.Resource
+	 * orders resources according to volume of a single block stored
+	 * and (secondary) according to its number of vertices
+	 * and (tertiary) according to its value
+	 * number of blocks stored is not considered
+	 * @author martin
+	 */
+	public static class BlockResource extends models.Resource implements Comparable <BlockResource>
+	{
+		public BlockResource (Resource r) { super (r.getBlock(), r.getInventory(), r.getVolume(), false); }
 		
+		public BlockResource (Block b, int capacity) { super (b, capacity, b.getVolume(), false); }
+		
+		public int compareTo (BlockResource comp)
+		{
+			if (this.getVolume() < comp.getVolume())
+				return -1;
+			else if (this.getVolume() > comp.getVolume())
+				return 1;
+			else if (this.getBlock().getNumberOfVertices() < comp.getBlock().getNumberOfVertices())
+				return -1;
+			else if (this.getBlock().getNumberOfVertices() > comp.getBlock().getNumberOfVertices())
+				return 1;
+			else if (this.getBlock().getValue() < comp.getBlock().getValue())
+				return -1;
+			else if (this.getBlock().getValue() > comp.getBlock().getValue())
+				return 1;
+			else
+				return 0;
+		}
 	}
 	
 	
@@ -100,6 +137,14 @@ public class DynamicAlgo extends Algorithm
 			Subset clone = new Subset();
 			for (Resource r : getOrderedElements())
 				clone.add (r);
+			return clone;
+		}
+		
+		public Subset deepClone()
+		{
+			Subset clone = new Subset();
+			for (Resource r : getOrderedElements())
+				clone.add (r.clone());
 			return clone;
 		}
 		
@@ -230,9 +275,6 @@ public class DynamicAlgo extends Algorithm
 					}
 					//get optimal for parameters
 					Entry e = mLookupTable.get (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex);
-					
-					ArrayList <Resource> remainder = e.getUnusedResources (s);
-					subsetIndex = getSubsetIndex (new Subset (remainder));
 					//get container, set to fit current cuboid
 					Container lookedUp = mLookupTable.getContainer (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex).clone(); 
 					rotateToFit (lookedUp, free);
@@ -240,6 +282,9 @@ public class DynamicAlgo extends Algorithm
 					lookedUp.glue (gluePos);
 					mConts.add (lookedUp);
 					mVal += e.getValue();
+					
+					//get remaining subset
+					s = e.getUnusedResources (s);
 				}
 			}
 			
@@ -426,8 +471,6 @@ public class DynamicAlgo extends Algorithm
 			largest.add (new Resource (r.getBlock(), r.getInventory()));
 		explore (getContainer(), mLargestSubset.getSet());
 		
-		
-		
 		setSolution (mLookupTable.getContainer (dep, wid, hig, mSubsets.getSize() - 1));
 		setAlgoDone();
 	}
@@ -454,9 +497,6 @@ public class DynamicAlgo extends Algorithm
 			for (BasicShape rotation : new ShapeRotator (bRef).getRotations())
 				rotatedBlocks.add (new Block (rotation, bRef.getValue()));
 			
-			Subset sClone = s.clone();
-			sClone.getElement (piece).deduct();
-			
 			for (Block rotatedPiece : rotatedBlocks)
 			{
 				ArrayList<Integer> sortPieceDims;
@@ -466,33 +506,16 @@ public class DynamicAlgo extends Algorithm
 					sortContDims.get (1) >= sortPieceDims.get (1) &&
 					sortContDims.get (2) >= sortPieceDims.get (2))
 				{
-					//place
-					Container cloneC = c.clone();
+					//clone and deduct subset
+					Subset sClone = s.deepClone();
+					Resource use = sClone.getElement (piece);
+					use.deduct();
+					if (use.getInventory() <= 0)
+						sClone.remove (use);
+					
+					//construct new empty constainer of sorted dimension's size and place
+					Container cloneC = new Container (sortContDims.get (0), sortContDims.get (1), sortContDims.get (2));
 					cloneC.placeBlock (piece.getBlock().clone(), new Glue (new IntegerMatrix (MAXDIM, 1)));
-					
-					/*
-					Container cloneClone = cloneC.clone();
-					cloneClone.addMissingRectanglePoints();
-					JFrame frame = new JFrame ("result");
-					frame.setSize (400, 400);
-					frame.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
-					frame.setLayout (new BorderLayout());
-					
-					PieceRenderPanel render = new PieceRenderPanel(cloneClone);
-					
-					PieceRenderPanel.RotationListener rotListen = render.new RotationListener();
-					PieceRenderPanel.ResizeListener resizeListen = render.new ResizeListener();
-					PieceRenderPanel.ZoomListener zoomListen = render.new ZoomListener();
-					
-					frame.addMouseListener (rotListen);
-					frame.addMouseMotionListener(rotListen);
-					frame.addMouseWheelListener(zoomListen);
-					frame.addComponentListener(resizeListen);
-					
-					frame.add (render, BorderLayout.CENTER);
-					frame.setVisible(true);
-					render.init();
-					*/
 					
 					//cut remainder, fill remainder, assemble remainder
 					ArrayList<Cuboid> freeRemain = cloneC.getFreeCuboids();
