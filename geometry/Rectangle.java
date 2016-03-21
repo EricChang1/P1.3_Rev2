@@ -13,8 +13,29 @@ import models.Matrix.*;
  * providing utility for intersection searches
  * @author martin
  */
-public class Rectangle extends GeoShape {
-
+public class Rectangle extends GeoShape 
+{
+	/**
+	 * 
+	 */
+	public static ArrayList<DoubleMatrix> determineVectors (Glue p1, Glue p2)
+	{
+		ArrayList<DoubleMatrix> vecs = new ArrayList<>();
+		for (int cDim = 0; cDim < p1.getDimension() && cDim < p2.getDimension(); ++cDim)
+		{
+			int pDiff = p1.getPosition (cDim) - p2.getPosition (cDim);
+			if (pDiff != 0)
+			{
+				DoubleMatrix v = new DoubleMatrix(Math.min (p1.getDimension(), p2.getDimension()), 1);
+				v.setCell(cDim, 0, pDiff);
+				v = normVector (v);
+				vecs.add (v);
+			}
+		}
+		return vecs;
+	}
+	
+	
 	public Rectangle (Glue p1, Glue p2) 
 	{
 		super (p1, p2);
@@ -163,7 +184,7 @@ public class Rectangle extends GeoShape {
 			IntersectionSolver interSol = new IntersectionSolver (s, l);
 			if (interSol.getSolutionType() == IntersectionSolver.Result.ONE && 
 				interSol.isWithinBounds())
-				inters.add (interSol.getIntersection());
+				inters.add (new Glue (interSol.getIntersection().toIntegerMatrix()));
 		}
 		return inters;
 	}

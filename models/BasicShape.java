@@ -3,6 +3,7 @@ package models;
 
 import geometry.Cuboid;
 import geometry.GaussElim;
+import geometry.GeoShape;
 import geometry.IntersectionSolver;
 import geometry.Line;
 import geometry.Point;
@@ -365,11 +366,46 @@ public class BasicShape
 		ArrayList <Line> lines = new ArrayList<Line>();
 		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
 		{
-			
 			for (int cConnect = cVertex; cConnect < getNumberOfVertices(); ++cConnect)
 			{
 				if (adjMatrix.getCell(cVertex, cConnect).equals(new Integer (1)))
 					lines.add (new Line (new Glue (getVertex (cVertex)), new Glue (getVertex (cConnect))));
+			}
+				
+		}
+		return lines;
+	}
+	
+	/**
+	 * @return list of lines where each vertex is only included once in any of the lines in the list
+	 */
+	public ArrayList<Line> getSingleConnectingLines()
+	{
+		ArrayList <Line> lines = new ArrayList<Line>();
+		boolean[] inclusionFlags = new boolean[getNumberOfVertices()];
+		for (int cInit = 0; cInit < getNumberOfVertices(); ++cInit)
+			inclusionFlags[cInit] = false;
+		
+		for (int cVertex = 0; cVertex < getNumberOfVertices(); ++cVertex)
+		{
+			for (int cConnect = cVertex; cConnect < getNumberOfVertices(); ++cConnect)
+			{
+				if (adjMatrix.getCell(cVertex, cConnect).equals(new Integer (1)))
+				{
+					Line addLine = new Line (new Glue (getVertex (cVertex)), new Glue (getVertex (cConnect)));
+					boolean include1 = true, include2 = true;
+					
+					if (!inclusionFlags[cVertex])
+						inclusionFlags[cVertex] = true;
+					else
+						include1 = false;
+					if (!inclusionFlags[cConnect])
+						inclusionFlags[cConnect] = true;
+					else
+						include2 = false;
+					addLine.setInclusion (include1, include2);
+					lines.add (addLine);
+				}
 			}
 				
 		}
@@ -398,7 +434,8 @@ public class BasicShape
 							++sharedConn;
 						++cConn;
 					}
-					if (sharedConn == 2)
+					//@TODO dirty fix: there should be no case when #vectors != 0 if adjacency matrix is properly maintained
+					if (sharedConn == 2 && Rectangle.determineVectors (new Glue (getVertex (cVertex)), new Glue (getVertex (cOppoVertex))).size() == 2)
 						rects.add(new Rectangle (new Glue (getVertex (cVertex)), new Glue (getVertex (cOppoVertex))));
 				}
 			}
@@ -470,7 +507,7 @@ public class BasicShape
 					Line connection = new Line (new Glue (getVertex (cVert1)), new Glue (getVertex (cVert2)));
 					IntersectionSolver solver = new IntersectionSolver (connection, l2);
 					if (solver.getSolutionType() == IntersectionSolver.Result.ONE && solver.isWithinBounds())
-						intersections.add (new Intersection(solver.getIntersection().toVector(), cVert1, cVert2));
+						intersections.add (new Intersection(solver.getIntersection().toIntegerMatrix(), cVert1, cVert2));
 				}
 			}
 		}
@@ -930,10 +967,13 @@ public class BasicShape
 				bMax.getPosition (cDim) > tMax.getPosition (cDim))
 				return false;
 		}
-		//do line check for every vertex of b
+		
+		BasicShape dissected = new BasicShape (this);
+		dissected.addMissingRectanglePoints();
+		//do check for every vertex of b
 		for (int cVert = 0; cVert < b.getNumberOfVertices(); ++cVert)
 		{
-			if (!isWithin (new Glue (b.getVertex (cVert))))
+			if (!dissected.isWithin (new Glue (b.getVertex (cVert))))
 				return false;
 		}
 		return true;
@@ -941,20 +981,36 @@ public class BasicShape
 	
 	/**
 	 * @param p a given point in the same space as shape
-	 * @return true if p is within this shape
+	 * @return true if p is within this shape. 
+	 * Precondition: this shape needs to have enough vertices and connections
+	 * such that it can be considered as a set of cuboids.
 	 */
 	public boolean isWithin (Glue p)
 	{
-		Glue origin = new Glue (new IntegerMatrix (p.getDimension(), 1));
+		//use ray casting algorithm
+		IntegerMatrix outVec = mGlue.toVector();
+		outVec.setCell (0, 0, outVec.getCell (0, 0) - 1);
+		outVec.setCell (1, 0, outVec.getCell (1, 0) - 1);
+		outVec.setCell (2, 0, outVec.getCell (2, 0) - 1);
+		Line ray = new Line (new Glue (outVec), p);
 		int inters = 0;
-		for (Line l : getConnectingLines())
+		
+		ArrayList<GeoShape> linesAndSides = new ArrayList<>();
+		linesAndSides.addAll (getSingleConnectingLines());
+		for (Rectangle side : getRectangles())
 		{
-			IntersectionSolver solver = new IntersectionSolver(new Line (origin, p), l);
+			side.setInclusion (false, false);
+			linesAndSides.add (side);
+		}
+		
+		for (GeoShape g : linesAndSides)
+		{	
+			IntersectionSolver solver = new IntersectionSolver (ray, g);
 			if (solver.getSolutionType() == IntersectionSolver.Result.ONE && solver.isWithinBounds())
 				++inters;
 		}
 		
-		return (inters % 2 == 1);
+ 		return (inters % 2 == 1);
 	}
 	
 	/** Calculates the dimensions of a shape
@@ -1016,7 +1072,8 @@ public class BasicShape
 							//if intersections found
 							if (solver.getSolutionType() == IntersectionSolver.Result.ONE && solver.isWithinBounds())
 							{
-								Glue inter = solver.getIntersection();
+								//assume no floats
+								Glue inter = new Glue (solver.getIntersection().toIntegerMatrix());
 								//add intersection vertex-intersection
 								inters.add (new Intersection (inter.toVector(), vertex.toVector(), inter.toVector()));
 								//if intersection is on side line

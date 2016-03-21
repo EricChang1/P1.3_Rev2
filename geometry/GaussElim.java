@@ -8,12 +8,35 @@ import models.Matrix.*;
 
 /**
  * solves systems of linear equations
+ * for augmented matrices
  * @author martin
  *
  */
 public class GaussElim implements Runnable
 {
+	//double matrix uses 5 digit precision
+	public static final double EPSILON = 0.001;
 	public static boolean mDebug = false;
+	
+	/**
+	 * @param d1 double type
+	 * @param d2 double type
+	 * @return true if d2 is greater than d1 - EPSILON and less than d1 + EPSILON
+	 */
+	public static boolean epsilonEquals (double d1, double d2)
+	{
+		return (d2 >= d1 - EPSILON && d2 <= d1 + EPSILON);
+	}
+	
+	/**
+	 * @param less double type to be less
+	 * @param larger double type to be larger
+	 * @return true if less < larger + EPSILON
+	 */
+	public static boolean epsilonLess (double less, double larger)
+	{
+		return (less < larger + EPSILON);
+	}
 	
 	/**
 	 * testing main method
@@ -162,9 +185,19 @@ public class GaussElim implements Runnable
 	 */
 	public DoubleMatrix getTranslationVector()
 	{
-		DoubleMatrix trans = new DoubleMatrix (mMat.getRows(), 1);
+		DoubleMatrix trans = new DoubleMatrix (Math.min (mMat.getColumns() - 1, mMat.getRows()), 1);
+		int cVar = 0;
 		for (int cRow = 0; cRow < mMat.getRows(); ++cRow)
-			trans.setCell(cRow, 0, mMat.getCell (cRow, mMat.getColumns() - 1));
+		{
+			//if there is a pivot
+			if (mPivots[cRow] < mMat.getColumns())
+			{
+				trans.setCell (cVar, 0, mMat.getCell (cRow, mMat.getColumns() - 1));
+				++cVar;
+				if (cVar == trans.getRows())
+					return trans;
+			}
+		}
 		return trans;
 	}
 	
@@ -181,13 +214,7 @@ public class GaussElim implements Runnable
 	 */
 	public int getNumberOfFreeVars()
 	{
-		int cnt = 0;
-		for (int pivot : mPivots)
-		{
-			if (pivot == mMat.getColumns())
-				++cnt;
-		}
-		return cnt;
+		return (mMat.getColumns() - 1 - getNumberOfBasicVars());
 	}
 	
 	/**
@@ -195,7 +222,14 @@ public class GaussElim implements Runnable
 	 */
 	public int getNumberOfBasicVars()
 	{
-		return (mMat.getRows() - getNumberOfFreeVars());
+		int cnt = 0;
+		//row counter less than number of variables = number of columns - 1
+		for (int cRow = 0; cRow < mMat.getRows(); ++cRow)
+		{
+			if (mPivots[cRow] < mMat.getColumns())
+				++cnt;
+		}
+		return cnt;
 	}
 	
 	/**
@@ -205,7 +239,7 @@ public class GaussElim implements Runnable
 	 */
 	public boolean allBasicVariables ()
 	{
-		return (mPivots[mMat.getColumns() - 2] < mMat.getColumns());
+		return (getNumberOfFreeVars() == 0);
 	}
 	
 	/**
@@ -331,14 +365,19 @@ public class GaussElim implements Runnable
 			for (int cRestRow = cRow + 1; cRestRow < mMat.getRows(); ++cRestRow)
 			{
 				double c = -mMat.getCell(cRestRow, mPivots[cRow]) / pivot;
-				boolean beyondPivot = false;
+				boolean beyondPivot = (mPivots[cRow] > mPivots[cRestRow]);
 				for (int cRestCol = mPivots[cRow]; cRestCol < mMat.getColumns(); ++cRestCol)
 				{
 					boolean nonZero = (!mMat.getCell (cRestRow, cRestCol).equals (0.0));
 					mMat.setCell (cRestRow, cRestCol, mMat.getCell(cRestRow, cRestCol) + c * mMat.getCell(cRow, cRestCol));
-					if (!beyondPivot && nonZero && mMat.getCell (cRestRow, cRestCol).equals (0.0))
-						++mPivots[cRestRow];
-					beyondPivot = false;
+					if (epsilonEquals (mMat.getCell (cRestRow, cRestCol), 0.0))
+						mMat.setCell (cRestRow, cRestCol, 0.0);
+					//if element is zero and not past pivot then set pivot to current column + 1
+					//set beyond pivot to true if current element is not zero
+					if (!beyondPivot && mMat.getCell (cRestRow, cRestCol).equals (0.0))
+						mPivots[cRestRow] = cRestCol + 1;
+					else
+						beyondPivot = true;
 				}
 			}
 			++cRow;
@@ -360,7 +399,11 @@ public class GaussElim implements Runnable
 				{
 					double c = -mMat.getCell(cRestRow, mPivots[cRow]) / pivot;
 					for (int cRestCol = mPivots[cRow]; cRestCol < mMat.getColumns(); ++cRestCol)
+					{
 						mMat.setCell(cRestRow, cRestCol, mMat.getCell(cRestRow, cRestCol) + c * mMat.getCell(cRow, cRestCol));
+						if (epsilonEquals (mMat.getCell (cRestRow, cRestCol), 0.0))
+							mMat.setCell (cRestRow, cRestCol, 0.0);
+					}
 				}
 			}
 		}

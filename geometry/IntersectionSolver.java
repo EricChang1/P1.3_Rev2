@@ -29,6 +29,64 @@ public class IntersectionSolver
 	}
 	
 	/**
+	 * @param s a given geometric shape
+	 * @param p a point represented as a double matrix
+	 * @return true if p is within s
+	 */
+	public static boolean solveWithin (GeoShape s, DoubleMatrix p)
+	{
+		int numVectors = s.getVectors().size();
+		double[] maxScalar = new double[numVectors];
+		//compute max scalar using first dimension
+		for (int cNumVec = 0; cNumVec < numVectors; ++cNumVec)
+		{
+			int cCoord = 0;
+			boolean found = false;
+			do
+			{
+				double dist = s.getSecond().getCell (cCoord, 0) - s.getFirst().getCell (cCoord, 0);
+				double vecCoord = s.getVectors().get (cNumVec).getCell (cCoord, 0);
+				if (!GaussElim.epsilonEquals (vecCoord, 0.0))
+				{
+					maxScalar[cNumVec] = dist / vecCoord;
+					found = true;
+				}
+				else
+					++cCoord;
+			}
+			while (!found);
+		}
+		
+		//standard form for rect
+		//q + u + v = p => u + v = p - q
+		DoubleMatrix wMat = s.loadEquationMatrix();
+		for (int cRow = 0; cRow < wMat.getRows(); ++cRow)
+			wMat.setCell (cRow, wMat.getColumns() - 1, p.getCell (cRow, 0) - wMat.getCell (cRow, wMat.getColumns() - 1));
+		//solve augmented matrix
+		GaussElim solve = new GaussElim (wMat);
+		solve.run();
+		//true if system is consistent and 0 <= scalar <= maxScalar
+		if (solve.isConsistent())
+		{ 
+			DoubleMatrix solution = solve.getTranslationVector();
+			for (int cNumVec = 0; cNumVec < numVectors; ++cNumVec)
+			{
+				double scalar = solution.getCell (cNumVec, 0);
+				//if scalar is less/(equal) to 0 or scalar is larger/(equals) to max				
+				if (s.isFirstIncluded() && !GaussElim.epsilonEquals (scalar, 0.0) && scalar < 0.0)
+					return false;
+				else if (!s.isFirstIncluded() && (scalar < 0.0 || GaussElim.epsilonEquals (scalar, 0.0)))
+					return false;
+				if (s.isSecondIncluded() && !GaussElim.epsilonEquals (scalar, maxScalar[cNumVec]) && scalar > maxScalar[cNumVec])
+					return false;
+				else if (!s.isSecondIncluded() && (scalar > maxScalar[cNumVec] || GaussElim.epsilonEquals (maxScalar[cNumVec], scalar)))
+					return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
 	 * constructor
 	 * @param l1 line 1
 	 * @param l2 line 2
@@ -45,7 +103,7 @@ public class IntersectionSolver
 	 * @return position of intersection
 	 * @throws IntersectionSolverException if there is no intersection
 	 */
-	public Position getIntersection () throws IntersectionSolverException
+	public DoubleMatrix getIntersection () throws IntersectionSolverException
 	{
 		if (mSolutionType == Result.INCONSISTENT)
 			throw new IntersectionSolverException ("non solvable linear equations");
@@ -59,7 +117,9 @@ public class IntersectionSolver
 			for (int cVec = 0; cVec < vecs.size(); ++cVec)
 				p.setCell(cDim, 0, p.getCell(cDim, 0) + mScalars.get(cVec) * vecs.get(cVec).getCell(cDim,  0));
 		}
-		return new Position (p.toIntegerMatrix());
+		
+		
+		return p;
 	}
 	
 	
@@ -101,8 +161,11 @@ public class IntersectionSolver
 			DoubleMatrix solution = solver.getTranslationVector();
 			for (int cVar = 0; cVar < solver.getNumberOfBasicVars(); ++cVar)
 				mScalars.add (solution.getCell(cVar, 0));
-			Position inter = getIntersection();
-			mOnline = mS1.isInRange(inter) && mS2.isInRange(inter);
+			DoubleMatrix inter = getIntersection();
+			
+			
+			mOnline = solveWithin (mS1, inter) && solveWithin (mS2, inter);
+			
 		}
 		else if (!solver.isConsistent())
 			mSolutionType = Result.INCONSISTENT;

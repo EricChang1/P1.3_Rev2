@@ -20,7 +20,7 @@ public abstract class GeoShape
 	/**
 	 * scales down v to length 1
 	 * @param v vector given
-	 * @return v scaled to length 1
+	 * @return a clone of v scaled to length 1
 	 */
 	public static DoubleMatrix normVector (DoubleMatrix v)
 	{
@@ -127,6 +127,16 @@ public abstract class GeoShape
 	 * @return dimension of the subspace the shape is in
 	 */
 	public int getDimension() { return mP1.getDimension(); }
+	
+	/**
+	 * @return true if first point is included
+	 */
+	public boolean isFirstIncluded() { return mInP1; }
+	
+	/**
+	 * @return true if second point is included
+	 */
+	public boolean isSecondIncluded() { return mInP2; }
 	
 	/**
 	 * @param g2 shape to compare orientation with
