@@ -691,6 +691,9 @@ public class DynamicAlgo extends Algorithm
 	
 	private void setSolution (Container sol)
 	{
+		Cuboid fit = new Cuboid (getContainer().getGlue(), getContainer().getMaxDimension());
+		rotateToFit(sol, fit);
+		
 		for (int cBlock = 0; cBlock < sol.getAmountOfBlocks(); ++cBlock)
 		{
 			Block placed = sol.getBlock (cBlock);
