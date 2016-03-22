@@ -631,7 +631,7 @@ public class DynamicAlgo extends Algorithm
 					
 					//cut remainder, fill remainder, assemble remainder
 					ArrayList<Cuboid> freeRemain = cloneC.getFreeCuboids();
-					if (!freeRemain.isEmpty())
+					if (!freeRemain.isEmpty())	
 					{
 						ArrayList <Container> filled = fillFreeCuboids (freeRemain, sClone);
 						if (!filled.isEmpty())

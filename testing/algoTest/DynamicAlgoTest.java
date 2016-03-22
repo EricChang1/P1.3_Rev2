@@ -2,6 +2,7 @@ package testing.algoTest;
 
 import geometry.Cuboid;
 import gui.PieceRenderPanel;
+import gui.PieceRenderPanel.ZoomListener;
 
 import java.util.*;
 import java.io.*;
@@ -28,7 +29,7 @@ public class DynamicAlgoTest
 	
 	public static void main (String[] args) throws IOException, ShapeParser.BadFileStructureException
 	{
-		int[] quants = {15, 15, 15};
+		int[] quants = {5, 5, 5};
 		boolean[] inf = {false, false, false};
 		int d = 7, w = 7, h = 7;
 
@@ -156,6 +157,7 @@ public class DynamicAlgoTest
 		PieceRenderPanel.RotationListener rotListen = render.new RotationListener();
 		PieceRenderPanel.ResizeListener resizeListen = render.new ResizeListener();
 		PieceRenderPanel.ZoomListener zoomListen = render.new ZoomListener();
+		zoomListen.setSensitivity (0.1);
 		
 		frame.addMouseListener (rotListen);
 		frame.addMouseMotionListener(rotListen);
