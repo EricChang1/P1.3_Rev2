@@ -74,6 +74,48 @@ public class Cuboid extends GeoShape
 		vertices.add (new Glue (getSecond()));
 		return vertices;
 	}
+	
+	/**
+	 * @return bottom left vertex
+	 */
+	public Glue getMin()
+	{
+		Glue min = null;
+		int minSum = Integer.MAX_VALUE;
+		for (Glue v : getVertices())
+		{
+			int sum = 0;
+			for (int cDim = 0; cDim < getDimension(); ++cDim)
+				sum += v.getPosition (cDim);
+			if (sum < minSum)
+			{
+				min = v;
+				minSum = sum;
+			}
+		}
+		return min;
+	}
+	
+	/**
+	 * @return top right vertex
+	 */
+	public Glue getMax()
+	{
+		Glue max = null;
+		int maxSum = Integer.MIN_VALUE;
+		for (Glue v : getVertices())
+		{
+			int sum = 0;
+			for (int cDim = 0; cDim < getDimension(); ++cDim)
+				sum += v.getPosition (cDim);
+			if (sum > maxSum)
+			{
+				max = v;
+				maxSum = sum;
+			}
+		}
+		return max;
+	}
 
 	@Override
 	public DoubleMatrix loadEquationMatrix() 

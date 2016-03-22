@@ -29,6 +29,20 @@ public class Set<T extends Comparable<T>> implements Cloneable
 	}
 	
 	/**
+	 * constructs set and adds elements in initial to set
+	 * @param initials set of initial elements
+	 */
+	public Set (Iterable<T> initials)
+	{
+		this();
+		for (T elem : initials)
+		{
+			if (!hasElement (elem))
+				add (elem);
+		}
+	}
+	
+	/**
 	 * @param op2 another given set of same type
 	 * @return union of this with op2
 	 * NOTE: elements in this have priority over elements in op2.
