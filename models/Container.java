@@ -205,9 +205,10 @@ public class Container extends Block
 	public Container clone()
 	{
 		Container clone = new Container (getDimensions(0), getDimensions(1), getDimensions(2));
-		Glue origin = new Glue (new IntegerMatrix (getGlue().getDimension(), 1));
+		clone.glue (this.getGlue());
+		
 		for (Block b : mPlacedBlocks)
-			clone.placeBlock (b, origin);
+			clone.placeBlock (b, b.getGlue());
 		
 		return clone;
 	}
@@ -328,8 +329,16 @@ public class Container extends Block
 	**/
 	public boolean checkPositionOverlap (Block block, Glue pos)
 	{	
-		if (!this.isWithin (block))
-			return false;
+		for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+		{
+			if (block.getGlue().getPosition (cDim) < this.getGlue().getPosition (cDim))
+				return false;
+			if (block.getGlue().getPosition (cDim) > this.getMaxDimension().getPosition (cDim))
+				return false;
+			if (block.getMaxDimension().getPosition (cDim) > this.getMaxDimension().getPosition (cDim))
+				return false;
+		}
+		
 		//glue and dissect block to place
 		BasicShape completed = new BasicShape (block);
 		completed.glue (block.getGlue());

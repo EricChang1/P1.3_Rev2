@@ -28,9 +28,9 @@ public class DynamicAlgoTest
 	
 	public static void main (String[] args) throws IOException, ShapeParser.BadFileStructureException
 	{
-		int[] quants = {4, 4, 4};
+		int[] quants = {15, 15, 15};
 		boolean[] inf = {false, false, false};
-		int d = 8, w = 8, h = 8;
+		int d = 7, w = 7, h = 7;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "parcels.txt";

@@ -19,6 +19,7 @@ import models.Block;
 import models.Container;
 import models.Glue;
 import models.Matrix;
+import models.Matrix.DoubleMatrix;
 import models.Matrix.*;
 
 import algorithm.LookupTable.Entry;
@@ -236,6 +237,19 @@ public class DynamicAlgo extends Algorithm
 		private int mIndex;
 	}
 	
+	/**
+	 * @param list list to perform swap on
+	 * @param i1 index of first element
+	 * @param i2 index of second element
+	 * swaps elements referred to by i1, i2
+	 */
+	public static <T> void swapInList (ArrayList<T> list, int i1, int i2)
+	{
+		T temp = list.get (i1);
+		list.set (i1, list.get (i2));
+		list.set (i2, temp);
+	}
+	
 	
 	public DynamicAlgo() 
 	{
@@ -256,6 +270,9 @@ public class DynamicAlgo extends Algorithm
 		 * subset
 		 * @author martin
 		 */
+		
+		//SOMEWHERE HERE THERE'S A BUG!!!
+		
 		class Order
 		{
 			public Order (LinkedList <Cuboid> cubes, Subset s)
@@ -351,12 +368,13 @@ public class DynamicAlgo extends Algorithm
 			for (int cInPart = 0; cInPart < part.getAmountOfBlocks(); ++cInPart)
 			{
 				Block place = part.getBlock (cInPart);
+				/*
 				if (!stump.checkPositionOverlap (place, place.getGlue()));
 				{
 					stump.checkPositionOverlap (place, place.getGlue());
-					assert (stump.checkPositionOverlap (place, place.getGlue()));
-				}
-				stump.placeBlock (place, place.getGlue());
+					assert (stump.checkPositionOverlap (place, place.getGlue().clone()));
+				}*/
+				stump.placeBlock (place.clone(), place.getGlue());
 			}
 		}
 		return stump;
@@ -413,33 +431,130 @@ public class DynamicAlgo extends Algorithm
 		ArrayList<Integer> fitDim = fit.getDimensions();
 		
 		Matrix<Double> manipulation = new DoubleMatrix (3, 3);
-		manipulation.getScalarMatrix (1.0, manipulation);
+		//manipulation = manipulation.getScalarMatrix (1.0, manipulation);
+		
+		ArrayList<Integer> obtainedDims = obtained.getDimensions();
+		
+		
+		/*Container clone = obtained.clone();
+		clone = rotateToFitClone (clone, fit);
+		
+		if (!clone.getDimensions().equals (fitDim))
+		{
+			int x = 2;
+			x += 3;
+		}*/
+		
+		//iterate through dimensions
+		for (int cFit = 0; cFit < obtainedDims.size(); ++cFit)
+		{
+			//find matching dimension in fit
+			int cObt = 0;
+			boolean found = false;;
+			while (cObt < obtainedDims.size() && !found)
+			{
+				if (fitDim.get (cFit).equals (obtainedDims.get (cObt)))
+				{
+					//search whether fit dimension is already used
+					int cPrev = 0;
+					while (cPrev < cFit && manipulation.getCell (cPrev, cObt).equals (0.0))
+						++cPrev;
+					if (cPrev >= cFit)
+					{
+						manipulation.setCell (cFit, cObt, 1.0);
+						found = true;
+						found = true;
+					}
+				}
+				++cObt;
+			}	
+		}
+		
+		/*
 		//manipulate x1
-		if (obtained.getDimensions (0) != fitDim.get (0))
+		if (obtainedDims.get (0) != fitDim.get (0))
 		{
 			Matrix<Double> rot = null;
-			if (obtained.getDimensions (0) == fitDim.get (1))
+			if (obtainedDims.get (0) == fitDim.get (1))
+			{
 				rot = BasicShape.rotationMatrix (0.0, 90.0, BasicShape.RotationDir.ONWARD);
-			else if (obtained.getDimensions (0) == fitDim.get (2))
+				swapInList (obtainedDims, 0, 1);
+			}
+			else if (obtainedDims.get (0) == fitDim.get (2))
+			{
 				rot = BasicShape.rotationMatrix (90.0, 0.0, BasicShape.RotationDir.ONWARD);
+				swapInList (obtainedDims, 0, 2);
+			}
 			manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
 		}
 		//manipulate x2
-		if (obtained.getDimensions (1) != fitDim.get (1))
+		if (obtainedDims.get (1) != fitDim.get (1))
 		{
-			if (obtained.getDimensions (1) == fitDim.get (2))
+			Matrix<Double> rot = null;
+			if (obtainedDims.get (1) == fitDim.get (0))
 			{
-				Matrix<Double> rot = null;
 				rot = BasicShape.rotationMatrix (0.0, 90.0, BasicShape.RotationDir.ONWARD);
-				manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
-				rot = BasicShape.rotationMatrix (90.0, 0.0, BasicShape.RotationDir.ONWARD);
-				manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
-				rot = BasicShape.rotationMatrix (0.0, -90.0, BasicShape.RotationDir.ONWARD);
-				manipulation = manipulation.multiply (rot, new DoubleMatrix (3, 3));
 			}
-		}
+			if (obtainedDims.get (1) == fitDim.get (2))
+			{
+				Matrix<Double> temp = null;
+				rot = BasicShape.rotationMatrix (0.0, 90.0, BasicShape.RotationDir.ONWARD);
+				temp = BasicShape.rotationMatrix (90.0, 0.0, BasicShape.RotationDir.ONWARD);
+				rot = rot.multiply (temp, new DoubleMatrix (3, 3));
+				temp = BasicShape.rotationMatrix (0.0, -90.0, BasicShape.RotationDir.ONWARD);
+				rot = rot.multiply (temp, new DoubleMatrix (3, 3));
+			}
+			manipulation = rot.multiply (manipulation, new DoubleMatrix (3, 3));
+			//no swapping in dimensions list required
+		}*/
+		
 		obtained.rotate (manipulation);
 		obtained.glue (offset);
+		
+		assert (obtained.getDimensions().equals (fitDim));
+		return obtained;
+	}
+	
+	
+	public Container rotateToFitClone (Container obtained, Cuboid fit)
+	{
+		Glue offset = obtained.getGlue();
+		ArrayList<Integer> fitDim = fit.getDimensions();
+		
+		Matrix<Double> manipulation = new DoubleMatrix (3, 3);
+		//manipulation = manipulation.getScalarMatrix (1.0, manipulation);
+		
+		ArrayList<Integer> obtainedDims = obtained.getDimensions();
+		
+		//iterate through dimensions
+		for (int cFit = 0; cFit < obtainedDims.size(); ++cFit)
+		{
+			//find matching dimension in fit
+			int cObt = 0;
+			boolean found = false;;
+			while (cObt < obtainedDims.size() && !found)
+			{
+				if (fitDim.get (cFit).equals (obtainedDims.get (cObt)))
+				{
+					//search whether fit dimension is already used
+					int cPrev = 0;
+					while (cPrev < cFit && manipulation.getCell (cPrev, cObt).equals (0.0))
+						++cPrev;
+					if (cPrev >= cFit)
+					{
+						manipulation.setCell (cFit, cObt, 1.0);
+						found = true;
+						found = true;
+					}
+				}
+				++cObt;
+			}	
+		}
+		
+		obtained.rotate (manipulation);
+		obtained.glue (offset);
+		
+		//assert (obtained.getDimensions().equals (fitDim));
 		return obtained;
 	}
 	
@@ -466,12 +581,9 @@ public class DynamicAlgo extends Algorithm
 		ArrayList<Integer> tDims = LookupTable.sortIndices (dep, wid, hig);
 		mLookupTable = new LookupTable (tDims.get(0) + 1, tDims.get(1) + 1, tDims.get(2) + 1, mSubsets.getSize());
 		
-		Subset largest = new Subset();
-		for (models.Resource r : getPieces())
-			largest.add (new Resource (r.getBlock(), r.getInventory()));
 		explore (getContainer(), mLargestSubset.getSet());
 		
-		setSolution (mLookupTable.getContainer (dep, wid, hig, mSubsets.getSize() - 1));
+		setSolution (mLookupTable.getContainer (dep, wid, hig, mLargestSubset.getIndex()));
 		setAlgoDone();
 	}
 	
@@ -559,14 +671,17 @@ public class DynamicAlgo extends Algorithm
 				assert (!res.isInfinite());
 				
 				int cAdd = 1;
-				while (last.getSet().getVolume() + cAdd * res.getVolume() <= getContainer().getVolume() && cAdd <= res.getInventory())
+				while (/*last.getSet().getVolume() + cAdd * res.getVolume() <= getContainer().getVolume() && */cAdd <= res.getInventory())
 				{
 					Subset add = last.getSet().clone();
 					Resource addRes = new Resource (res.getBlock().clone(), cAdd);
 					add.add (addRes);
 					
-					mLargestSubset = new SubsetAtIndex (add, mSubsets.getSize());
-					mSubsets.add (mLargestSubset);
+					SubsetAtIndex addAtIndex = new SubsetAtIndex (add, mSubsets.getSize());
+					
+					if (add.getVolume() > mLargestSubset.getSet().getVolume())
+						mLargestSubset = addAtIndex;
+					mSubsets.add (addAtIndex);
 					++cAdd;
 				}
 			}

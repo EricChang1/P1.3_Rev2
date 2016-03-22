@@ -320,12 +320,12 @@ public class BasicShape
 	{
 		//init vertices
 		this.vectors = new ArrayList<IntegerMatrix>();
-		mOrderedVectors = new Set<>();
+		//mOrderedVectors = new Set<>();
 		for (IntegerMatrix vec : vectors)
 		{
 			IntegerMatrix ref = vec.clone();
 			this.vectors.add (ref);
-			mOrderedVectors.add (new IndexVertex (ref, mOrderedVectors.getSize()));
+			//mOrderedVectors.add (new IndexVertex (ref, mOrderedVectors.getSize()));
 		}
 		if (!numberOfCols(vectors)) 
 			throw new BadNumberOfCollumsException ("The vectors introduced are not 3x1");
@@ -596,6 +596,18 @@ public class BasicShape
 		if (!vertex.getCell (yInd, 0).equals (maxPos.getCell (yInd, 0)))
 			relats.add (RelatPos.ABOVE);
 		return relats;
+	}
+	
+	/**
+	 * @return list of dimensions of the smallest cuboid containing
+	 * the entire shape
+	 */
+	public ArrayList<Integer> getDimensions()
+	{
+		ArrayList<Integer> dims = new ArrayList<>();
+		for (int cDim = 0; cDim < mGlue.getDimension(); ++cDim)
+			dims.add (this.getDimensions (cDim));
+		return dims;
 	}
 	
 	/**
@@ -1650,7 +1662,8 @@ public class BasicShape
 	 */
 	public void rotate (Matrix<Double> rotMatrix){
 
-		for(int cCounter=0; cCounter<vectors.size();cCounter++){
+		for(int cCounter=0; cCounter<vectors.size();cCounter++)
+		{
 			Matrix.DoubleMatrix result = new Matrix.DoubleMatrix (3,1);
 			Matrix.DoubleMatrix vec = vectors.get(cCounter).toDoubleMatrix();
 			rotMatrix.multiply (vec, result);
@@ -1818,7 +1831,7 @@ public class BasicShape
 			if (cVertex == vectors.size())
 			{
 				vectors.add (newVertices.get(cNewVertex));
-				mOrderedVectors.add (new IndexVertex (newVertices.get (cNewVertex), mOrderedVectors.getSize()));
+				//mOrderedVectors.add (new IndexVertex (newVertices.get (cNewVertex), mOrderedVectors.getSize()));
 				mPossibleConnections.add (getHypoPossibleConnections (newVertices.get (cNewVertex)));
 			}
 			addedIndices.add (cVertex);
@@ -2050,7 +2063,7 @@ public class BasicShape
 	}
 	
 	private ArrayList<IntegerMatrix> vectors;
-	private Set<IndexVertex> mOrderedVectors;
+	//private Set<IndexVertex> mOrderedVectors;
 	private ArrayList<Integer> dimensions;
 	private ArrayList <ArrayList <RelatPos>> mPossibleConnections;
 	private IntegerMatrix adjMatrix;
