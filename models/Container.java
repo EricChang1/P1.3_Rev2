@@ -1,4 +1,5 @@
 package models;
+import generic.Set;
 import geometry.*;
 import geometry.IntersectionSolver.Result;
 
@@ -175,8 +176,28 @@ public class Container extends Block
 	 */
 	public ArrayList <Cuboid> getFreeCuboids()
 	{
-		ArrayList <Cuboid> free = new ArrayList<>();
+		BasicShape dissected = new BasicShape (this);
+		dissected.addMissingRectanglePoints();
 		
+		Set<OrderedCuboid> orderedCuboids = new Set<> ();
+		for (Cuboid c : dissected.getCuboids())
+			orderedCuboids.add (new OrderedCuboid (c.getMin(), c.getMax()));
+		
+		Set<OrderedCuboid> orderedBlockCuboids = new Set<>();
+		for (int cBlock = 0; cBlock < getAmountOfBlocks(); ++cBlock)
+		{
+			Block completedBlock = getBlock (cBlock).clone();
+			completedBlock.addMissingRectanglePoints();
+			for (Cuboid c : completedBlock.getCuboids())
+				orderedBlockCuboids.add (new OrderedCuboid (c.getMin(), c.getMax()));
+		}
+		
+		ArrayList <Cuboid> free = new ArrayList<>();
+		for (OrderedCuboid ordered : orderedCuboids.getDifference (orderedBlockCuboids).getOrderedElements())
+			free.add (ordered);
+		
+		
+		/* legacy
 		Container cloneCont = this.clone();
 		cloneCont.addMissingRectanglePoints();
 		
@@ -193,7 +214,7 @@ public class Container extends Block
 					free.add (c);
 			}
 		}
-		
+		*/
 		
 		return free;
 	}
