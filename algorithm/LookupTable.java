@@ -64,6 +64,8 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 					if (left > 0)
 						unused.add (new Resource (avail.getBlock(), left));
 				}
+				else
+					unused.add (avail);
 			}
 			
 			return unused;
