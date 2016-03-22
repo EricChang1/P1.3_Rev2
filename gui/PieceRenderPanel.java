@@ -220,7 +220,12 @@ public class PieceRenderPanel extends JPanel
 	 */
 	public class ResizeListener extends ComponentAdapter
 	{
-
+		
+		public ResizeListener()
+		{
+			mFirst = false;
+		}
+		
 		@Override
 		public void componentResized(ComponentEvent e) 
 		{
@@ -232,7 +237,18 @@ public class PieceRenderPanel extends JPanel
 			adjustPixelMapping(imgArea.getWidth(), imgArea.getHeight());
 			adjustCentering (imgArea);
 			repaint();
-		}	
+		}
+		
+		public void componentShown (ComponentEvent e)
+		{
+			if (mFirst)
+			{
+				mFirst = false;
+				init();
+			}
+		}
+		
+		private boolean mFirst;
 	}
 	
 	/**
@@ -285,6 +301,7 @@ public class PieceRenderPanel extends JPanel
 	
 	/**
 	 * method to be called before a valid drawing can be made
+	 * happens automatically if resize listener is added
 	 * Precondition: size of the component is set
 	 * Postcondition: drawing is adjusted for this size
 	 */
