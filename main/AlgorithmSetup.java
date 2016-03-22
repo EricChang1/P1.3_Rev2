@@ -10,9 +10,13 @@ import models.Block;
 import models.Container;
 import models.Resource;
 
+/**
+ * utility class for setting up data to run algorithms
+ * @author martin
+ */
 public class AlgorithmSetup 
 {
-	enum DimName {DEPTH, WIDTH, HEIGHT}
+	public enum DimName {DEPTH, WIDTH, HEIGHT}
 	
 	/**
 	 * @param possible list of possible blocks
@@ -29,6 +33,11 @@ public class AlgorithmSetup
 				mResources.add (r);
 		}
 	}
+	
+	/**
+	 * @return all resource setup objects
+	 */
+	public ArrayList<ResourceSetup> getResourceSetups() { return mResources.getOrderedElements(); }
 	
 	/**
 	 * @param b a given block
