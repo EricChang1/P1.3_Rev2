@@ -153,9 +153,14 @@ public class MainMenu extends JFrame
 	
 	public void showErrorDialog (String title, String message)
 	{
-		JDialog errorDialog = new JDialog (this, message, false);
+		int textCols = 30;
+		JDialog errorDialog = new JDialog (this, false);
 		errorDialog.setTitle (title);
 		errorDialog.setDefaultCloseOperation (DISPOSE_ON_CLOSE);
+		
+		JTextField text = new JTextField (message, textCols);
+		errorDialog.add (text);
+		
 		errorDialog.setVisible (true);
 	}
 	
