@@ -255,6 +255,7 @@ public class DynamicAlgo extends Algorithm
 	public DynamicAlgo() 
 	{
 		mSubsets = new Set<>();
+		mFuseUse = false;
 	}
 	
 	
@@ -619,6 +620,15 @@ public class DynamicAlgo extends Algorithm
 			return mSubsets.getSize();
 	}
 	
+	/**
+	 * @param fuseUse true to enable fusing, false to disable
+	 * default is false
+	 */
+	public void setFuse (boolean fuseUse)
+	{
+		mFuseUse = fuseUse;
+	}
+	
 	public void run()
 	{
 		super.run();
@@ -772,4 +782,6 @@ public class DynamicAlgo extends Algorithm
 	private LookupTable mLookupTable;
 	
 	private Progress.Increase mCurrentIncrease;
+	
+	private boolean mFuseUse;
 }

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -75,6 +74,9 @@ public class PieceRenderPanel extends JPanel
 		}
 		return new Rectangle2D.Double(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 	}
+	
+	
+	public static final Insets DEFAULT_SPACING = new Insets (5, 5, 5, 5);
 	
 	/**
 	 * abstract class to be extended by classes that need to store a sensitivity value
@@ -298,6 +300,9 @@ public class PieceRenderPanel extends JPanel
 		initCamPos.setCell(2, 0, c.getDimensions(2) / 2);
 		mCameraPosition = new Glue (initCamPos);
 		mCamera = new Camera(180, 0, 1);
+		
+		mSpacing = (Insets) DEFAULT_SPACING.clone();
+		
 		//initialize projection and rotation matrix
 		setProjectionMatrix();
 		setAxisRotation();
@@ -322,6 +327,14 @@ public class PieceRenderPanel extends JPanel
 	public void setVisible (boolean flag)
 	{
 		init();
+	}
+	
+	/**
+	 * @param spacing border spacing to use
+	 */
+	public void setInsets (Insets spacing)
+	{
+		mSpacing = spacing;
 	}
 	
 	public void paintComponent (Graphics g)
@@ -412,6 +425,18 @@ public class PieceRenderPanel extends JPanel
 		mDbgAngleX3.setText ("" + mCamera.getAngleX3());
 	}
 	
+	/**
+	 * @return area of component minus spacing
+	 */
+	private Rectangle2D getDrawingArea()
+	{
+		Rectangle2D area = new Rectangle2D.Double();
+		int wid = getWidth() - mSpacing.left - mSpacing.right;
+		int hig = getHeight() - mSpacing.top - mSpacing.bottom;
+		area.setFrame (mSpacing.left, mSpacing.top, wid, hig);
+		return area;
+	}
+	
 	private DoubleMatrix getTransformation()
 	{
 		Matrix <Double> trans = mAxisRotation;
@@ -442,9 +467,10 @@ public class PieceRenderPanel extends JPanel
 	
 	private void adjustPixelMapping (double imageWidth, double imageHeight)
 	{
+		Rectangle2D drawArea = getDrawingArea();
 		imageWidth /= mCamera.getRadius();
 		imageHeight /= mCamera.getRadius(); 
-		double pixelPerUnit = Math.min (getWidth() / imageWidth, getHeight() / imageHeight);
+		double pixelPerUnit = Math.min (drawArea.getWidth() / imageWidth, drawArea.getHeight() / imageHeight);
 		DoubleMatrix mapScalar = new DoubleMatrix (2, 2);
 		mapScalar.getScalarMatrix(pixelPerUnit, mapScalar);
 		mScreenMapping.copyValues(mapScalar, 1, 1, 0, 0, mapScalar.getRows(), mapScalar.getColumns());
@@ -452,9 +478,12 @@ public class PieceRenderPanel extends JPanel
 	
 	private void adjustCentering (Rectangle2D imgArea)
 	{
+		Rectangle2D drawArea = getDrawingArea();
 		double scalar = mScreenMapping.getCell(2, 2);
-		double transX = (getWidth() - scalar * imgArea.getWidth()) / 2 - scalar * imgArea.getMinX();
-		double transY = (getHeight() - scalar * imgArea.getHeight()) / 2 - scalar * imgArea.getMinY();
+		double transX = (drawArea.getWidth() - scalar * imgArea.getWidth()) / 2 - scalar * imgArea.getMinX();
+		double transY = (drawArea.getHeight() - scalar * imgArea.getHeight()) / 2 - scalar * imgArea.getMinY();
+		transX += drawArea.getMinX();
+		transY += drawArea.getMinY();
 		mScreenMapping.setCell(1, 0, transX);
 		mScreenMapping.setCell(2, 0, transY);
 	}
@@ -466,6 +495,8 @@ public class PieceRenderPanel extends JPanel
 	private Matrix<Double> mScreenMapping, mProjection, mAxisRotation;
 	private Camera mCamera;
 	private Glue mCameraPosition;
+	
+	private Insets mSpacing;
 	
 	private JLabel mDbgAngleX2, mDbgAngleX3;
 }
