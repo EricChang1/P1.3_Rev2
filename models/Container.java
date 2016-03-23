@@ -244,6 +244,25 @@ public class Container extends Block
 	}
 	
 	/**
+	 * @return total volume - volume remaining
+	 */
+	public int getVolumeRemaining()
+	{
+		return (getVolume() - getVolumeUsed());
+	}
+	
+	/**
+	 * @return sum of the volumes of all blocks placed
+	 */
+	public int getVolumeUsed()
+	{
+		int vUse = 0;
+		for (int cBlock = 0; cBlock < getAmountOfBlocks(); ++cBlock)
+			vUse += getBlock (cBlock).getVolume();
+		return vUse;
+	}
+	
+	/**
 	 * @param vertex a given vertex
 	 * @return true if vertex is a corner vertex of this container
 	 */
