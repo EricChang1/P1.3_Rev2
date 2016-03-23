@@ -92,13 +92,13 @@ public class ContainerTest
 	{	
 		ArrayList <IntegerMatrix> vecs = Container.computeInitDimVectors(2, 3, 3);
 		IntegerMatrix adj = Container.computeInitAdjacencyMatrix(vecs);
-		Block cuboid1 = new Block (vecs, adj, 2);
+		Block cuboid1 = new Block (vecs, adj, 2, "");
 		System.out.println("cuboid 1");
 		cuboid1.print(System.out);
 		
 		vecs = Container.computeInitDimVectors(2, 2, 4);
 		adj = Container.computeInitAdjacencyMatrix(vecs);
-		Block cuboid2 = new Block (vecs, adj, 5);
+		Block cuboid2 = new Block (vecs, adj, 5, "");
 		System.out.println("cuboid 2");
 		cuboid2.print(System.out);
 		
@@ -161,16 +161,16 @@ public class ContainerTest
 		Block[] s = new Block[4];
 		Glue[] p = new Glue[4];
 		
-		s[0] = new Block (getCube (3, 3, 3), 3);
+		s[0] = new Block (getCube (3, 3, 3), 3, "");
 		p[0] = getPosition (0, 0, 0);
 		
-		s[1] = new Block (getCube (4, 3, 2), 3);
+		s[1] = new Block (getCube (4, 3, 2), 3, "");
 		p[1] = getPosition (3, 3, 3);
 		
-		s[2] = new Block (getCube (4, 2, 3), 3);
+		s[2] = new Block (getCube (4, 2, 3), 3, "");
 		p[2] = getPosition (3, 3, 3);
 		
-		s[3] = new Block (getCube (4, 3, 2), 3);
+		s[3] = new Block (getCube (4, 3, 2), 3, "");
 		p[3] = getPosition (3, 3, 3);
 		
 		int noChecks = 3;
@@ -204,7 +204,7 @@ public class ContainerTest
 	{
 		ArrayList<IntegerMatrix> bVerts = Container.computeInitDimVectors (4, 2, 2);
 		IntegerMatrix bAdj = Container.computeInitAdjacencyMatrix (bVerts);
-		mContainer.placeBlock (new Block (new BasicShape (bVerts, bAdj), 3), new Glue (new IntegerMatrix (3, 1)));
+		mContainer.placeBlock (new Block (new BasicShape (bVerts, bAdj), 3, ""), new Glue (new IntegerMatrix (3, 1)));
 		
 		PieceRenderPanel show = new PieceRenderPanel (mContainer.clone());
 		JFrame frame = new JFrame ("container");

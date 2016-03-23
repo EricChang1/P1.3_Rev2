@@ -1,6 +1,8 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +17,7 @@ import models.Matrix.*;
  * PIECES
  * <possibility for comments here>
  * new
+ * <name>
  * (<z coord>,<x coord>,<y coord>)
  * <repeat for every vertex>
  * connect
@@ -62,9 +65,12 @@ public class ShapeParser
 	public ShapeParser (File input) throws FileNotFoundException
 	{
 		mRead = new BufferedReader (new FileReader (input));
-		mBlocks = new ArrayList<Block>();
+		mBlocks = new ArrayList<>();
 	}
 	
+	/**
+	 * @return list of new block objects
+	 */
 	public ArrayList <Block> getBlocks()
 	{
 		ArrayList <Block> blocks = new ArrayList <Block>();
@@ -73,6 +79,9 @@ public class ShapeParser
 		return blocks;
 	}
 	
+	/**
+	 * @return list of new shape objects
+	 */
 	public ArrayList <BasicShape> getShapes()
 	{
 		ArrayList <BasicShape> shapes = new ArrayList <BasicShape>();
@@ -97,12 +106,14 @@ public class ShapeParser
 			String match = readToKey (Pattern.compile (endOrStart));
 			if (!match.isEmpty() && LOCAL_START_KEY.matcher (match).find())
 			{
+				String name = mRead.readLine();
 				ArrayList <IntegerMatrix> vecs = parseVectors();
 				IntegerMatrix adjacent = parseConnections (vecs);
 				double value = Double.parseDouble(mRead.readLine());
-				mBlocks.add (new Block (vecs, adjacent, value));
 				if (!LOCAL_END_KEY.matcher (mRead.readLine()).matches())
 					throw new BadFileStructureException ("missing terminating 'end' token");
+				
+				mBlocks.add (new Block (vecs, adjacent, value, name));
 			}
 			else
 				endReached = true;

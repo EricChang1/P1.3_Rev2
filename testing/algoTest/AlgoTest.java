@@ -23,9 +23,9 @@ public class AlgoTest
 		BasicShape b1 = Container.constructInitShape(2, 2, 3);
 		BasicShape b2 = Container.constructInitShape (2, 4, 4);
 		BasicShape b3 = Container.constructInitShape(4, 3, 2);
-		mResources.add(new Resource(new Block (b1, 4), 10, 1, false));
-		mResources.add(new Resource(new Block (b2, 6), 10, 1, false));
-		mResources.add(new Resource(new Block (b3, 5), 10, 1, false));
+		mResources.add(new Resource(new Block (b1, 4, ""), 10, 1, false));
+		mResources.add(new Resource(new Block (b2, 6, ""), 10, 1, false));
+		mResources.add(new Resource(new Block (b3, 5, ""), 10, 1, false));
 		mCont = new Container (15, 10, 10);
 		
 		/*

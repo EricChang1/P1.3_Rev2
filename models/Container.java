@@ -124,14 +124,14 @@ public class Container extends Block
 	 */
 	public Container (int d, int w, int h)
 	{
-		super(constructInitShape (d, w, h), 0);
+		super(constructInitShape (d, w, h), 0, "container");
 		mPlacedBlocks = new ArrayList <Block>();
 	}
 	
 	
 	public Container (Block b)
 	{
-		super (b, 0);
+		super (b, 0, "container");
 		mPlacedBlocks = new ArrayList <Block>();
 	}
 	

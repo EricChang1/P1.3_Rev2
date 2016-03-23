@@ -14,20 +14,22 @@ public class Block extends BasicShape implements Cloneable {
 	*@param adjMat adjacency matrix of block 
 	*@param value Value assigned to the block.
 	*/
-	public Block (ArrayList<IntegerMatrix> matrixHVectors, IntegerMatrix adjMat, double value)
+	public Block (ArrayList<IntegerMatrix> matrixHVectors, IntegerMatrix adjMat, double value, String name)
 	{
 		super (matrixHVectors, adjMat);
 		this.value = value;
+		mName = name;
 	}
 	/**
 	*Constructor to pass the value with the BasicShape object
 	*@param value Value assigned to the shape
 	*@param bShape Object of BasicShape
 	*/
-	public Block(BasicShape bShape, double value)
+	public Block(BasicShape bShape, double value, String name)
 	{
 		super (bShape);
 		this.value = value;
+		mName = name;
 	}
 	
 	/**
@@ -35,9 +37,14 @@ public class Block extends BasicShape implements Cloneable {
 	 */
 	public Block clone()
 	{
-		return new Block (this, getValue());
+		return new Block (this, getValue(), this.getName());
 	}
-
+	
+	/**
+	 * @return name of pentomino
+	 */
+	public String getName() { return mName; }
+	
 	/**
 	*Method to get the value.
 	*@return the value.
@@ -58,6 +65,7 @@ public class Block extends BasicShape implements Cloneable {
 		this.value += b.getValue();
 		super.addShape(b);
 	}
-
+	
+	private String mName;
 	private double value;
 }

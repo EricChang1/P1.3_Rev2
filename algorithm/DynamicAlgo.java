@@ -645,7 +645,7 @@ public class DynamicAlgo extends Algorithm
 			Block bRef = piece.getBlock();
 			ArrayList<Block> rotatedBlocks = new ArrayList<>();
 			for (BasicShape rotation : new ShapeRotator (bRef).getRotations())
-				rotatedBlocks.add (new Block (rotation, bRef.getValue()));
+				rotatedBlocks.add (new Block (rotation, bRef.getValue(), bRef.getName()));
 			
 			for (Block rotatedPiece : rotatedBlocks)
 			{
