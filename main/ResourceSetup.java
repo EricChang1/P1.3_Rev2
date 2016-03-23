@@ -1,5 +1,6 @@
 package main;
 
+import models.BasicShape;
 import models.Block;
 import models.Resource;
 
@@ -23,6 +24,14 @@ public class ResourceSetup implements Comparable<ResourceSetup>
 	public Resource constructResource()
 	{
 		return new Resource (mBlock, mCapacity, mBlock.getVolume(), mInfinite);
+	}
+	
+	/**
+	 * @return internal shape stored
+	 */
+	public BasicShape getShape()
+	{
+		return mBlock;
 	}
 	
 	/**

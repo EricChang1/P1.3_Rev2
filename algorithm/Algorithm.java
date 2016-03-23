@@ -55,6 +55,7 @@ public abstract class Algorithm implements Runnable
 	{
 		mContainer = null;
 		mPieces = null;
+		mProgress = new Progress();
 		mAlgoStarted = false;
 		mAlgoDone = false;
 	}
@@ -67,6 +68,17 @@ public abstract class Algorithm implements Runnable
 		if (!mAlgoDone)
 			throw new AlgorithmNotStartedException ("tried to access presumably filled container before algorithm started");
 		return mContainer.clone();
+	}
+	
+	/**
+	 * @return remaining increase to progress
+	 * Precondition: algorithm is started but did not terminate
+	 */
+	public Progress getProgress()
+	{
+		if (isAlgoDone())
+			throw new AlgorithmTerminatedException();
+		return mProgress;
 	}
 	
 	/**
@@ -147,10 +159,12 @@ public abstract class Algorithm implements Runnable
 	{
 		if (!mAlgoStarted)
 			throw new AlgorithmNotStartedException ("tried to access internal pieces before algorithm was started");
+		getProgress().increase (getProgress().getRemainingIncrease());
 		mAlgoDone = true;
 	}
 	
 	private Container mContainer;
 	private ArrayList <Resource> mPieces;
+	private Progress mProgress;
 	private boolean mAlgoStarted, mAlgoDone; 
 }

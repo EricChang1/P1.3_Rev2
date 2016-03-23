@@ -90,6 +90,11 @@ public class ShapeParser
 		return shapes;
 	}
 	
+	/**
+	 * parses the file
+	 * @throws BadFileStructureException if file structure does not correspond to expected format
+	 * @throws IOException if io goes wrong
+	 */
 	public void parse() throws BadFileStructureException, IOException
 	{
 		boolean endReached = false;

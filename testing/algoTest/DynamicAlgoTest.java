@@ -93,6 +93,16 @@ public class DynamicAlgoTest
 	{
 		mAlgo = new DynamicAlgo();
 		mAlgo.init (mCont, mRes);
+		
+		JFrame showBar = new JFrame ("current progress");
+		showBar.setSize (300, 75);
+		showBar.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
+		showBar.setLayout (new BorderLayout (25, 10));
+		JProgressBar progressIndicator = new JProgressBar (0, 100);
+		mAlgo.getProgress().setProgressBar (progressIndicator);
+		showBar.add (progressIndicator, BorderLayout.CENTER);
+		showBar.setVisible(true);
+		
 		mAlgo.run();
 	}
 	
