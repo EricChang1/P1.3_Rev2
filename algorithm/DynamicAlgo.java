@@ -9,6 +9,7 @@ import gui.PieceRenderPanel.ZoomListener;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 import javax.swing.JFrame;
 
@@ -356,6 +357,43 @@ public class DynamicAlgo extends Algorithm
 	}
 	
 	/**
+	 * @param raw list of raw cuboids as obtained from basic shape
+	 * @return new list of cuboids fusing as many cuboids as possible (greedy, first)
+	 */
+	public ArrayList<Cuboid> fuseAdjacentCuboids (ArrayList<Cuboid> raw)
+	{
+		LinkedList<Cuboid> working = new LinkedList<> (raw);
+		boolean change = true;
+		//iterate over cuboids while there is a change
+		while (change)
+		{
+			change = false;
+
+			ListIterator<Cuboid> iFuse1 = working.listIterator();
+			while (!change && iFuse1.nextIndex() < working.size())
+			{
+				Cuboid c1 = iFuse1.next();
+				int cFuse2 = iFuse1.nextIndex();
+				while (!change && cFuse2 < working.size())
+				{
+					Cuboid c2 = working.get (cFuse2);
+					if (c1.areFuseable (c2))
+					{
+						working.set (cFuse2, c1.fuse (c2));
+						change = true;
+						iFuse1.remove();
+						iFuse1 = null;
+					}
+					++cFuse2;
+				}
+				
+			}
+		}
+		
+		return new ArrayList<> (working);
+	}
+	
+	/**
 	 * @param stump partially filled container
 	 * @param filledParts container objects of the exact size 
 	 * and in the exact location of stump's free cuboids
@@ -632,6 +670,8 @@ public class DynamicAlgo extends Algorithm
 					ArrayList<Cuboid> freeRemain = cloneC.getFreeCuboids();
 					if (!freeRemain.isEmpty())	
 					{
+						freeRemain = fuseAdjacentCuboids (freeRemain);
+						
 						ArrayList <Container> filled = fillFreeCuboids (freeRemain, sClone);
 						if (!filled.isEmpty())
 							putPiecesTogether (cloneC, filled);

@@ -98,6 +98,21 @@ public class Cuboid extends GeoShape
 	}
 	
 	/**
+	 * @param fuse cuboid to fuse this with
+	 * @return a new cuboid spanned by combined
+	 * min and max vertices of vertices of this cuboid
+	 * and vertices of fuse
+	 * Precondition: this and fuse should be fuseable
+	 */
+	public Cuboid fuse (Cuboid fuse)
+	{
+		ArrayList<Glue> combinedVerts = new ArrayList<>();
+		combinedVerts.addAll (this.getVertices());
+		combinedVerts.addAll (fuse.getVertices());
+		return new Cuboid (getMin (combinedVerts), getMax (combinedVerts));
+	}
+	
+	/**
 	 * @param fuse cuboid to test for possible fusion
 	 * @return true if this and fuse can be added together to form a new cuboid,
 	 * true only if there is one side both cuboids have in common

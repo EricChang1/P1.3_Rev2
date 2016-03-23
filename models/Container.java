@@ -181,7 +181,7 @@ public class Container extends Block
 		
 		Set<OrderedCuboid> orderedCuboids = new Set<> ();
 		for (Cuboid c : dissected.getCuboids())
-			orderedCuboids.add (new OrderedCuboid (c.getMin(), c.getMax()));
+			orderedCuboids.add (new OrderedCuboid (c.getMin (c.getVertices()), c.getMax(c.getVertices())));
 		
 		Set<OrderedCuboid> orderedBlockCuboids = new Set<>();
 		for (int cBlock = 0; cBlock < getAmountOfBlocks(); ++cBlock)
@@ -189,7 +189,7 @@ public class Container extends Block
 			Block completedBlock = getBlock (cBlock).clone();
 			completedBlock.addMissingRectanglePoints();
 			for (Cuboid c : completedBlock.getCuboids())
-				orderedBlockCuboids.add (new OrderedCuboid (c.getMin(), c.getMax()));
+				orderedBlockCuboids.add (new OrderedCuboid (c.getMin (c.getVertices()), c.getMax(c.getVertices())));
 		}
 		
 		ArrayList <Cuboid> free = new ArrayList<>();
