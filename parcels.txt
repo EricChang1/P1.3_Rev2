@@ -1,6 +1,8 @@
+PIECES
 contains parcels
 parcel A
 new
+Aparcel
 (0,0,0)
 (0,0,4)
 (0,2,4)
@@ -22,6 +24,7 @@ end
 
 parcel B
 new
+Bparcel
 (0,0,0)
 (0,0,4)
 (0,3,4)
@@ -43,6 +46,7 @@ end
 
 parcel C
 new
+Cparcel
 (0,0,0)
 (0,0,3)
 (0,3,3)
@@ -61,3 +65,4 @@ connect
 value
 5
 end
+END_PIECES

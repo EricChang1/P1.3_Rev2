@@ -3,7 +3,8 @@ package generic;
 import java.util.ArrayList;
 
 /**
- * 
+ * custom set implementation
+ * not iterable yet
  * @author martin
  * @param <T>
  */
@@ -26,6 +27,20 @@ public class Set<T extends Comparable<T>> implements Cloneable
 	public Set()
 	{
 		mStore = new AvlTree<>();
+	}
+	
+	/**
+	 * constructs set and adds elements in initial to set
+	 * @param initials set of initial elements
+	 */
+	public Set (Iterable<T> initials)
+	{
+		this();
+		for (T elem : initials)
+		{
+			if (!hasElement (elem))
+				add (elem);
+		}
 	}
 	
 	/**
@@ -110,7 +125,7 @@ public class Set<T extends Comparable<T>> implements Cloneable
 	public T getElement (T val)
 	{
 		if (!mStore.hasElement (val))
-			throw new SetException ("value " + val + " to be added exists already");
+			throw new SetException ("value " + val + " does not exist");
 		return mStore.getElement (val);
 	}
 	
@@ -123,6 +138,11 @@ public class Set<T extends Comparable<T>> implements Cloneable
 		ret += " ]";
 		return ret;
 	}
+	
+	/**
+	 * @return number of elements stored
+	 */
+	public int getSize() { return mStore.getSize(); }
 	
 	/**
 	 * @param sub another given subset

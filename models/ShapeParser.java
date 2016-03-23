@@ -1,7 +1,11 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.*;
 
 import models.Matrix.*;
@@ -10,8 +14,10 @@ import models.Matrix.*;
 /**
  * class parsing special files to construct blocks
  * format needs to be the following
+ * PIECES
  * <possibility for comments here>
  * new
+ * <name>
  * (<z coord>,<x coord>,<y coord>)
  * <repeat for every vertex>
  * connect
@@ -25,6 +31,8 @@ import models.Matrix.*;
  * new
  * ...
  * end
+ * PIECES_END
+ * 
  * Note that round brackets for vertices are necessary 
  * and that no white spaces between coordinates are allowed
  * Note that the commands new, connect, value, end need to be in separate lines
@@ -37,6 +45,14 @@ import models.Matrix.*;
  */
 public class ShapeParser 
 {
+	public static final Pattern GLOBAL_START_KEY = Pattern.compile ("PIECES");
+	public static final Pattern GLOBAL_END_KEY = Pattern.compile ("PIECES_END");
+	public static final Pattern LOCAL_START_KEY = Pattern.compile ("new");
+	public static final Pattern LOCAL_END_KEY = Pattern.compile ("end");
+	public static final Pattern CONNECTION_START_KEY = Pattern.compile ("connect");
+	public static final Pattern VALUE_START_KEY = Pattern.compile ("value");
+	
+	
 	@SuppressWarnings("serial")
 	public class BadFileStructureException extends Exception
 	{
@@ -49,9 +65,12 @@ public class ShapeParser
 	public ShapeParser (File input) throws FileNotFoundException
 	{
 		mRead = new BufferedReader (new FileReader (input));
-		mBlocks = new ArrayList<Block>();
+		mBlocks = new ArrayList<>();
 	}
 	
+	/**
+	 * @return list of new block objects
+	 */
 	public ArrayList <Block> getBlocks()
 	{
 		ArrayList <Block> blocks = new ArrayList <Block>();
@@ -60,6 +79,9 @@ public class ShapeParser
 		return blocks;
 	}
 	
+	/**
+	 * @return list of new shape objects
+	 */
 	public ArrayList <BasicShape> getShapes()
 	{
 		ArrayList <BasicShape> shapes = new ArrayList <BasicShape>();
@@ -68,26 +90,38 @@ public class ShapeParser
 		return shapes;
 	}
 	
+	/**
+	 * parses the file
+	 * @throws BadFileStructureException if file structure does not correspond to expected format
+	 * @throws IOException if io goes wrong
+	 */
 	public void parse() throws BadFileStructureException, IOException
 	{
-		while (mRead.ready())
+		boolean endReached = false;
+		//read until global start key
+		String startLine = readToKey (GLOBAL_START_KEY);
+		if (startLine.isEmpty())
+			endReached = true;
+		
+		while (mRead.ready() && !endReached)
 		{
 			//skip unusable part
-			boolean foundNewKey = false;
-			while (mRead.ready() && !foundNewKey) 
-			{
-				foundNewKey = mRead.readLine().equals(new String ("new"));
-			}
+			String endOrStart = GLOBAL_END_KEY.pattern() + "|" + LOCAL_START_KEY.pattern();
 			
-			if (foundNewKey)
+			String match = readToKey (Pattern.compile (endOrStart));
+			if (!match.isEmpty() && LOCAL_START_KEY.matcher (match).find())
 			{
+				String name = mRead.readLine();
 				ArrayList <IntegerMatrix> vecs = parseVectors();
 				IntegerMatrix adjacent = parseConnections (vecs);
 				double value = Double.parseDouble(mRead.readLine());
-				mBlocks.add (new Block (vecs, adjacent, value));
-				if (!mRead.readLine().startsWith("end"))
+				if (!LOCAL_END_KEY.matcher (mRead.readLine()).matches())
 					throw new BadFileStructureException ("missing terminating 'end' token");
+				
+				mBlocks.add (new Block (vecs, adjacent, value, name));
 			}
+			else
+				endReached = true;
 		}
 	}
 	
@@ -158,7 +192,26 @@ public class ShapeParser
 		return adj;
 	}
 	
-	
+	/**
+	 * @param key key to match
+	 * @return line matching key or empty string if no match was found
+	 * advances reader until line containing key is found or file ends
+	 */
+	private String readToKey (Pattern key) throws IOException
+	{
+		boolean found = false;
+		while (mRead.ready() && !found)
+		{
+			String line = mRead.readLine();
+			Matcher matcher = key.matcher (line);
+			if (matcher.matches())
+			{
+				found = true;
+				return line;
+			}
+		}
+		return new String();
+	}
 	
 	private BufferedReader mRead;
 	private ArrayList<Block> mBlocks;

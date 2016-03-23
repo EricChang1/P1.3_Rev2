@@ -2,6 +2,7 @@ package testing.algoTest;
 
 import geometry.Cuboid;
 import gui.PieceRenderPanel;
+import gui.PieceRenderPanel.ZoomListener;
 
 import java.util.*;
 import java.io.*;
@@ -28,9 +29,9 @@ public class DynamicAlgoTest
 	
 	public static void main (String[] args) throws IOException, ShapeParser.BadFileStructureException
 	{
-		int[] quants = {4, 4, 4};
+		int[] quants = {10, 0, 0};
 		boolean[] inf = {false, false, false};
-		int d = 8, w = 3, h = 3;
+		int d = 4, w = 5, h = 6;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "parcels.txt";
@@ -40,12 +41,18 @@ public class DynamicAlgoTest
 		DynamicAlgoTest test = new DynamicAlgoTest();
 		test.setResources (input.getBlocks(), quants, inf);
 		test.setContainer (d, w, h);
-		/*
+		
+		long startTime = System.currentTimeMillis();
+		
 		test.run();
+		
+		long runningTime = System.currentTimeMillis() - startTime;
+		runningTime /= 1000;
+		System.out.println ("running time " + runningTime);
 		test.drawResult();
 		test.printResult();
-		*/
-		test.testRotateToFit();
+		
+		//test.testRotateToFit();
 	}
 	
 	public void setResources (ArrayList<Block> blocks, int[] quants, boolean[] infFlags)
@@ -86,6 +93,16 @@ public class DynamicAlgoTest
 	{
 		mAlgo = new DynamicAlgo();
 		mAlgo.init (mCont, mRes);
+		
+		JFrame showBar = new JFrame ("current progress");
+		showBar.setSize (300, 75);
+		showBar.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
+		showBar.setLayout (new BorderLayout (25, 10));
+		JProgressBar progressIndicator = new JProgressBar (0, 100);
+		mAlgo.getProgress().setProgressBar (progressIndicator);
+		showBar.add (progressIndicator, BorderLayout.CENTER);
+		showBar.setVisible(true);
+		
 		mAlgo.run();
 	}
 	
@@ -129,12 +146,12 @@ public class DynamicAlgoTest
 	
 	public void printSubsets()
 	{
-		DynamicAlgo algo = new DynamicAlgo();
+		/*DynamicAlgo algo = new DynamicAlgo();
 		algo.init (mCont, mRes);
 		algo.generatePowerSet();
 		System.out.println ("subsets generated " + algo.mSubsets.size());
 		for (DynamicAlgo.Subset subs : algo.mSubsets)
-			System.out.println (subs);
+			System.out.println (subs);*/
 	}
 	
 	public void printResult()
@@ -156,6 +173,7 @@ public class DynamicAlgoTest
 		PieceRenderPanel.RotationListener rotListen = render.new RotationListener();
 		PieceRenderPanel.ResizeListener resizeListen = render.new ResizeListener();
 		PieceRenderPanel.ZoomListener zoomListen = render.new ZoomListener();
+		zoomListen.setSensitivity (0.1);
 		
 		frame.addMouseListener (rotListen);
 		frame.addMouseMotionListener(rotListen);

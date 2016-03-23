@@ -115,7 +115,7 @@ public class CubeDissectionTest
 	{
 		
 		mShape.rotate (BasicShape.rotationMatrix (90.0, 0, BasicShape.RotationDir.ONWARD));
-		mCont.placeBlock (new Block (mShape, 3), new Glue (new IntegerMatrix (3, 1)));
+		mCont.placeBlock (new Block (mShape, 3, ""), new Glue (new IntegerMatrix (3, 1)));
 		
 		System.out.println ("free cuboids");
 		for (Cuboid c : mCont.getFreeCuboids())

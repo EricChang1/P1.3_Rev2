@@ -168,7 +168,7 @@ public class PieceRenderPanel extends JPanel
 				double distY = currentLocation.getY() - mPrevMouseLocation.getY();
 				mCamera.moveX2 (getSensitivity() * distY);
 				mCamera.moveX3 (-getSensitivity() * distX);
-				updateDebugOutput();
+				//updateDebugOutput();
 			}
 			mPrevMouseLocation = currentLocation;
 			setAxisRotation();
@@ -184,9 +184,10 @@ public class PieceRenderPanel extends JPanel
 				mCamera.moveX3 (-mCamera.getAngleX3());
 				setAxisRotation();
 				repaint();
-				updateDebugOutput();
+				mPrevMouseLocation = null;
+				//updateDebugOutput();
 			}
-			mPrevMouseLocation = e.getLocationOnScreen();
+			
 		}
 
 		@Override
@@ -205,7 +206,10 @@ public class PieceRenderPanel extends JPanel
 		public void mouseEntered(MouseEvent e) {}
 		
 		@Override
-		public void mousePressed(MouseEvent e) {}
+		public void mousePressed(MouseEvent e) 
+		{
+			mPrevMouseLocation = e.getLocationOnScreen();
+		}
 		
 		@Override
 		public void mouseMoved(MouseEvent e) {}
@@ -220,7 +224,12 @@ public class PieceRenderPanel extends JPanel
 	 */
 	public class ResizeListener extends ComponentAdapter
 	{
-
+		
+		public ResizeListener()
+		{
+			mFirst = false;
+		}
+		
 		@Override
 		public void componentResized(ComponentEvent e) 
 		{
@@ -232,7 +241,18 @@ public class PieceRenderPanel extends JPanel
 			adjustPixelMapping(imgArea.getWidth(), imgArea.getHeight());
 			adjustCentering (imgArea);
 			repaint();
-		}	
+		}
+		
+		public void componentShown (ComponentEvent e)
+		{
+			if (mFirst)
+			{
+				mFirst = false;
+				init();
+			}
+		}
+		
+		private boolean mFirst;
 	}
 	
 	/**
@@ -243,7 +263,7 @@ public class PieceRenderPanel extends JPanel
 	{	
 		//construct gui
 		setLayout(new GridBagLayout());
-		constructDebugComponents();
+		//constructDebugComponents();
 		setDebugOutput (true);
 		//set viewing point position
 		IntegerMatrix centerContPos = new IntegerMatrix (3, 1);
@@ -285,6 +305,7 @@ public class PieceRenderPanel extends JPanel
 	
 	/**
 	 * method to be called before a valid drawing can be made
+	 * happens automatically if resize listener is added
 	 * Precondition: size of the component is set
 	 * Postcondition: drawing is adjusted for this size
 	 */
@@ -296,6 +317,11 @@ public class PieceRenderPanel extends JPanel
 		Rectangle2D imgRect = getImageArea(projected, 1);
 		adjustPixelMapping(imgRect.getWidth(), imgRect.getHeight());
 		adjustCentering(imgRect);
+	}
+	
+	public void setVisible (boolean flag)
+	{
+		init();
 	}
 	
 	public void paintComponent (Graphics g)

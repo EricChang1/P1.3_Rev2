@@ -1,12 +1,16 @@
 package geometry;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import models.Glue;
 import models.Matrix;
 import models.Matrix.*;
 
-
+/**
+ * abstract class for geometric model classes
+ * @author martin
+ */
 public abstract class GeoShape 
 {
 	@SuppressWarnings("serial")
@@ -20,7 +24,7 @@ public abstract class GeoShape
 	/**
 	 * scales down v to length 1
 	 * @param v vector given
-	 * @return v scaled to length 1
+	 * @return a clone of v scaled to length 1
 	 */
 	public static DoubleMatrix normVector (DoubleMatrix v)
 	{
@@ -100,6 +104,50 @@ public abstract class GeoShape
 		return eq;
 	}
 	
+	/**
+	 * @param vertices set of vertices
+	 * @return bottom left most in vertices vertex
+	 */
+	public Glue getMin (Collection<Glue> vertices)
+	{
+		Glue min = null;
+		int minSum = Integer.MAX_VALUE;
+		for (Glue v : vertices)
+		{
+			int sum = 0;
+			for (int cDim = 0; cDim < getDimension(); ++cDim)
+				sum += v.getPosition (cDim);
+			if (sum < minSum)
+			{
+				min = v;
+				minSum = sum;
+			}
+		}
+		return min;
+	}
+	
+	/**
+	 * @param vertices set of vertices
+	 * @return top right most in vertices vertex
+	 */
+	public Glue getMax (Collection<Glue> vertices)
+	{
+		Glue max = null;
+		int maxSum = Integer.MIN_VALUE;
+		for (Glue v : vertices)
+		{
+			int sum = 0;
+			for (int cDim = 0; cDim < getDimension(); ++cDim)
+				sum += v.getPosition (cDim);
+			if (sum > maxSum)
+			{
+				max = v;
+				maxSum = sum;
+			}
+		}
+		return max;
+	}
+	
 	public String toString()
 	{
 		String ret = new String ("abstract geometric shape defined by ");
@@ -127,6 +175,16 @@ public abstract class GeoShape
 	 * @return dimension of the subspace the shape is in
 	 */
 	public int getDimension() { return mP1.getDimension(); }
+	
+	/**
+	 * @return true if first point is included
+	 */
+	public boolean isFirstIncluded() { return mInP1; }
+	
+	/**
+	 * @return true if second point is included
+	 */
+	public boolean isSecondIncluded() { return mInP2; }
 	
 	/**
 	 * @param g2 shape to compare orientation with

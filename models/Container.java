@@ -1,4 +1,5 @@
 package models;
+import generic.Set;
 import geometry.*;
 import geometry.IntersectionSolver.Result;
 
@@ -123,14 +124,14 @@ public class Container extends Block
 	 */
 	public Container (int d, int w, int h)
 	{
-		super(constructInitShape (d, w, h), 0);
+		super(constructInitShape (d, w, h), 0, "container");
 		mPlacedBlocks = new ArrayList <Block>();
 	}
 	
 	
 	public Container (Block b)
 	{
-		super (b, 0);
+		super (b, 0, "container");
 		mPlacedBlocks = new ArrayList <Block>();
 	}
 	
@@ -175,8 +176,28 @@ public class Container extends Block
 	 */
 	public ArrayList <Cuboid> getFreeCuboids()
 	{
-		ArrayList <Cuboid> free = new ArrayList<>();
+		BasicShape dissected = new BasicShape (this);
+		dissected.addMissingRectanglePoints();
 		
+		Set<OrderedCuboid> orderedCuboids = new Set<> ();
+		for (Cuboid c : dissected.getCuboids())
+			orderedCuboids.add (new OrderedCuboid (c.getMin (c.getVertices()), c.getMax(c.getVertices())));
+		
+		Set<OrderedCuboid> orderedBlockCuboids = new Set<>();
+		for (int cBlock = 0; cBlock < getAmountOfBlocks(); ++cBlock)
+		{
+			Block completedBlock = getBlock (cBlock).clone();
+			completedBlock.addMissingRectanglePoints();
+			for (Cuboid c : completedBlock.getCuboids())
+				orderedBlockCuboids.add (new OrderedCuboid (c.getMin (c.getVertices()), c.getMax(c.getVertices())));
+		}
+		
+		ArrayList <Cuboid> free = new ArrayList<>();
+		for (OrderedCuboid ordered : orderedCuboids.getDifference (orderedBlockCuboids).getOrderedElements())
+			free.add (ordered);
+		
+		
+		/* legacy
 		Container cloneCont = this.clone();
 		cloneCont.addMissingRectanglePoints();
 		
@@ -193,20 +214,22 @@ public class Container extends Block
 					free.add (c);
 			}
 		}
-		
+		*/
 		
 		return free;
 	}
 	
 	/**
-	 * @return deep copy of this
+	 * @return deep copy of this by placing the cloned blocks
+	 * at the same positions in the cloned container
 	 */
 	public Container clone()
 	{
 		Container clone = new Container (getDimensions(0), getDimensions(1), getDimensions(2));
-		Glue origin = new Glue (new IntegerMatrix (getGlue().getDimension(), 1));
+		clone.glue (this.getGlue());
+		
 		for (Block b : mPlacedBlocks)
-			clone.placeBlock (b, origin);
+			clone.placeBlock (b, b.getGlue());
 		
 		return clone;
 	}
@@ -327,15 +350,23 @@ public class Container extends Block
 	**/
 	public boolean checkPositionOverlap (Block block, Glue pos)
 	{	
-		//check whether lines inside intersect with sides of block
-		Glue prevPos = block.getGlue();
-		block.glue(pos);
+		for (int cDim = 0; cDim < getGlue().getDimension(); ++cDim)
+		{
+			if (block.getGlue().getPosition (cDim) < this.getGlue().getPosition (cDim))
+				return false;
+			if (block.getGlue().getPosition (cDim) > this.getMaxDimension().getPosition (cDim))
+				return false;
+			if (block.getMaxDimension().getPosition (cDim) > this.getMaxDimension().getPosition (cDim))
+				return false;
+		}
 		
+		//glue and dissect block to place
 		BasicShape completed = new BasicShape (block);
+		completed.glue (block.getGlue());
 		completed.addMissingRectanglePoints();
 		//@TODO optimize
-		//ArrayList<Rectangle> blockSides = completed.getRectangles();
-		
+		//for every placed block: check whether block intersects with place or
+		//whether place intersects block
 		for (Block bPlaced : mPlacedBlocks)
 		{
 			BasicShape placedCompleted = new BasicShape (bPlaced);
@@ -347,7 +378,6 @@ public class Container extends Block
 			if (bPlaced.isWithin (block) || block.isWithin (bPlaced))
 				return false;
 		}
-		block.glue (prevPos);
 		return true;
 	}
 	
