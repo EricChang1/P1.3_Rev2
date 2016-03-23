@@ -50,26 +50,28 @@ public class MainMenu extends JFrame
 		gbc.gridwidth = 1;
 		gbc.gridy = 0;
 		gbc.gridx = 0;
-		gbc.fill = GridBagConstraints.VERTICAL;
-		gbc.weightx = 0.5;
-		gbc.weighty = 0.1;
+		gbc.fill = GridBagConstraints.NONE;
 		gbc.insets = new Insets (horPad, verPad, horPad, verPad);
 		
 		JLabel sizeLabel = new JLabel ("container dimensions");
 		add (sizeLabel, gbc);
 		
+		Dimension spinnerSize = new Dimension(45, 30);
 		JSpinner spinDep, spinWid, spinHig;
 		spinDep = new JSpinner();
+		spinDep.setPreferredSize (spinnerSize);
 		spinDep.setToolTipText ("depth of container");
 		++gbc.gridy;
 		add (spinDep, gbc);
 		spinDep.addChangeListener (new DimensionInputListener (AlgorithmSetup.DimName.DEPTH));
 		spinWid = new JSpinner();
+		spinWid.setPreferredSize (spinnerSize);
 		spinWid.setToolTipText ("width of container");
 		++gbc.gridx;
 		add (spinWid, gbc);
 		spinWid.addChangeListener (new DimensionInputListener (AlgorithmSetup.DimName.WIDTH));
 		spinHig = new JSpinner();
+		spinHig.setPreferredSize (spinnerSize);
 		spinHig.setToolTipText ("height of container");
 		++gbc.gridx;
 		add (spinHig, gbc);
@@ -103,6 +105,8 @@ public class MainMenu extends JFrame
 		JButton startButton = new JButton ("go!");
 		add (startButton, gbc);
 		startButton.addActionListener (new StartListener());
+		
+		pack();
 	}
 	
 	
@@ -134,12 +138,19 @@ public class MainMenu extends JFrame
 	
 	public void loadAlgorithm (AlgorithmType loadType)
 	{
+		AlgorithmConfigurator algoConfig = null;
+		
 		switch (loadType)
 		{
-		case DYNAMIC: mExecute = new DynamicAlgo();
+		case DYNAMIC: algoConfig = new DynamicAlgorithmConfigurator();
 		break;
 		default: showErrorDialog ("make another choise", "I cannot load this algorithm");
 		}
+		
+		algoConfig.setModalityType (Dialog.ModalityType.APPLICATION_MODAL);
+		algoConfig.setDefaultCloseOperation (JDialog.DISPOSE_ON_CLOSE);
+		algoConfig.setSize (250, 250);
+		algoConfig.setVisible(true);
 	}
 	
 	
@@ -185,6 +196,7 @@ public class MainMenu extends JFrame
 		public void actionPerformed (ActionEvent e)
 		{
 			chooseFile();
+			pack();
 		}
 	}
 	
@@ -195,6 +207,23 @@ public class MainMenu extends JFrame
 		{
 			loadAlgorithm ((AlgorithmType) mAlgoChooser.getSelectedItem());
 		}
+	}
+	
+	private class AlgoConfigClose extends ComponentAdapter
+	{
+		public AlgoConfigClose (AlgorithmConfigurator config)
+		{
+			mConfig = config;
+		}
+		
+		@Override
+		public void componentHidden(ComponentEvent e) 
+		{
+			super.componentHidden(e);
+			mExecute = mConfig.getAlgorithm();
+		}
+		
+		private AlgorithmConfigurator mConfig;
 	}
 	
 	private class StartListener implements ActionListener
