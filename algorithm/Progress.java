@@ -1,6 +1,9 @@
 package algorithm;
 
 import java.util.ArrayList;
+import java.util.Stack;
+
+import javax.swing.JProgressBar;
 
 /**
  * class storing progress as double in [0, 1]
@@ -8,19 +11,30 @@ import java.util.ArrayList;
  */
 public class Progress 
 {
+	/**
+	 * custom exception of progress class
+	 * @author martin
+	 */
+	public static class ProgressException extends IllegalStateException
+	{
+		public ProgressException() {}
+		
+		public ProgressException (String message) { super (message); }
+	}
 	
 	/**
 	 * class encapsulating amount of increase
 	 * can be split into even parts
+	 * if a split part was not used, its value is added to the progress automatically,
+	 * when unite is called, in order to reduce the amount of condition checking by the caller
 	 * @author martin
 	 */
-	public static class Increase implements Cloneable
+	public class Increase implements Cloneable
 	{
-		public Increase (double init)
-		{
-			mAmount = init;
-		}
-		
+		/**
+		 * returns copy of this increase
+		 * having an empty parts stack
+		 */
 		public Increase clone() { return new Increase (getAmount()); }
 		
 		/**
@@ -33,18 +47,47 @@ public class Progress
 		 */
 		public void split (int parts)
 		{
-			mAmount /= mAmount;
+			if (!mCompletedStack.isEmpty())
+				increasePerformed();
+			mAmount /= parts;
+			mPartStack.add (parts);
+			mCompletedStack.push (parts);
 		}
 		
 		/**
-		 * @param ratio ratio of current amount to store as new amount
+		 * merge split branch
 		 */
-		public void split (double ratio)
+		public void unite()
 		{
-			assert (ratio > 0 && ratio <= 1);
-			mAmount *= ratio;
+			if (mPartStack.isEmpty())
+				throw new IllegalStateException ("no previous split exists");
+			
+			int opsPending = mCompletedStack.peek();
+			for (int cPending = 0; cPending < opsPending; ++cPending)	
+				increase (this);
+			mCompletedStack.pop();
+			
+			int top = mPartStack.pop();
+			mAmount *= top;
 		}
 		
+		private Increase (double init)
+		{
+			mAmount = init;
+			mPartStack = new Stack<>();
+			mCompletedStack = new Stack<>();
+		}
+		
+		private void increasePerformed()
+		{
+			int top = mCompletedStack.pop();
+			if (top <= 0)
+				throw new ProgressException ("number of parts exhausted");
+			mCompletedStack.push (--top);
+		}
+		
+		private Stack<Integer> mPartStack;
+		private Stack<Integer> mCompletedStack;
 		private double mAmount;
 	}
 	
@@ -78,16 +121,39 @@ public class Progress
 	}
 	
 	/**
+	 * @return progress in [0; 1]
+	 */
+	public double getProgress() { return mProg; }
+	
+	/**
 	 * @param i increase to add to progress
 	 */
 	public void increase (Increase i)
 	{
-		if (!epsilonEquals (1.0, mProg + i.getAmount()) && mProg + i.getAmount() > 1.0)
-			throw new IllegalStateException ("progress above 1.0 is not permissible");
+		/*if (!epsilonEquals (1.0, mProg + i.getAmount()) && mProg + i.getAmount() > 1.0)
+			throw new IllegalStateException ("progress above 1.0 is not permissible");*/
+		if (i.getAmount() == Double.NaN)
+			throw new IllegalArgumentException ("NaN increase not permissible");
+		
+		i.increasePerformed();
 		mProg += i.getAmount();
+		
+		double newBarVal = (mProgBar.getMaximum() - mProgBar.getMinimum()) * mProg;
+		mProgBar.setValue ((int) newBarVal);
+	}
+	
+	/**
+	 * @param bar progress bar to set
+	 * sets progress bar to be updated
+	 */
+	public void setProgressBar (JProgressBar bar)
+	{
+		mProgBar = bar;
 	}
 	
 	//enable for multi threading private ArrayList<Increase> mIncreaseOps;
 	private double mProg;
 	private boolean mLock;
+	
+	private JProgressBar mProgBar;
 }

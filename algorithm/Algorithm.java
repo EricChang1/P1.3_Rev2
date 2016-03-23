@@ -76,8 +76,6 @@ public abstract class Algorithm implements Runnable
 	 */
 	public Progress getProgress()
 	{
-		if (!isAlgoStarted())
-			throw new AlgorithmNotStartedException();
 		if (isAlgoDone())
 			throw new AlgorithmTerminatedException();
 		return mProgress;
@@ -161,6 +159,7 @@ public abstract class Algorithm implements Runnable
 	{
 		if (!mAlgoStarted)
 			throw new AlgorithmNotStartedException ("tried to access internal pieces before algorithm was started");
+		getProgress().increase (getProgress().getRemainingIncrease());
 		mAlgoDone = true;
 	}
 	

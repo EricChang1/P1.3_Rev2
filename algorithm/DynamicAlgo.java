@@ -271,14 +271,15 @@ public class DynamicAlgo extends Algorithm
 		 * @author martin
 		 */
 		
-		//SOMEWHERE HERE THERE'S A BUG!!!
-		
 		class Order
 		{
 			public Order (LinkedList <Cuboid> cubes, Subset s)
 			{
 				mCubes = cubes;
 				mConts = new ArrayList <>();
+				
+				if (mCubes.size() > 0)
+					mCurrentIncrease.split (mCubes.size());
 				for (Cuboid free : mCubes)
 				{
 					ArrayList <Integer> cubeDims = free.getDimensions();
@@ -303,6 +304,8 @@ public class DynamicAlgo extends Algorithm
 					//get remaining subset
 					s = e.getUnusedResources (s);
 				}
+				if (mCubes.size() > 0)
+					mCurrentIncrease.unite();
 			}
 			
 			public ArrayList<Container> getOrderedContainers()
@@ -324,6 +327,8 @@ public class DynamicAlgo extends Algorithm
 		memo.ensureCapacity (freeCuboids.size());
 		//do dynamic algo for cuboids and elements of subset:
 		//iterate through cuboids
+		
+		mCurrentIncrease.split (2 * freeCuboids.size());
 		for (int cFree = 0; cFree < freeCuboids.size(); ++cFree)
 		{
 			//set best to last
@@ -337,6 +342,8 @@ public class DynamicAlgo extends Algorithm
 			
 			//current cuboid needs to be added to a sequence of cuboids. Position? => determine
 			//iterate through [0, n] such that current value is index to place current cuboid
+			if (cFree > 0)
+				mCurrentIncrease.split (cFree);
 			for (int cInsert = 0; cInsert < cFree; ++cInsert)
 			{
 				//decision: keep current order with element inserted
@@ -350,7 +357,10 @@ public class DynamicAlgo extends Algorithm
 				if (newOrder.getValue() > memo.get (cFree).getValue())
 					memo.set (cFree, newOrder);
 			}
+			if (cFree > 0)
+				mCurrentIncrease.unite();
 		}
+		mCurrentIncrease.unite();
 		
 		return memo.get (memo.size() - 1).getOrderedContainers();
 	}
@@ -581,6 +591,8 @@ public class DynamicAlgo extends Algorithm
 		ArrayList<Integer> tDims = LookupTable.sortIndices (dep, wid, hig);
 		mLookupTable = new LookupTable (tDims.get(0) + 1, tDims.get(1) + 1, tDims.get(2) + 1, mSubsets.getSize());
 		
+		mCurrentIncrease = getProgress().getRemainingIncrease();
+		
 		explore (getContainer(), mLargestSubset.getSet());
 		
 		setSolution (mLookupTable.getContainer (dep, wid, hig, mLargestSubset.getIndex()));
@@ -602,6 +614,9 @@ public class DynamicAlgo extends Algorithm
 		ArrayList<Integer> sortContDims;
 		sortContDims = LookupTable.sortIndices (c.getDimensions (0), c.getDimensions (1), c.getDimensions (2));
 		
+		if (s.getSize() > 0)
+			mCurrentIncrease.split (s.getResources().size());
+		
 		for (Resource piece : s.getResources())
 		{
 			Block bRef = piece.getBlock();
@@ -609,6 +624,7 @@ public class DynamicAlgo extends Algorithm
 			for (BasicShape rotation : new ShapeRotator (bRef).getRotations())
 				rotatedBlocks.add (new Block (rotation, bRef.getValue()));
 			
+			mCurrentIncrease.split (rotatedBlocks.size());
 			for (Block rotatedPiece : rotatedBlocks)
 			{
 				ArrayList<Integer> sortPieceDims;
@@ -625,7 +641,7 @@ public class DynamicAlgo extends Algorithm
 					if (use.getInventory() <= 0)
 						sClone.remove (use);
 					
-					//construct new empty constainer of sorted dimension's size and place
+					//construct new empty container of sorted dimension's size and place
 					Container cloneC = new Container (sortContDims.get (0), sortContDims.get (1), sortContDims.get (2));
 					cloneC.placeBlock (piece.getBlock().clone(), new Glue (new IntegerMatrix (MAXDIM, 1)));
 					
@@ -633,17 +649,29 @@ public class DynamicAlgo extends Algorithm
 					ArrayList<Cuboid> freeRemain = cloneC.getFreeCuboids();
 					if (!freeRemain.isEmpty())	
 					{
+						mCurrentIncrease.split (freeRemain.size() + 1);
+						
 						ArrayList <Container> filled = fillFreeCuboids (freeRemain, sClone);
+						
 						if (!filled.isEmpty())
 							putPiecesTogether (cloneC, filled);
+						
+						getProgress().increase (mCurrentIncrease);
+						mCurrentIncrease.unite();
 					}
+					
 					//check for new max
 					Entry current = mLookupTable.new Entry (cloneC);
 					if (best == null || current.getValue() > best.getValue())
 						best = current;
 				}
 			}
+			mCurrentIncrease.unite();
 		}
+		
+		if (s.getSize() > 0)
+			mCurrentIncrease.unite();
+		
 		//set max value to current cell
 		mLookupTable.set (best, c.getDimensions (0), c.getDimensions (1), c.getDimensions (2), iSub);
 	}
@@ -701,4 +729,6 @@ public class DynamicAlgo extends Algorithm
 	private Set<SubsetAtIndex> mSubsets;
 	private SubsetAtIndex mLargestSubset;
 	private LookupTable mLookupTable;
+	
+	private Progress.Increase mCurrentIncrease;
 }
