@@ -75,47 +75,7 @@ public class Cuboid extends GeoShape
 		return vertices;
 	}
 	
-	/**
-	 * @return bottom left vertex
-	 */
-	public Glue getMin()
-	{
-		Glue min = null;
-		int minSum = Integer.MAX_VALUE;
-		for (Glue v : getVertices())
-		{
-			int sum = 0;
-			for (int cDim = 0; cDim < getDimension(); ++cDim)
-				sum += v.getPosition (cDim);
-			if (sum < minSum)
-			{
-				min = v;
-				minSum = sum;
-			}
-		}
-		return min;
-	}
 	
-	/**
-	 * @return top right vertex
-	 */
-	public Glue getMax()
-	{
-		Glue max = null;
-		int maxSum = Integer.MIN_VALUE;
-		for (Glue v : getVertices())
-		{
-			int sum = 0;
-			for (int cDim = 0; cDim < getDimension(); ++cDim)
-				sum += v.getPosition (cDim);
-			if (sum > maxSum)
-			{
-				max = v;
-				maxSum = sum;
-			}
-		}
-		return max;
-	}
 
 	@Override
 	public DoubleMatrix loadEquationMatrix() 
@@ -128,11 +88,53 @@ public class Cuboid extends GeoShape
 		return eq;
 	}
 	
+	/**
+	 * constructs a container using the dimensions of this cuboid
+	 */
 	public Container toContainer()
 	{
 		ArrayList <Integer> dims = getDimensions();
 		return new Container (dims.get(0), dims.get(1), dims.get(2));
 	}
+	
+	/**
+	 * @param fuse cuboid to fuse this with
+	 * @return a new cuboid spanned by combined
+	 * min and max vertices of vertices of this cuboid
+	 * and vertices of fuse
+	 * Precondition: this and fuse should be fuseable
+	 */
+	public Cuboid fuse (Cuboid fuse)
+	{
+		ArrayList<Glue> combinedVerts = new ArrayList<>();
+		combinedVerts.addAll (this.getVertices());
+		combinedVerts.addAll (fuse.getVertices());
+		return new Cuboid (getMin (combinedVerts), getMax (combinedVerts));
+	}
+	
+	/**
+	 * @param fuse cuboid to test for possible fusion
+	 * @return true if this and fuse can be added together to form a new cuboid,
+	 * true only if there is one side both cuboids have in common
+	 */
+	public boolean areFuseable (Cuboid fuse)
+	{
+		int cntSameVertices = 0;
+		for (Glue tVertex : this.getVertices())
+		{
+			for (Glue fVertex : fuse.getVertices())
+			{
+				if (tVertex.equals (fVertex))
+				{
+					++cntSameVertices;
+					if (cntSameVertices == 4)
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	
 	private DoubleMatrix mV1, mV2, mV3;
 }

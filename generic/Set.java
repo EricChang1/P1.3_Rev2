@@ -3,7 +3,8 @@ package generic;
 import java.util.ArrayList;
 
 /**
- * 
+ * custom set implementation
+ * not iterable yet
  * @author martin
  * @param <T>
  */

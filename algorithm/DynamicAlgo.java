@@ -9,6 +9,7 @@ import gui.PieceRenderPanel.ZoomListener;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 import javax.swing.JFrame;
 
@@ -356,6 +357,43 @@ public class DynamicAlgo extends Algorithm
 	}
 	
 	/**
+	 * @param raw list of raw cuboids as obtained from basic shape
+	 * @return new list of cuboids fusing as many cuboids as possible (greedy, first)
+	 */
+	public ArrayList<Cuboid> fuseAdjacentCuboids (ArrayList<Cuboid> raw)
+	{
+		LinkedList<Cuboid> working = new LinkedList<> (raw);
+		boolean change = true;
+		//iterate over cuboids while there is a change
+		while (change)
+		{
+			change = false;
+
+			ListIterator<Cuboid> iFuse1 = working.listIterator();
+			while (!change && iFuse1.nextIndex() < working.size())
+			{
+				Cuboid c1 = iFuse1.next();
+				int cFuse2 = iFuse1.nextIndex();
+				while (!change && cFuse2 < working.size())
+				{
+					Cuboid c2 = working.get (cFuse2);
+					if (c1.areFuseable (c2))
+					{
+						working.set (cFuse2, c1.fuse (c2));
+						change = true;
+						iFuse1.remove();
+						iFuse1 = null;
+					}
+					++cFuse2;
+				}
+				
+			}
+		}
+		
+		return new ArrayList<> (working);
+	}
+	
+	/**
 	 * @param stump partially filled container
 	 * @param filledParts container objects of the exact size 
 	 * and in the exact location of stump's free cuboids
@@ -611,14 +649,13 @@ public class DynamicAlgo extends Algorithm
 			
 			for (Block rotatedPiece : rotatedBlocks)
 			{
-				ArrayList<Integer> sortPieceDims;
-				sortPieceDims = LookupTable.sortIndices (rotatedPiece.getDimensions (0), rotatedPiece.getDimensions (1), rotatedPiece.getDimensions (2));
 				//if piece fits
-				if (sortContDims.get (0) >= sortPieceDims.get (0) && 
-					sortContDims.get (1) >= sortPieceDims.get (1) &&
-					sortContDims.get (2) >= sortPieceDims.get (2))
+				if (sortContDims.get (0) >= rotatedPiece.getDimensions(0) && 
+					sortContDims.get (1) >= rotatedPiece.getDimensions(1) &&
+					sortContDims.get (2) >= rotatedPiece.getDimensions(2))
 				{
 					//clone and deduct subset
+					//maybe only clone?
 					Subset sClone = s.deepClone();
 					Resource use = sClone.getElement (piece);
 					use.deduct();
@@ -627,12 +664,14 @@ public class DynamicAlgo extends Algorithm
 					
 					//construct new empty constainer of sorted dimension's size and place
 					Container cloneC = new Container (sortContDims.get (0), sortContDims.get (1), sortContDims.get (2));
-					cloneC.placeBlock (piece.getBlock().clone(), new Glue (new IntegerMatrix (MAXDIM, 1)));
+					cloneC.placeBlock (rotatedPiece, new Glue (new IntegerMatrix (MAXDIM, 1)));
 					
 					//cut remainder, fill remainder, assemble remainder
 					ArrayList<Cuboid> freeRemain = cloneC.getFreeCuboids();
 					if (!freeRemain.isEmpty())	
 					{
+						//freeRemain = fuseAdjacentCuboids (freeRemain);
+						
 						ArrayList <Container> filled = fillFreeCuboids (freeRemain, sClone);
 						if (!filled.isEmpty())
 							putPiecesTogether (cloneC, filled);
