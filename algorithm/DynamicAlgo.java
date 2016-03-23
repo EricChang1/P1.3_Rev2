@@ -670,7 +670,7 @@ public class DynamicAlgo extends Algorithm
 					ArrayList<Cuboid> freeRemain = cloneC.getFreeCuboids();
 					if (!freeRemain.isEmpty())	
 					{
-						freeRemain = fuseAdjacentCuboids (freeRemain);
+						//freeRemain = fuseAdjacentCuboids (freeRemain);
 						
 						ArrayList <Container> filled = fillFreeCuboids (freeRemain, sClone);
 						if (!filled.isEmpty())
