@@ -51,8 +51,8 @@ public class MainMenu extends JFrame
 		gbc.gridy = 0;
 		gbc.gridx = 0;
 		gbc.fill = GridBagConstraints.VERTICAL;
-		gbc.weightx = 0.1;
-		gbc.weighty = 0.01;
+		gbc.weightx = 0.5;
+		gbc.weighty = 0.1;
 		gbc.insets = new Insets (horPad, verPad, horPad, verPad);
 		
 		JLabel sizeLabel = new JLabel ("container dimensions");
@@ -70,7 +70,6 @@ public class MainMenu extends JFrame
 		add (spinWid, gbc);
 		spinWid.addChangeListener (new DimensionInputListener (AlgorithmSetup.DimName.WIDTH));
 		spinHig = new JSpinner();
-		
 		spinHig.setToolTipText ("height of container");
 		++gbc.gridx;
 		add (spinHig, gbc);

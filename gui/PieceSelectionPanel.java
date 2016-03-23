@@ -20,14 +20,14 @@ public class PieceSelectionPanel extends JScrollPane
 	public static JPanel getDefaultContentPanel()
 	{
 		JPanel contentPanel = new JPanel();
-		contentPanel.setLayout (new GridBagLayout());
+		//contentPanel.setLayout (new GridBagLayout());
 		return contentPanel;
 	}
 	
 	
 	public PieceSelectionPanel()
 	{
-		super ();
+		super (new JPanel());
 		
 		mSetups = new Set<>();
 	}
@@ -41,35 +41,42 @@ public class PieceSelectionPanel extends JScrollPane
 	 */
 	public void constructComponents (Collection<ResourceSetup> setups)
 	{
-		removeAll();
+		JPanel contents = new JPanel();
+		contents.setLayout (new GridBagLayout());
 		
 		GridBagConstraints gbcBase = new GridBagConstraints();
 		gbcBase.anchor = GridBagConstraints.CENTER;
 		gbcBase.weightx = 1.0;
 		
 		GridBagConstraints gbcLabel = (GridBagConstraints) gbcBase.clone();
-		gbcLabel.weighty = 0.0;
+		gbcLabel.weighty = 0.01;
 		gbcLabel.gridx = 0;
 		gbcLabel.gridy = 0;
 		
-		add (new JLabel ("quantity"), gbcLabel);
+		/*
+		contents.add (new JLabel ("quantity"), gbcLabel);
 		gbcLabel.gridx = 1;
-		add (new JLabel ("infinity"), gbcLabel);
+		contents.add (new JLabel ("infinity"), gbcLabel);*/
 		
 		GridBagConstraints gbcEdit = (GridBagConstraints) gbcBase.clone();
 		gbcEdit.gridwidth = GridBagConstraints.REMAINDER;
 		gbcEdit.gridx = 0;
 		gbcEdit.gridy = 1;
+		gbcEdit.fill = GridBagConstraints.BOTH;
+		gbcEdit.weightx = 1.0;
+		gbcEdit.weighty = 1.0;
 		
+		mSetups = new Set<>();
 		for (ResourceSetup setup : setups)
 		{
 			mSetups.add (setup);
-			add (new PieceEditPanel (setup), gbcEdit);
+			PieceEditPanel edit = new PieceEditPanel (setup);
+			edit.constructComponents();
+			contents.add (edit, gbcEdit);
 			++gbcEdit.gridy;
 		}
 		
-		revalidate();
-		repaint();
+		setViewportView (contents);
 	}
 	
 	private Set<ResourceSetup> mSetups;

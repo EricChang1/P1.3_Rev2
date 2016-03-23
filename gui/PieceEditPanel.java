@@ -44,18 +44,20 @@ public class PieceEditPanel extends JPanel
 		
 		gbcNumber = (GridBagConstraints) gbcBase.clone();
 		gbcNumber.gridx = 0;
-		gbcNumber.weightx = 0.25;
+		gbcNumber.weightx = 0.1;
 		gbcNumber.weighty = 0.25;
 		
 		gbcBox = (GridBagConstraints) gbcBase.clone();
 		gbcBox.gridx = 1;
-		gbcBox.weightx = 0.25;
+		gbcBox.weightx = 0.1;
 		gbcBox.weighty = 0.25;
 		
-		gbcPiece = new GridBagConstraints();
+		gbcPiece = (GridBagConstraints) gbcBase.clone();
 		gbcPiece.gridx = 2;
 		gbcPiece.gridwidth = 2;
-		gbcPiece.weightx = 0.5;
+		gbcPiece.weightx = 0.75;
+		gbcPiece.weighty = 1.0;
+		gbcPiece.insets = new Insets (10, 10, 10, 10);
 		
 		mCapacitySpinner = new JSpinner();
 		mCapacitySpinner.addChangeListener (new CapacityListen());
@@ -75,6 +77,8 @@ public class PieceEditPanel extends JPanel
 		add (mCapacitySpinner, gbcNumber);
 		add (mCheckInfinity, gbcBox);
 		add (mRenderPiece, gbcPiece);
+		
+		mRenderPiece.setVisible(true);
 	}
 	
 	
