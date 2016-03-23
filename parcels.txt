@@ -1,3 +1,4 @@
+PIECES
 contains parcels
 parcel A
 new
@@ -61,3 +62,4 @@ connect
 value
 5
 end
+END_PIECES
