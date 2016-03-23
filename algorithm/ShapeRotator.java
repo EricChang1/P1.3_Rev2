@@ -55,7 +55,7 @@ public class ShapeRotator
 			BasicShape yRotated = new BasicShape (xRotated);
 			do
 			{
-				rotations.add (yRotated);
+				rotations.add (new BasicShape (yRotated));
 				
 				yRotated.rotate (yRotation);
 				yRotated.glue (mShape.getGlue());
