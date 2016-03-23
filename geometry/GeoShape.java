@@ -1,12 +1,16 @@
 package geometry;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import models.Glue;
 import models.Matrix;
 import models.Matrix.*;
 
-
+/**
+ * abstract class for geometric model classes
+ * @author martin
+ */
 public abstract class GeoShape 
 {
 	@SuppressWarnings("serial")
@@ -98,6 +102,50 @@ public abstract class GeoShape
 			eq.setCell(cDim, eq.getColumns() - 1, fixCoord);
 		}
 		return eq;
+	}
+	
+	/**
+	 * @param vertices set of vertices
+	 * @return bottom left most in vertices vertex
+	 */
+	public Glue getMin (Collection<Glue> vertices)
+	{
+		Glue min = null;
+		int minSum = Integer.MAX_VALUE;
+		for (Glue v : vertices)
+		{
+			int sum = 0;
+			for (int cDim = 0; cDim < getDimension(); ++cDim)
+				sum += v.getPosition (cDim);
+			if (sum < minSum)
+			{
+				min = v;
+				minSum = sum;
+			}
+		}
+		return min;
+	}
+	
+	/**
+	 * @param vertices set of vertices
+	 * @return top right most in vertices vertex
+	 */
+	public Glue getMax (Collection<Glue> vertices)
+	{
+		Glue max = null;
+		int maxSum = Integer.MIN_VALUE;
+		for (Glue v : vertices)
+		{
+			int sum = 0;
+			for (int cDim = 0; cDim < getDimension(); ++cDim)
+				sum += v.getPosition (cDim);
+			if (sum > maxSum)
+			{
+				max = v;
+				maxSum = sum;
+			}
+		}
+		return max;
 	}
 	
 	public String toString()
