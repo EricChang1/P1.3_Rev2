@@ -112,10 +112,19 @@ public abstract class Algorithm implements Runnable
 	}
 	
 	/**
+	 * @param endAction action to be performed once the algorithm finishes
+	 */
+	public void setEndAction (Runnable endAction)
+	{
+		mEndAction = endAction;
+	}
+	
+	/**
 	 * run algorithm
 	 */
 	public void run()
 	{
+		System.out.println ("algo runs");
 		if (mContainer == null || mPieces == null)
 			throw new AlgorithmNotInitializedException ("Missing init parameters to run the algorithm");
 		if (mAlgoStarted)
@@ -157,14 +166,23 @@ public abstract class Algorithm implements Runnable
 	 */
 	protected void setAlgoDone()
 	{
+		System.out.println ("algo done");
 		if (!mAlgoStarted)
 			throw new AlgorithmNotStartedException ("tried to access internal pieces before algorithm was started");
 		getProgress().increase (getProgress().getRemainingIncrease());
 		mAlgoDone = true;
+		if (mEndAction != null)
+		{
+			mEndAction.run();
+			System.out.println ("mEndAction" + mEndAction);
+		}
 	}
 	
 	private Container mContainer;
 	private ArrayList <Resource> mPieces;
+	
 	private Progress mProgress;
+	private Runnable mEndAction;
+	
 	private boolean mAlgoStarted, mAlgoDone; 
 }

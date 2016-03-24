@@ -29,11 +29,13 @@ public class StatsPanel extends JPanel
 		GridBagConstraints gbcBase = new GridBagConstraints();
 		gbcBase.gridx = 1;
 		gbcBase.weighty = 0.1;
+		gbcBase.weightx = 0.1;
 		gbcBase.fill = GridBagConstraints.BOTH;
 		
 		GridBagConstraints gbcScroll = new GridBagConstraints();
 		gbcScroll.weightx = 1.0;
 		gbcScroll.weighty = 1.0;
+		gbcScroll.fill = GridBagConstraints.BOTH;
 		
 		add (mUsage, gbcScroll);
 		add (new JLabel ("volume available"), gbcBase);
@@ -54,7 +56,8 @@ public class StatsPanel extends JPanel
 	{
 		mVolumeUsed.setText (new Integer (c.getVolumeUsed()).toString() + " units");
 		mVolumeAvailable.setText (new Integer (c.getVolume()).toString() + "units ");
-		mDensity.setText (new Double (100 * c.getVolumeUsed() / c.getVolume()).toString() + "%");
+		if (c.getVolume() > 0)
+			mDensity.setText (new Double (100 * c.getVolumeUsed() / c.getVolume()).toString() + "%");
 		setBlockAmounts (c);
 	}
 	
@@ -79,7 +82,7 @@ public class StatsPanel extends JPanel
 		for (int cBlock = 0; cBlock < c.getAmountOfBlocks(); ++cBlock)
 		{
 			Block b = c.getBlock (cBlock);
-			if (amountsPerBlock.containsKey (b.getName()))
+			if (!amountsPerBlock.containsKey (b.getName()))
 				amountsPerBlock.put (b.getName(), new ModifyInt (1));
 			else
 				amountsPerBlock.get (b.getName()).add (1);
@@ -90,7 +93,7 @@ public class StatsPanel extends JPanel
 		for (Entry<String, ModifyInt> e : amountsPerBlock.entrySet())
 		{
 			contents.add (new JLabel (e.getKey()));
-			contents.add (new JLabel (e.getValue().toString()));
+			contents.add (new JLabel (e.getValue().get().toString()));
 		}
 		mUsage.setViewportView (contents);
 		revalidate();

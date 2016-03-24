@@ -16,6 +16,7 @@ import algorithm.*;
 import main.*;
 import main.AlgorithmSetup.DimName;
 import models.Block;
+import models.Container;
 import models.ShapeParser;
 
 /**
@@ -37,7 +38,7 @@ public class MainMenu extends JFrame
 		setDefaultCloseOperation (EXIT_ON_CLOSE);
 		setTitle (DEFAULT_TITLE);
 		
-		mAlgoSetup = new AlgorithmSetup (new ArrayList<Block>());
+		mAlgoSetup = new AlgorithmSetup ();
 	}
 	
 	public void constructComponents()
@@ -100,7 +101,7 @@ public class MainMenu extends JFrame
 		gbc.gridy = gbcPieceEditPanel.gridy + gbcPieceEditPanel.gridheight + 1;
 		gbc.gridx = GridBagConstraints.RELATIVE;
 		add (mAlgoChooser, gbc);
-		mAlgoChooser.addItemListener (new LoadAlgoListener());
+		mAlgoChooser.addActionListener (new LoadAlgoListener());
 		
 		JButton startButton = new JButton ("go!");
 		add (startButton, gbc);
@@ -125,7 +126,7 @@ public class MainMenu extends JFrame
 			ShapeParser parser = new ShapeParser (input);
 			parser.parse();
 			ArrayList<Block> parsedBlocks = parser.getBlocks();
-			mAlgoSetup = new AlgorithmSetup (parsedBlocks);
+			mAlgoSetup.setBlocks (parsedBlocks);
 			mPieceSelection.constructComponents (mAlgoSetup.getResourceSetups());
 		}
 		catch (Exception e)
@@ -151,19 +152,36 @@ public class MainMenu extends JFrame
 		algoConfig.setDefaultCloseOperation (JDialog.DISPOSE_ON_CLOSE);
 		algoConfig.setSize (250, 250);
 		algoConfig.setVisible(true);
+		algoConfig.addWindowListener (new AlgoConfigClose (algoConfig));
 	}
 	
 	
 	public void startExecution()
 	{
 		mAlgoSetup.loadAlgorithm (mExecute);
-		//do stuff to run and display the algorithm
+		
+		SolutionViewer viewSolution = new SolutionViewer (mAlgoSetup.getContainer());
+		viewSolution.constructComponents();
+		viewSolution.setVisible(true);
+		
+		mExecute.setEndAction (new ShowSolutionRunner (viewSolution, mExecute));
+		
+		mExecute.getProgress().setProgressBar (viewSolution.getProgressBar());
+		
+		Thread t = new Thread (mExecute);
+		t.start();
+		
+		setVisible(false);
+		//dispose();
 	}
 	
 	
 	public void showErrorDialog (String title, String message)
 	{
 		int textCols = 30;
+		int wid = 250, hig = 150;
+		
+		
 		JDialog errorDialog = new JDialog (this, false);
 		errorDialog.setTitle (title);
 		errorDialog.setDefaultCloseOperation (DISPOSE_ON_CLOSE);
@@ -171,8 +189,28 @@ public class MainMenu extends JFrame
 		JTextField text = new JTextField (message, textCols);
 		errorDialog.add (text);
 		
+		errorDialog.setSize (wid, hig);
 		errorDialog.setVisible (true);
 	}
+	
+	private class ShowSolutionRunner implements Runnable
+	{
+		public ShowSolutionRunner (SolutionViewer update, Algorithm executed)
+		{
+			mUpdate = update;
+			mExecuted = executed;
+		}
+		
+		public void run()
+		{
+			mUpdate.setSolution (mExecuted.getFilledContainer());
+			mUpdate.repaint();
+		}
+		
+		private SolutionViewer mUpdate;
+		private Algorithm mExecuted;
+	}
+	
 	
 	private class DimensionInputListener implements ChangeListener
 	{
@@ -200,16 +238,16 @@ public class MainMenu extends JFrame
 		}
 	}
 	
-	private class LoadAlgoListener implements ItemListener
+	private class LoadAlgoListener implements ActionListener
 	{
 		@Override
-		public void itemStateChanged(ItemEvent e) 
+		public void actionPerformed (ActionEvent e) 
 		{
 			loadAlgorithm ((AlgorithmType) mAlgoChooser.getSelectedItem());
 		}
 	}
 	
-	private class AlgoConfigClose extends ComponentAdapter
+	private class AlgoConfigClose extends WindowAdapter
 	{
 		public AlgoConfigClose (AlgorithmConfigurator config)
 		{
@@ -217,9 +255,8 @@ public class MainMenu extends JFrame
 		}
 		
 		@Override
-		public void componentHidden(ComponentEvent e) 
+		public void windowClosed(WindowEvent e) 
 		{
-			super.componentHidden(e);
 			mExecute = mConfig.getAlgorithm();
 		}
 		
@@ -230,9 +267,9 @@ public class MainMenu extends JFrame
 	{
 		public void actionPerformed (ActionEvent e)
 		{
-			if (mExecute == null)
+			/*if (mExecute == null)
 				showErrorDialog ("HOW???", "please choose an algorithm before attemting to run it!");
-			else
+			else*/
 				startExecution();
 		}
 	}

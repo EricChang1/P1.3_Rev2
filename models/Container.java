@@ -243,6 +243,14 @@ public class Container extends Block
 		return mPlacedBlocks.get(index);
 	}
 	
+	public int getVolume()
+	{
+		int vol = 1;
+		for (int dim : getDimensions())
+			vol *= dim;
+		return vol;
+	}
+	
 	/**
 	 * @return total volume - volume remaining
 	 */

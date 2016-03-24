@@ -177,6 +177,14 @@ public class Set<T extends Comparable<T>> implements Cloneable
 	}
 	
 	/**
+	 * erases all elements stored
+	 */
+	public void clear()
+	{
+		mStore.clear();
+	}
+	
+	/**
 	 * @param add element to add to this set
 	 * PRECONDITION: add may not already exist in this set
 	 */

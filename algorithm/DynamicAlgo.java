@@ -390,10 +390,11 @@ public class DynamicAlgo extends Algorithm
 					Cuboid c2 = working.get (cFuse2);
 					if (c1.areFuseable (c2))
 					{
-						working.set (cFuse2, c1.fuse (c2));
 						change = true;
 						iFuse1.remove();
 						iFuse1 = null;
+						working.remove (cFuse2 - 1);
+						working.addFirst (c1.fuse (c2));
 					}
 					++cFuse2;
 				}
@@ -696,7 +697,8 @@ public class DynamicAlgo extends Algorithm
 					ArrayList<Cuboid> freeRemain = cloneC.getFreeCuboids();
 					if (!freeRemain.isEmpty())	
 					{
-						//freeRemain = fuseAdjacentCuboids (freeRemain);
+						if (mFuseUse)
+							freeRemain = fuseAdjacentCuboids (freeRemain);
 						mCurrentIncrease.split (freeRemain.size() + 1);
 						
 						ArrayList <Container> filled = fillFreeCuboids (freeRemain, sClone);

@@ -76,6 +76,7 @@ public class Progress
 			mAmount = init;
 			mPartStack = new Stack<>();
 			mCompletedStack = new Stack<>();
+			mCompletedStack.push (1);
 		}
 		
 		private void increasePerformed()

@@ -251,6 +251,16 @@ public class AvlTree<T extends Comparable<T>> implements Cloneable
 	}
 	
 	/**
+	 * erases all elements stored
+	 */
+	public void clear()
+	{
+		mRoot = null;
+		mCache = null;
+		mSize = 0;
+	}
+	
+	/**
 	 * @param addVal value to add to tree
 	 */
 	public void add (T addVal)
