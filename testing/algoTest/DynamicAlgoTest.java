@@ -29,9 +29,9 @@ public class DynamicAlgoTest
 	
 	public static void main (String[] args) throws IOException, ShapeParser.BadFileStructureException
 	{
-		int[] quants = {10, 4, 0};
+		int[] quants = {5, 5, 5};
 		boolean[] inf = {false, false, false};
-		int d = 6, w = 6, h = 6;
+		int d = 7, w = 7, h = 7;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "parcels.txt";
@@ -93,10 +93,11 @@ public class DynamicAlgoTest
 	{
 		mAlgo = new DynamicAlgo();
 		mAlgo.init (mCont, mRes);
+		mAlgo.setFuse(true);
 		
 		JFrame showBar = new JFrame ("current progress");
 		showBar.setSize (300, 75);
-		showBar.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
+		showBar.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		showBar.setLayout (new BorderLayout (25, 10));
 		JProgressBar progressIndicator = new JProgressBar (0, 100);
 		mAlgo.getProgress().setProgressBar (progressIndicator);

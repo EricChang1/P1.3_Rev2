@@ -66,6 +66,18 @@ public class AlgorithmSetup
 		return a;
 	}
 	
+	/**
+	 * @return container dimensions and resources as string
+	 */
+	public String getSetupString()
+	{
+		String s = new String();
+		s += "setup\n" + mContD + " x " + mContW + " x " + mContH + " container\n";
+		for (ResourceSetup set : mResources.getOrderedElements())
+			s += set.getBlock().getName() + " x " + set.getCapacity() + "\n";
+		return s;
+	}
+	
 	public void setBlocks (Collection<Block> possible)
 	{
 		mResources.clear();

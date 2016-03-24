@@ -162,9 +162,11 @@ public class MainMenu extends JFrame
 		
 		SolutionViewer viewSolution = new SolutionViewer (mAlgoSetup.getContainer());
 		viewSolution.constructComponents();
+		viewSolution.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		viewSolution.setVisible(true);
 		
-		mExecute.setEndAction (new ShowSolutionRunner (viewSolution, mExecute));
+		
+		mExecute.setEndAction (new ShowSolutionRunner (viewSolution, mExecute, mAlgoSetup.getSetupString()));
 		
 		mExecute.getProgress().setProgressBar (viewSolution.getProgressBar());
 		
@@ -195,20 +197,23 @@ public class MainMenu extends JFrame
 	
 	private class ShowSolutionRunner implements Runnable
 	{
-		public ShowSolutionRunner (SolutionViewer update, Algorithm executed)
+		public ShowSolutionRunner (SolutionViewer update, Algorithm executed, String defaultComment)
 		{
 			mUpdate = update;
 			mExecuted = executed;
+			mDefaultComment = defaultComment;
 		}
 		
 		public void run()
 		{
 			mUpdate.setSolution (mExecuted.getFilledContainer());
 			mUpdate.repaint();
+			mUpdate.setComment (mDefaultComment);
 		}
 		
 		private SolutionViewer mUpdate;
 		private Algorithm mExecuted;
+		private String mDefaultComment;
 	}
 	
 	

@@ -65,7 +65,7 @@ public class PieceEditPanel extends JPanel
 		mCheckInfinity = new JCheckBox ();
 		mCheckInfinity.addItemListener (new InfinityListen());
 		
-		mRenderPiece = new PieceRenderPanel (new BasicShape (mResSetup.getShape()));
+		mRenderPiece = new PieceRenderPanel (new BasicShape (mResSetup.getBlock()));
 		PieceRenderPanel.ResizeListener renderResize = mRenderPiece.new ResizeListener();
 		PieceRenderPanel.RotationListener renderRotate = mRenderPiece.new RotationListener();
 		PieceRenderPanel.ZoomListener renderZoom = mRenderPiece.new ZoomListener();
