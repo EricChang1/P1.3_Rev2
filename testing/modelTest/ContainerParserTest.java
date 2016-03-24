@@ -26,7 +26,7 @@ public class ContainerParserTest
 	
 	public void load() throws FileNotFoundException, ContainerParserException, BadFileStructureException
 	{
-		ContainerParser getContainer = new ContainerParser (new File ("guiexport.txt"));
+		ContainerParser getContainer = new ContainerParser (new File ("BParcelOnly.txt"));
 		getContainer.parser();
 		
 		mContainer = getContainer.constructContainer();

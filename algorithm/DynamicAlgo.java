@@ -251,10 +251,24 @@ public class DynamicAlgo extends Algorithm
 		list.set (i2, temp);
 	}
 	
+	/**
+	 * @param resources list of resources
+	 * removes all resources having a capacity of 0 or less
+	 */
+	public static void eraseZeroResources (Set<Resource> resources)
+	{
+		for (Resource r : resources.getOrderedElements())
+		{
+			if (r.getInventory() <= 0)
+				resources.remove (r);
+		}
+	}
+	
 	
 	public DynamicAlgo() 
 	{
-		mSubsets = new Set<>();
+		//mSubsets = new Set<>();
+		mLargestSubset = new Subset();
 		mFuseUse = false;
 	}
 	
@@ -280,31 +294,30 @@ public class DynamicAlgo extends Algorithm
 				mCubes = cubes;
 				mConts = new ArrayList <>();
 				
+				//entry having no resources used
+				Entry e = mLookupTable.new Entry (s);
+				
 				if (mCubes.size() > 0)
 					mCurrentIncrease.split (mCubes.size());
 				for (Cuboid free : mCubes)
 				{
 					ArrayList <Integer> cubeDims = free.getDimensions();
-					int subsetIndex = getSubsetIndex (s);
 					//if entry needed is not set
-					if (!mLookupTable.isSet (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex))
+					if (!mLookupTable.isSet (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), e))
 					{
 						Container x = new Container (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2));
 						explore (x, s.clone());
-						assert (mLookupTable.get (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex) != null);
+						assert (mLookupTable.isSet (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), e));
 					}
 					//get optimal for parameters
-					Entry e = mLookupTable.get (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex);
+					e = mLookupTable.get (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), e);
 					//get container, set to fit current cuboid
-					Container lookedUp = mLookupTable.getContainer (cubeDims.get (0), cubeDims.get (1), cubeDims.get (2), subsetIndex).clone(); 
+					Container lookedUp = e.getContainer().clone(); 
 					rotateToFit (lookedUp, free);
 					Glue gluePos = new Glue (new IntegerMatrix (3, 1)).getClosest (free.getVertices());
 					lookedUp.glue (gluePos);
 					mConts.add (lookedUp);
 					mVal += e.getValue();
-					
-					//get remaining subset
-					s = e.getUnusedResources (s);
 				}
 				if (mCubes.size() > 0)
 					mCurrentIncrease.unite();
@@ -436,6 +449,7 @@ public class DynamicAlgo extends Algorithm
 	 * @return the largest entry of look up table whose container and subset are smaller or equal
 	 * or current as Entry if current is larger than max in table
 	 */
+	/*legacy
 	public Entry getMax (Container current, int subIndex)
 	{
 		Entry max = mLookupTable.new Entry (current);
@@ -468,7 +482,7 @@ public class DynamicAlgo extends Algorithm
 				max = less;
 		}
 		return max;
-	}
+	}*/
 	
 	/**
 	 * @param obtained a given container
@@ -612,6 +626,7 @@ public class DynamicAlgo extends Algorithm
 	 * @param subset given subset of resources
 	 * @return index corresponding to subset equal to given subset
 	 */
+	/* legacy
 	public int getSubsetIndex (Subset subset)
 	{
 		//FIND INDEX USING SET IMPLEMENTATION SORTING RESOURCES BASED ON VOLUME
@@ -619,7 +634,7 @@ public class DynamicAlgo extends Algorithm
 			return mSubsets.getElement (new SubsetAtIndex (subset, 0)).getIndex();
 		else
 			return mSubsets.getSize();
-	}
+	}*/
 	
 	/**
 	 * @param fuseUse true to enable fusing, false to disable
@@ -633,18 +648,23 @@ public class DynamicAlgo extends Algorithm
 	public void run()
 	{
 		super.run();
-		generatePowerSet();
+		
+		//generatePowerSet();
+		//System.out.println ("generated powersets");
+		generateStartSet();
+		eraseZeroResources (mLargestSubset);
+		
 		int dep = getContainer().getDimensions(0);
 		int wid = getContainer().getDimensions(1);
 		int hig = getContainer().getDimensions(2);
 		ArrayList<Integer> tDims = LookupTable.sortIndices (dep, wid, hig);
-		mLookupTable = new LookupTable (tDims.get(0) + 1, tDims.get(1) + 1, tDims.get(2) + 1, mSubsets.getSize());
+		mLookupTable = new LookupTable (tDims.get(0) + 1, tDims.get(1) + 1, tDims.get(2) + 1);
 		
 		mCurrentIncrease = getProgress().getRemainingIncrease();
 		
-		explore (getContainer(), mLargestSubset.getSet());
+		explore (getContainer(), mLargestSubset);
 		
-		setSolution (mLookupTable.getContainer (dep, wid, hig, mLargestSubset.getIndex()));
+		setSolution (mLookupTable.get (dep, wid, hig, mLookupTable.new Entry (mLargestSubset)).getContainer());
 		setAlgoDone();
 	}
 	
@@ -657,8 +677,8 @@ public class DynamicAlgo extends Algorithm
 	{
 		final int MAXDIM = 3;
 		
-		Entry best = mLookupTable.new Entry (c);
-		int iSub = getSubsetIndex (s);
+		Entry best = mLookupTable.new Entry (c, s);
+		//int iSub = getSubsetIndex (s);
 		
 		ArrayList<Integer> sortContDims;
 		sortContDims = LookupTable.sortIndices (c.getDimensions (0), c.getDimensions (1), c.getDimensions (2));
@@ -711,7 +731,7 @@ public class DynamicAlgo extends Algorithm
 					}
 					
 					//check for new max
-					Entry current = mLookupTable.new Entry (cloneC);
+					Entry current = mLookupTable.new Entry (cloneC, s);
 					if (best == null || current.getValue() > best.getValue())
 						best = current;
 				}
@@ -723,12 +743,13 @@ public class DynamicAlgo extends Algorithm
 			mCurrentIncrease.unite();
 		
 		//set max value to current cell
-		mLookupTable.set (best, c.getDimensions (0), c.getDimensions (1), c.getDimensions (2), iSub);
+		mLookupTable.addEntry (best, c.getDimensions (0), c.getDimensions (1), c.getDimensions (2), best);
 	}
 	
 	/**
 	 * populates mSubsets with elements of the power set of the given resources
 	 */
+	/*legacy
 	public void generatePowerSet()
 	{
 		mLargestSubset = new SubsetAtIndex (new Subset(), 0);
@@ -749,7 +770,7 @@ public class DynamicAlgo extends Algorithm
 				assert (!res.isInfinite());
 				
 				int cAdd = 1;
-				while (/*last.getSet().getVolume() + cAdd * res.getVolume() <= getContainer().getVolume() && */cAdd <= res.getInventory())
+				while (cAdd <= res.getInventory())
 				{
 					Subset add = last.getSet().clone();
 					Resource addRes = new Resource (res.getBlock().clone(), cAdd);
@@ -763,6 +784,14 @@ public class DynamicAlgo extends Algorithm
 					++cAdd;
 				}
 			}
+		}
+	}*/
+	
+	private void generateStartSet()
+	{
+		for (models.Resource r : getPieces())
+		{
+			mLargestSubset.add (new Resource (r.getBlock(), r.getInventory()));
 		}
 	}
 	
@@ -779,8 +808,8 @@ public class DynamicAlgo extends Algorithm
 		}
 	}
 	
-	private Set<SubsetAtIndex> mSubsets;
-	private SubsetAtIndex mLargestSubset;
+	private Set<Subset> mSubsets;
+	private Subset mLargestSubset;
 	private LookupTable mLookupTable;
 	
 	private Progress.Increase mCurrentIncrease;

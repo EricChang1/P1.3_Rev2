@@ -29,12 +29,12 @@ public class DynamicAlgoTest
 	
 	public static void main (String[] args) throws IOException, ShapeParser.BadFileStructureException
 	{
-		int[] quants = {5, 5, 5};
+		int[] quants = {2, 2, 2};
 		boolean[] inf = {false, false, false};
-		int d = 7, w = 7, h = 7;
+		int d = 3, w = 3, h = 3;
 
 		ArrayList <Resource> res = new ArrayList<>();
-		String fileName = "parcels.txt";
+		String fileName = "LPTPentominoes.txt";
 		ShapeParser input = new ShapeParser (new File (fileName));
 		input.parse();
 		

@@ -76,7 +76,7 @@ public class MainMenu extends JFrame
 		spinHig.setToolTipText ("height of container");
 		++gbc.gridx;
 		add (spinHig, gbc);
-		spinDep.addChangeListener (new DimensionInputListener (AlgorithmSetup.DimName.HEIGHT));
+		spinHig.addChangeListener (new DimensionInputListener (AlgorithmSetup.DimName.HEIGHT));
 		
 		JLabel pieceLabel = new JLabel ("select pieces");
 		++gbc.gridy;

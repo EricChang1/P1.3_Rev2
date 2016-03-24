@@ -19,30 +19,42 @@ import algorithm.LookupTable.Entry;
  * to store solutions of sub problems
  * @author martin
  */
-public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Entry>>>>
+public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 {
 	/**
 	 * class containing information of one entry of table
 	 * @author martin
 	 */
-	public class Entry
+	public class Entry implements Comparable <Entry>
 	{
 		/**
 		 * parametric constructor
 		 * @param cont container to store
+		 * @param set of resources available before container was filled
 		 */
-		public Entry (Container cont)
+		public Entry (Container cont, Set<Resource> available)
 		{
 			mContainer = cont;
-			mUsed = new Set<>();
-			for (int cBlock = 0; cBlock < mContainer.getAmountOfBlocks(); ++cBlock)
-			{
-				BlockResource currRes = new BlockResource (mContainer.getBlock (cBlock), 1);
-				if (mUsed.hasElement (currRes))
-					mUsed.getElement (currRes).refill();
-				else
-					mUsed.add (currRes);
-			}
+			mAvailable = new Subset();
+			for (Resource av : available.getOrderedElements())
+				mAvailable.add (av);
+			mUnused = new Subset();
+			computeUnusedResources();
+		}
+		
+		/**
+		 * constructor for mock objects
+		 * to be used for look ups
+		 * @param resources list of available resources
+		 */
+		public Entry (Set<Resource> resources)
+		{
+			mContainer = new Container (0, 0, 0);
+			mUnused = new Subset();
+			mAvailable = new Subset();
+			for (Resource av : resources.getOrderedElements())
+				mAvailable.add (av);
+			computeUnusedResources();
 		}
 		
 		/**
@@ -51,24 +63,32 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 		 * Note: no block objects will be cloned
 		 * Note: only resource objects whose inventory is altered will be constructed
 		 */
-		public Subset getUnusedResources (Subset available)
+		public Subset getUnusedResources() { return mUnused; }
+		
+		public Container getContainer() { return mContainer; }
+		
+		/**
+		 * @param comp entry to compare with
+		 * @return -1 if less, 0 if equal, 1 if larger
+		 * uses subset of used resources to determine comparison outcome
+		 */
+		public int compareTo (Entry comp)
 		{
-			//unused = difference + intersection deducting quantities
-			Subset unused = new Subset();
-			for (Resource avail : available.getOrderedElements())
+			ArrayList<Resource> tRes = this.mAvailable.getOrderedElements();
+			ArrayList<Resource> cRes = comp.mAvailable.getOrderedElements();
+			
+			for (int cComp = 0; cComp < tRes.size() && cComp < cRes.size(); ++cComp)
 			{
-				BlockResource bAvail = new BlockResource (avail);
-				if (mUsed.hasElement (bAvail))
-				{
-					int left = avail.getInventory() - mUsed.getElement (bAvail).getInventory(); 
-					if (left > 0)
-						unused.add (new Resource (avail.getBlock(), left));
-				}
-				else
-					unused.add (avail);
+				int comparison = tRes.get (cComp).compareTo (cRes.get (cComp));
+				if (comparison != 0)
+					return comparison;
 			}
 			
-			return unused;
+			if (tRes.size() < cRes.size())
+				return -1;
+			if (tRes.size() > cRes.size())
+				return 1;
+			return 0;
 		}
 		
 		/**
@@ -76,8 +96,34 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 		 */
 		public double getValue() { return mContainer.getValue(); }
 		
+		
+		private void computeUnusedResources ()
+		{
+			Set<BlockResource> used = new Set<>();
+			for (int cBlock = 0; cBlock < mContainer.getAmountOfBlocks(); ++cBlock)
+			{
+				BlockResource currRes = new BlockResource (mContainer.getBlock (cBlock), 1);
+				if (used.hasElement (currRes))
+					used.getElement (currRes).refill();
+				else
+					used.add (currRes);
+			}
+			//unused = difference + intersection deducting quantities
+			mUnused.clear();
+			
+			for (Resource avail : mAvailable.getOrderedElements())
+			{
+				BlockResource blockAvail = new BlockResource (avail);
+				int left = avail.getInventory();
+				if (used.hasElement (blockAvail))
+					left -= used.getElement (blockAvail).getInventory(); 
+				if (left > 0)
+					mUnused.add (new Resource (avail.getBlock(), left));
+			}
+		}
+		
 		private Container mContainer;
-		private Set<BlockResource> mUsed;
+		private Subset mUnused, mAvailable;
 	}
 	
 	/**
@@ -104,19 +150,17 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	 * @param h number of height increments of container
 	 * @param sets number of subsets
 	 */
-	public LookupTable (int d, int w, int h, int sets)
+	public LookupTable (int d, int w, int h)
 	{
 		for (int cD = 0; cD < d; ++cD)
 		{
-			ArrayList <ArrayList<ArrayList<Entry>>> newD = new ArrayList<ArrayList<ArrayList<Entry>>>();
+			ArrayList <ArrayList<Set<Entry>>> newD = new ArrayList<>();
 			for (int cW = 0; cW < w; ++cW)
 			{
-				ArrayList <ArrayList<Entry>> newW = new ArrayList<ArrayList<Entry>>();
+				ArrayList <Set<Entry>> newW = new ArrayList<>();
 				for (int cH = 0; cH < h; ++cH)
 				{
-					ArrayList <Entry> newH = new ArrayList<>();
-					for (int cS = 0; cS < sets; ++cS)
-						newH.add (null);
+					Set <Entry> newH = new Set<>();
 					newW.add(newH);
 				}
 				newD.add (newW);
@@ -125,11 +169,12 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 		}
 	}
 	
-	public Entry get (int d, int w, int h, int s)
+	public Entry get (int d, int w, int h, Entry e)
 	{
 		ArrayList<Integer> is = sortIndices (d, w, h);
-		return get (is.get (0)).get (is.get (1)).get (is.get (2)).get(s);
+		return get (is.get (0)).get (is.get (1)).get (is.get (2)).getElement(e);
 	}
+	
 	
 	/**
 	 * @param d depth index
@@ -138,10 +183,11 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	 * @param s subset index
 	 * @return reference of container stored at given combination of indices
 	 */
+	/*
 	public Container getContainer (int d, int w, int h, int s)
 	{
 		return get (d, w, h, s).mContainer;
-	}
+	}*/
 	
 	/**
 	 * @param d depth index
@@ -150,14 +196,15 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <ArrayList <Ent
 	 * @param s subset index
 	 * @return true if cell requested is no longer default initialized to null
 	 */
-	public boolean isSet (int d, int w, int h , int s)
-	{
-		return (get (d, w, h, s) != null);
-	}
-	
-	public void set (Entry val, int d, int w, int h, int s)
+	public boolean isSet (int d, int w, int h , Entry e)
 	{
 		ArrayList<Integer> is = sortIndices (d, w, h);
-		get (is.get (0)).get (is.get (1)).get (is.get (2)).set (s, val);
+		return (get (is.get (0)).get (is.get (1)).get (is.get (2)).hasElement (e));
+	}
+	
+	public void addEntry (Entry val, int d, int w, int h, Entry e)
+	{
+		ArrayList<Integer> is = sortIndices (d, w, h);
+		get (is.get (0)).get (is.get (1)).get (is.get (2)).add (e);
 	}
 }
