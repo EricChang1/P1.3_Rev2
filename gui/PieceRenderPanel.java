@@ -76,7 +76,7 @@ public class PieceRenderPanel extends JPanel
 	}
 	
 	
-	public static final Insets DEFAULT_SPACING = new Insets (5, 5, 5, 5);
+	public static final Insets DEFAULT_SPACING = new Insets (2, 2, 2, 2);
 	
 	/**
 	 * abstract class to be extended by classes that need to store a sensitivity value

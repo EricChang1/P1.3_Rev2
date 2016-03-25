@@ -25,7 +25,7 @@ public class Ratio
 		return x.doubleValue() * getRatio();
 	}
 	
-	public double getRatio() { return (double) (mNum / mDenom); }
+	public double getRatio() { return ((double) mNum / mDenom); }
 	
 	private long mNum, mDenom;
 }

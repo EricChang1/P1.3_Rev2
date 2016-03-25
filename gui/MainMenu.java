@@ -17,7 +17,10 @@ import main.*;
 import main.AlgorithmSetup.DimName;
 import models.Block;
 import models.Container;
+import models.ContainerParser;
 import models.ShapeParser;
+import models.ContainerParser.ContainerParserException;
+import models.ShapeParser.BadFileStructureException;
 
 /**
  * main menu window
@@ -88,7 +91,6 @@ public class MainMenu extends JFrame
 		loadPieceButton.addActionListener (new LoadBlocksListener());
 		
 		GridBagConstraints gbcPieceEditPanel = new GridBagConstraints();
-		gbcPieceEditPanel.gridheight = 4;
 		gbcPieceEditPanel.gridwidth = 3;
 		gbcPieceEditPanel.gridy = gbc.gridy + 1;
 		gbcPieceEditPanel.fill = GridBagConstraints.BOTH;
@@ -99,13 +101,19 @@ public class MainMenu extends JFrame
 		
 		mAlgoChooser = new JComboBox<> (AlgorithmType.values());
 		gbc.gridy = gbcPieceEditPanel.gridy + gbcPieceEditPanel.gridheight + 1;
-		gbc.gridx = GridBagConstraints.RELATIVE;
+		gbc.gridx = 0;
 		add (mAlgoChooser, gbc);
 		mAlgoChooser.addActionListener (new LoadAlgoListener());
 		
 		JButton startButton = new JButton ("go!");
+		gbc.gridx = GridBagConstraints.RELATIVE;
 		add (startButton, gbc);
 		startButton.addActionListener (new StartListener());
+		
+		JButton viewButton = new JButton ("view");
+		gbc.gridx = 2;
+		add (viewButton, gbc);
+		viewButton.addActionListener (new ViewListener());
 		
 		pack();
 	}
@@ -165,7 +173,6 @@ public class MainMenu extends JFrame
 		viewSolution.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		viewSolution.setVisible(true);
 		
-		
 		mExecute.setEndAction (new ShowSolutionRunner (viewSolution, mExecute, mAlgoSetup.getSetupString()));
 		
 		mExecute.getProgress().setProgressBar (viewSolution.getProgressBar());
@@ -175,6 +182,47 @@ public class MainMenu extends JFrame
 		
 		setVisible(false);
 		//dispose();
+	}
+	
+	
+	public void viewSolution()
+	{
+		JFileChooser chooseSolution = new JFileChooser();
+		FileNameExtensionFilter txtOnly = new FileNameExtensionFilter (".txt only", "txt");
+		chooseSolution.setFileFilter (txtOnly);
+		chooseSolution.showOpenDialog (this);
+		
+		File chosen = chooseSolution.getSelectedFile();
+		
+		try
+		{
+			ContainerParser parseFile = new ContainerParser (chosen);
+			parseFile.parser();
+			SolutionViewer view = new SolutionViewer (parseFile.constructContainer());
+			view.constructComponents();
+			view.setComment (parseFile.getDescription());
+			view.pack();
+			view.setDefaultCloseOperation (DISPOSE_ON_CLOSE);
+			view.setVisible(true);
+		}
+		catch (FileNotFoundException fnfe)
+		{
+			String message = "file does not exist\n" + fnfe.getMessage();
+			showErrorDialog ("container information could not be accessed", message);
+		}
+		catch (ContainerParserException cpe)
+		{
+			String message = "container information could not be extracted\n";
+			message += cpe.getMessage();
+			showErrorDialog ("error reading container file", message);
+		}
+		catch (ShapeParser.BadFileStructureException bfse)
+		{
+			String message = "one of the pieces could not be read\n";
+			message += bfse.getMessage();
+			showErrorDialog ("error reading container file", message);
+		}
+		
 	}
 	
 	
@@ -206,6 +254,8 @@ public class MainMenu extends JFrame
 		
 		public void run()
 		{
+			mDefaultComment += "\nrunning time: " + mExecuted.getRunningTime() + " s";
+			
 			mUpdate.setSolution (mExecuted.getFilledContainer());
 			mUpdate.repaint();
 			mUpdate.setComment (mDefaultComment);
@@ -276,6 +326,14 @@ public class MainMenu extends JFrame
 				showErrorDialog ("HOW???", "please choose an algorithm before attemting to run it!");
 			else*/
 				startExecution();
+		}
+	}
+	
+	private class ViewListener implements ActionListener
+	{
+		public void actionPerformed (ActionEvent e)
+		{
+			viewSolution();
 		}
 	}
 	

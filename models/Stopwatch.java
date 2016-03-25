@@ -55,7 +55,7 @@ public class Stopwatch
 	 */
 	public long getElapsedTime (Ratio conversion)
 	{
-		return (long) conversion.apply (mElapsed);
+		return (long) conversion.apply (getElapsedTime());
 	}
 	
 	/**
