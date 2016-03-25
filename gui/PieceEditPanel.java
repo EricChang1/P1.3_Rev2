@@ -21,11 +21,15 @@ import models.BasicShape;
  */
 public class PieceEditPanel extends JPanel
 {
+	public static int DEFAULT_WIDTH = 250, DEFAULT_HEIGHT = 60;
+	public static int DEFAULT_SPINNER_WIDTH = 40, DEFAULT_SPINNER_HEIGHT = 30;
+	
 	
 	public PieceEditPanel (ResourceSetup setup)
 	{
 		mResSetup = setup;
 		setLayout (new GridBagLayout());
+		setPreferredSize (new Dimension (DEFAULT_WIDTH, DEFAULT_HEIGHT));
 	}
 	
 	
@@ -33,34 +37,28 @@ public class PieceEditPanel extends JPanel
 	
 	public void constructComponents()
 	{
-		int horInset = 1, vertInset = 3;
+		int horInset = 3, vertInset = 5;
 		GridBagConstraints gbcBase, gbcNumber, gbcBox, gbcPiece;
 		
 		gbcBase = new GridBagConstraints();
-		gbcBase.gridy = 0;
-		gbcBase.fill = GridBagConstraints.BOTH;
-		gbcBase.anchor = GridBagConstraints.CENTER;
 		gbcBase.insets = new Insets (horInset, vertInset, horInset, vertInset);
 		
 		gbcNumber = (GridBagConstraints) gbcBase.clone();
 		gbcNumber.gridx = 0;
-		gbcNumber.weightx = 0.1;
-		gbcNumber.weighty = 0.25;
 		
 		gbcBox = (GridBagConstraints) gbcBase.clone();
 		gbcBox.gridx = 1;
-		gbcBox.weightx = 0.1;
-		gbcBox.weighty = 0.25;
 		
 		gbcPiece = (GridBagConstraints) gbcBase.clone();
 		gbcPiece.gridx = 2;
 		gbcPiece.gridwidth = 2;
+		gbcPiece.fill = GridBagConstraints.BOTH;
 		gbcPiece.weightx = 0.75;
 		gbcPiece.weighty = 1.0;
-		gbcPiece.insets = new Insets (10, 10, 10, 10);
 		
 		mCapacitySpinner = new JSpinner();
 		mCapacitySpinner.addChangeListener (new CapacityListen());
+		mCapacitySpinner.setPreferredSize (new Dimension (DEFAULT_SPINNER_WIDTH, DEFAULT_SPINNER_HEIGHT));
 		
 		mCheckInfinity = new JCheckBox ();
 		mCheckInfinity.addItemListener (new InfinityListen());
