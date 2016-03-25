@@ -74,7 +74,12 @@ public class AlgorithmSetup
 		String s = new String();
 		s += "setup\n" + mContD + " x " + mContW + " x " + mContH + " container\n";
 		for (ResourceSetup set : mResources.getOrderedElements())
-			s += set.getBlock().getName() + " x " + set.getCapacity() + "\n";
+		{
+			if (set.getInfinite())
+				s += set.getBlock().getName() + " infinite\n";
+			else
+				s += set.getBlock().getName() + " x " + set.getCapacity() + "\n";
+		}
 		return s;
 	}
 	

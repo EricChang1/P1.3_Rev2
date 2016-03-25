@@ -36,10 +36,15 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 		{
 			mContainer = cont;
 			mAvailable = new Subset();
+			mUsed = new Set<>();
+			mUnused = new Subset();
+			mOptimal = true;
+			
 			for (Resource av : available.getOrderedElements())
 				mAvailable.add (av);
-			mUnused = new Subset();
+			
 			computeUnusedResources();
+			determineOptimality();
 		}
 		
 		/**
@@ -51,10 +56,14 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 		{
 			mContainer = new Container (0, 0, 0);
 			mUnused = new Subset();
+			mUsed = new Set<>();
 			mAvailable = new Subset();
+			mOptimal = true;
+			
 			for (Resource av : resources.getOrderedElements())
 				mAvailable.add (av);
 			computeUnusedResources();
+			determineOptimality();
 		}
 		
 		/**
@@ -71,6 +80,7 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 		 * @param comp entry to compare with
 		 * @return -1 if less, 0 if equal, 1 if larger
 		 * uses subset of used resources to determine comparison outcome
+		 * assumes container sizes are the same
 		 */
 		public int compareTo (Entry comp)
 		{
@@ -96,17 +106,101 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 		 */
 		public double getValue() { return mContainer.getValue(); }
 		
+		public boolean isOptimal() { return mOptimal; }
+		
+		/**
+		 * @param comp entry to compare this with
+		 * @return true if each available resource in comp is available in this
+		 */
+		public boolean hasSubsetAvailable (Entry comp)
+		{
+			if (this.mAvailable.getSize() < comp.mAvailable.getSize())
+				return false;
+			
+			Set<BlockResource> tAvail = new Set<>();
+			for (Resource avail : comp.mAvailable.getOrderedElements())
+				tAvail.add (new BlockResource (avail));
+			
+			
+			for (Resource avail : comp.mAvailable.getOrderedElements())
+			{
+				BlockResource blockAvail = new BlockResource (avail);
+				if (!tAvail.hasElement (blockAvail))
+					return false;
+				BlockResource matching = tAvail.getElement (blockAvail);
+				if (matching.getInventory() < blockAvail.getInventory())
+					return false;
+			}
+			return true;
+				
+		}
+		
+		/**
+		 * @param comp entry to compare with
+		 * @return true if comp has all resources available which are used in this
+		 */
+		public boolean containsAllUsed (Entry comp)
+		{
+			//match if no resources used in either entry
+			if (this.mUsed.getSize() == 0 && comp.mUsed.getSize() == 0)
+				return true;
+			
+			//if optimal only check if comp has at least used amount of resources
+			if (this.mUsed.getSize() <= comp.mAvailable.getSize() && comp.mUsed.getSize() <= this.mAvailable.getSize())
+			{
+				//idea return equal (== indicate match during look up) if
+				//number of available resources in comp if the used resources are contained in the available resources
+				//of the other
+				
+				ArrayList<BlockResource> tUsed = this.mUsed.getOrderedElements();
+				Set<BlockResource> compAvail = new Set<>();
+				for (Resource compRes : comp.mAvailable.getOrderedElements())
+					compAvail.add (new BlockResource (compRes));
+				
+				int cUsed = 0;
+				while (cUsed < tUsed.size())
+				{
+					if (!compAvail.hasElement (tUsed.get (cUsed)))
+						return false;
+					else if (compAvail.getElement (tUsed.get (cUsed)).getInventory() < tUsed.get (cUsed).getInventory())
+						return false;
+					else
+						++cUsed;
+				}
+				return true;
+			}
+			return false;
+		}
+		
+		
+		private void determineOptimality()
+		{
+			int maxVolume = 1;
+			for (int cDim = 0; cDim < mContainer.getDimensions().size(); ++cDim)
+				maxVolume *= mContainer.getDimensions (cDim);
+			
+			
+			ArrayList<Resource> listAvailable = mAvailable.getOrderedElements();
+			int cRes = 0;
+			while (mOptimal && cRes < listAvailable.size())
+			{
+				Resource res = listAvailable.get (cRes);
+				if (res.getInventory() * res.getVolume() < maxVolume)
+					mOptimal = false;
+				++cRes;
+			}
+		}
 		
 		private void computeUnusedResources ()
 		{
-			Set<BlockResource> used = new Set<>();
+			mUsed.clear();
 			for (int cBlock = 0; cBlock < mContainer.getAmountOfBlocks(); ++cBlock)
 			{
 				BlockResource currRes = new BlockResource (mContainer.getBlock (cBlock), 1);
-				if (used.hasElement (currRes))
-					used.getElement (currRes).refill();
+				if (mUsed.hasElement (currRes))
+					mUsed.getElement (currRes).refill();
 				else
-					used.add (currRes);
+					mUsed.add (currRes);
 			}
 			//unused = difference + intersection deducting quantities
 			mUnused.clear();
@@ -115,8 +209,8 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 			{
 				BlockResource blockAvail = new BlockResource (avail);
 				int left = avail.getInventory();
-				if (used.hasElement (blockAvail))
-					left -= used.getElement (blockAvail).getInventory(); 
+				if (mUsed.hasElement (blockAvail))
+					left -= mUsed.getElement (blockAvail).getInventory(); 
 				if (left > 0)
 					mUnused.add (new Resource (avail.getBlock(), left));
 			}
@@ -124,6 +218,8 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 		
 		private Container mContainer;
 		private Subset mUnused, mAvailable;
+		private Set<BlockResource> mUsed;
+		private boolean mOptimal;
 	}
 	
 	/**
@@ -189,6 +285,20 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 		return get (d, w, h, s).mContainer;
 	}*/
 	
+	
+	public Entry getEquivalent (int d, int w, int h, Entry e)
+	{
+		ArrayList<Integer> sDim = sortIndices(d, w, h);
+		ArrayList<Entry> entries = get (sDim.get (0)).get (sDim.get (1)).get (sDim.get (2)).getOrderedElements();
+		for (Entry comp : entries)
+		{			
+			if ((comp.isOptimal() || comp.hasSubsetAvailable (e)) && comp.containsAllUsed (e))
+		//	if (comp.hasSubsetAvailable (e) && comp.containsAllUsed (e))
+				return comp;
+		}
+		return null;
+	}
+	
 	/**
 	 * @param d depth index
 	 * @param w width index
@@ -202,9 +312,12 @@ public class LookupTable extends ArrayList <ArrayList <ArrayList <Set <Entry>>>>
 		return (get (is.get (0)).get (is.get (1)).get (is.get (2)).hasElement (e));
 	}
 	
-	public void addEntry (Entry val, int d, int w, int h, Entry e)
+	public void addEntry (int d, int w, int h, Entry e)
 	{
 		ArrayList<Integer> is = sortIndices (d, w, h);
 		get (is.get (0)).get (is.get (1)).get (is.get (2)).add (e);
+		
+	//	System.out.print ("added " + is.get(0) + " " + is.get(1) + " " + is.get(2));
+	//	System.out.println (" having " + e.mAvailable);
 	}
 }

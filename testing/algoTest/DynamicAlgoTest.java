@@ -31,7 +31,7 @@ public class DynamicAlgoTest
 	{
 		int[] quants = {2, 2, 2};
 		boolean[] inf = {false, false, false};
-		int d = 3, w = 3, h = 3;
+		int d = 3, w = 4, h = 4;
 
 		ArrayList <Resource> res = new ArrayList<>();
 		String fileName = "LPTPentominoes.txt";
