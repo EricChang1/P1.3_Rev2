@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import models.Container;
 import models.Resource;
+import models.Stopwatch;
 
 /**
  * base class for all algorithms
@@ -56,8 +57,7 @@ public abstract class Algorithm implements Runnable
 		mContainer = null;
 		mPieces = null;
 		mProgress = new Progress();
-		mAlgoStarted = false;
-		mAlgoDone = false;
+		mRunningTime = new Stopwatch();
 	}
 	
 	/**
@@ -65,7 +65,7 @@ public abstract class Algorithm implements Runnable
 	 */
 	public Container getFilledContainer()
 	{
-		if (!mAlgoDone)
+		if (!isAlgoDone())
 			throw new AlgorithmNotStartedException ("tried to access presumably filled container before algorithm started");
 		return mContainer.clone();
 	}
@@ -82,11 +82,20 @@ public abstract class Algorithm implements Runnable
 	}
 	
 	/**
+	 * @return the running time of the algorithm in seconds
+	 */
+	public long getRunningTime()
+	{
+		return mRunningTime.getElapsedTime (new Stopwatch.Seconds());
+	}
+	
+	
+	/**
 	 * @return true if algorithm was set to terminated
 	 */
 	public boolean isAlgoDone()
 	{
-		return mAlgoDone;
+		return mRunningTime.hasElapsed();
 	}
 	
 	/**
@@ -94,7 +103,7 @@ public abstract class Algorithm implements Runnable
 	 */
 	public boolean isAlgoStarted()
 	{
-		return mAlgoStarted;
+		return mRunningTime.isRunning();
 	}
 	
 	/**
@@ -105,10 +114,12 @@ public abstract class Algorithm implements Runnable
 	 */
 	public void init (Container container, ArrayList <Resource> pieces)
 	{
+		if (mRunningTime.isRunning())
+			throw new AlgorithmRunningException ("cannot initialize while algorithm is running");
+		
 		mContainer = container;
 		mPieces = pieces;
-		mAlgoStarted = false;
-		mAlgoDone = false;
+		mRunningTime.reset();
 	}
 	
 	/**
@@ -127,11 +138,12 @@ public abstract class Algorithm implements Runnable
 		System.out.println ("algo runs");
 		if (mContainer == null || mPieces == null)
 			throw new AlgorithmNotInitializedException ("Missing init parameters to run the algorithm");
-		if (mAlgoStarted)
+		if (isAlgoStarted())
 			throw new AlgorithmRunningException ("tried to run algorithm object already running");
-		if (mAlgoDone)
+		if (isAlgoDone())
 			throw new AlgorithmTerminatedException ("tried to run already terminated algorithm");
-		mAlgoStarted = true;
+		
+		mRunningTime.start();
 	}
 	
 	/**
@@ -140,9 +152,9 @@ public abstract class Algorithm implements Runnable
 	 */
 	protected Container getContainer()
 	{
-		if (!mAlgoStarted)
+		if (!isAlgoStarted())
 			throw new AlgorithmNotStartedException ("tried to accepublic void run()");
-		if (mAlgoDone)
+		if (isAlgoDone())
 			throw new AlgorithmTerminatedException ("tried to access internal container after algorithm terminated");
 		return mContainer;
 	}
@@ -153,9 +165,9 @@ public abstract class Algorithm implements Runnable
 	 */
 	protected ArrayList <Resource> getPieces()
 	{
-		if (!mAlgoStarted)
+		if (!isAlgoStarted())
 			throw new AlgorithmNotStartedException ("tried to access internal pieces before algorithm was started");
-		if (mAlgoDone)
+		if (isAlgoDone())
 			throw new AlgorithmTerminatedException ("tried to access internal container after algorithm terminated");
 		return mPieces;
 	}
@@ -167,10 +179,11 @@ public abstract class Algorithm implements Runnable
 	protected void setAlgoDone()
 	{
 		System.out.println ("algo done");
-		if (!mAlgoStarted)
-			throw new AlgorithmNotStartedException ("tried to access internal pieces before algorithm was started");
+		if (!isAlgoStarted())
+			throw new AlgorithmNotStartedException ("algorithm is not started, cannot set done");
+		
 		getProgress().increase (getProgress().getRemainingIncrease());
-		mAlgoDone = true;
+		mRunningTime.stop();
 		if (mEndAction != null)
 		{
 			mEndAction.run();
@@ -184,5 +197,5 @@ public abstract class Algorithm implements Runnable
 	private Progress mProgress;
 	private Runnable mEndAction;
 	
-	private boolean mAlgoStarted, mAlgoDone; 
+	private Stopwatch mRunningTime;
 }
