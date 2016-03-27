@@ -23,15 +23,9 @@ public class AlgorithmSetup
 	 * initializes resources to 0 inventory, infinite false
 	 * initializes container dimensions to 0, 0, 0
 	 */
-	public AlgorithmSetup (ArrayList<Block> possible)
+	public AlgorithmSetup ()
 	{
 		mResources = new Set<>();
-		for (Block b : possible)
-		{
-			ResourceSetup r = new ResourceSetup (b);
-			if (!mResources.hasElement (r))
-				mResources.add (r);
-		}
 	}
 	
 	/**
@@ -51,6 +45,14 @@ public class AlgorithmSetup
 	}
 	
 	/**
+	 * @return container of specified dimensions
+	 */
+	public Container getContainer()
+	{
+		return new Container (mContD, mContW, mContH);
+	}
+	
+	/**
 	 * @param a algorithm to load
 	 * @return reference to a, loaded with container, resources
 	 */
@@ -62,6 +64,34 @@ public class AlgorithmSetup
 			rs.add (set.constructResource());
 		a.init (c, rs);
 		return a;
+	}
+	
+	/**
+	 * @return container dimensions and resources as string
+	 */
+	public String getSetupString()
+	{
+		String s = new String();
+		s += "setup\n" + mContD + " x " + mContW + " x " + mContH + " container\n";
+		for (ResourceSetup set : mResources.getOrderedElements())
+		{
+			if (set.getInfinite())
+				s += set.getBlock().getName() + " infinite\n";
+			else
+				s += set.getBlock().getName() + " x " + set.getCapacity() + "\n";
+		}
+		return s;
+	}
+	
+	public void setBlocks (Collection<Block> possible)
+	{
+		mResources.clear();
+		for (Block b : possible)
+		{
+			ResourceSetup r = new ResourceSetup (b);
+			if (!mResources.hasElement (r))
+				mResources.add (r);
+		}
 	}
 	
 	/**

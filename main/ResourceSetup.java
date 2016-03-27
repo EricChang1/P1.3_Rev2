@@ -29,7 +29,7 @@ public class ResourceSetup implements Comparable<ResourceSetup>
 	/**
 	 * @return internal shape stored
 	 */
-	public BasicShape getShape()
+	public Block getBlock()
 	{
 		return mBlock;
 	}

@@ -54,9 +54,10 @@ public class CubeDissectionTest
 		
 		mShape = null;
 
-		ShapeParser readInShapes = new ShapeParser(new File ("parcels.txt"));
+		//ShapeParser readInShapes = new ShapeParser(new File ("parcels.txt"));
+		ShapeParser readInShapes = new ShapeParser(new File ("LPTPentominoes.txt"));
 		readInShapes.parse();
-		mShape = readInShapes.getShapes().get(0);
+		mShape = readInShapes.getShapes().get(1);
 		mCont = new Container (4, 3, 3);
 	}
 	
@@ -121,14 +122,18 @@ public class CubeDissectionTest
 		for (Cuboid c : mCont.getFreeCuboids())
 			System.out.println (c);
 		
+		PieceRenderPanel renderO = new PieceRenderPanel(mCont.clone());
+		JFrame winO = getFrame (renderO, "original container");
+		winO.setVisible(true);
+		renderO.init();
+		
 		mCont.addMissingRectanglePoints();
 		PieceRenderPanel render = new PieceRenderPanel(mCont);
 		JFrame win = getFrame (render, "dissected container");
 		win.setVisible(true);
 		render.init();
-		
-		
 	}
+	
 	
 	
 	private JFrame mBeforeWin, mAfterWin;
